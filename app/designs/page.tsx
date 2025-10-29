@@ -53,13 +53,15 @@ export default function DesignsPage() {
   if (loading) return <div className="p-6">Cargando...</div>;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-6 p-6 animate-fade-in">
+      <div className="flex items-center justify-between animate-slide-up">
         <div>
-          <h1 className="text-3xl font-bold">Diseños</h1>
-          <p className="text-muted-foreground">Gestión de todas las piezas gráficas</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
+            Diseños
+          </h1>
+          <p className="text-gray-600">Gestión de todas las piezas gráficas</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => setDialogOpen(true)} className="animate-slide-up">
           <Plus className="mr-2 h-4 w-4" />
           Crear Diseño
         </Button>
@@ -73,8 +75,12 @@ export default function DesignsPage() {
             </CardContent>
           </Card>
         ) : (
-          items.map((design) => (
-            <Card key={design.id}>
+          items.map((design, index) => (
+            <Card 
+              key={design.id}
+              className="animate-slide-up"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>

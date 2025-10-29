@@ -88,10 +88,12 @@ export default function MyWeekPage() {
   const filteredItems = items.filter((it) => !designerId || it.designer_id === designerId);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Mi Semana</h1>
-        <p className="text-muted-foreground">Tus tareas asignadas</p>
+    <div className="flex flex-col gap-6 p-6 animate-fade-in">
+      <div className="animate-slide-up">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
+          Mi Semana
+        </h1>
+        <p className="text-gray-600">Tus tareas asignadas</p>
       </div>
 
       <div className="grid gap-4">
@@ -102,10 +104,14 @@ export default function MyWeekPage() {
             </CardContent>
           </Card>
         ) : (
-          filteredItems.map((task) => {
+          filteredItems.map((task, index) => {
             const nextStatuses = statusFlow[task.status];
             return (
-              <Card key={task.id}>
+              <Card 
+                key={task.id} 
+                className="animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
                 <CardHeader>
                   <CardTitle>{task.title}</CardTitle>
                   <CardDescription>

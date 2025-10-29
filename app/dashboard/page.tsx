@@ -92,60 +92,66 @@ export default function DashboardPage() {
   const unassignedCount = items.filter((it) => !it.designer_id).length;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-6 p-6 animate-fade-in">
+      <div className="flex items-center justify-between animate-slide-up">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard del Equipo</h1>
-          <p className="text-muted-foreground">Vista general del equipo de diseño</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
+            Dashboard del Equipo
+          </h1>
+          <p className="text-gray-600">Vista general del equipo de diseño</p>
         </div>
         {unassignedCount > 0 && (
-          <Button onClick={handleAssign} disabled={assigning}>
+          <Button onClick={handleAssign} disabled={assigning} className="animate-slide-up">
             <Users className="mr-2 h-4 w-4" />
             {assigning ? 'Repartiendo...' : `Repartir (${unassignedCount} sin asignar)`}
           </Button>
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="animate-slide-up [animation-delay:0.1s]">
           <CardHeader>
-            <CardTitle>Backlog</CardTitle>
+            <CardTitle className="text-orange-700">Backlog</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{statusCount['BACKLOG'] || 0}</div>
+            <div className="text-4xl font-bold text-orange-600">{statusCount['BACKLOG'] || 0}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="animate-slide-up [animation-delay:0.2s]">
           <CardHeader>
-            <CardTitle>En curso</CardTitle>
+            <CardTitle className="text-orange-700">En curso</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{statusCount['IN_PROGRESS'] || 0}</div>
+            <div className="text-4xl font-bold text-orange-600">{statusCount['IN_PROGRESS'] || 0}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="animate-slide-up [animation-delay:0.3s]">
           <CardHeader>
-            <CardTitle>Por revisar</CardTitle>
+            <CardTitle className="text-orange-700">Por revisar</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{statusCount['TO_REVIEW'] || 0}</div>
+            <div className="text-4xl font-bold text-orange-600">{statusCount['TO_REVIEW'] || 0}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="animate-slide-up [animation-delay:0.4s]">
         <CardHeader>
-          <CardTitle>En riesgo (&lt;24h)</CardTitle>
+          <CardTitle className="text-orange-700">En riesgo (&lt;24h)</CardTitle>
         </CardHeader>
         <CardContent>
           {risky.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Sin diseños en riesgo</div>
+            <div className="text-sm text-gray-600">Sin diseños en riesgo</div>
           ) : (
-            <div className="grid gap-2">
-              {risky.map((it) => (
-                <div key={it.id} className="flex items-center justify-between rounded border p-3">
-                  <div className="font-medium">{it.title}</div>
-                  <Badge variant="destructive">{new Date(it.deadline_at).toLocaleString()}</Badge>
+            <div className="grid gap-3">
+              {risky.map((it, index) => (
+                <div 
+                  key={it.id} 
+                  className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 p-4 hover-lift backdrop-blur-sm"
+                  style={{ animationDelay: `${0.5 + index * 0.1}s` }}
+                >
+                  <div className="font-medium text-gray-800">{it.title}</div>
+                  <Badge variant="destructive" className="animate-pulse-slow">{new Date(it.deadline_at).toLocaleString()}</Badge>
                 </div>
               ))}
             </div>

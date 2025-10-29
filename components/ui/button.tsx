@@ -5,17 +5,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        default: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-xl hover-lift hover-glow',
+        destructive: 'bg-red-500 text-white hover:bg-red-600 shadow-lg hover-lift',
         outline:
-          'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'border-2 border-orange-300 bg-white/50 backdrop-blur-sm text-orange-700 hover:bg-orange-50 hover:border-orange-400 hover-lift',
+        secondary: 'bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-md hover-lift',
+        ghost: 'hover:bg-orange-50 hover:text-orange-700 text-gray-700',
+        link: 'text-orange-600 underline-offset-4 hover:text-orange-700 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',
