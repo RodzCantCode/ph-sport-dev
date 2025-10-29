@@ -35,7 +35,12 @@ export default function LoginPage() {
       role: userData.role,
     }));
 
-    router.push('/');
+    // Redirigir directamente según rol
+    if (userData.role === 'manager' || userData.role === 'admin') {
+      router.replace('/dashboard');
+    } else {
+      router.replace('/my-week');
+    }
     setLoading(false);
   };
 
@@ -47,7 +52,7 @@ export default function LoginPage() {
             <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
               PH Sport Dashboard
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-400">
               Inicia sesión en tu cuenta
             </p>
           </div>
@@ -62,7 +67,7 @@ export default function LoginPage() {
                   name="email"
                   type="email"
                   required
-                  className="glass-effect w-full px-4 py-3 rounded-lg border border-orange-200/30 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-400 transition-all duration-300"
+                  className="glass-effect w-full px-4 py-3 rounded-lg placeholder-gray-500 text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-white/20 transition-all duration-300"
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -77,7 +82,7 @@ export default function LoginPage() {
                   name="password"
                   type="password"
                   required
-                  className="glass-effect w-full px-4 py-3 rounded-lg border border-orange-200/30 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-400 transition-all duration-300"
+                  className="glass-effect w-full px-4 py-3 rounded-lg placeholder-gray-500 text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-white/20 transition-all duration-300"
                   placeholder="Contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -89,13 +94,13 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 shadow-lg hover-lift hover-glow transition-all duration-300"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 shadow-lg hover-lift transition-all duration-500 ease-in-out"
               >
                 {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
               </button>
             </div>
 
-            <div className="text-center text-sm text-gray-500">
+            <div className="text-center text-sm text-gray-400">
               Demo: Usa cualquier email/contraseña
             </div>
           </form>

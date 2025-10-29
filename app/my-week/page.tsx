@@ -6,8 +6,10 @@ import { es } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar, ExternalLink, List, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
+import { DesignCalendar } from '@/components/calendar/design-calendar';
 import type { DesignStatus } from '@/lib/types/filters';
 
 interface DesignItem {
@@ -34,6 +36,9 @@ export default function MyWeekPage() {
   const [loading, setLoading] = useState(true);
   const [designerId, setDesignerId] = useState<string | undefined>(undefined);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [selectedTask, setSelectedTask] = useState<DesignItem | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const loadTasks = () => {
     const userStr = typeof window !== 'undefined' ? sessionStorage.getItem('user') : null;
@@ -83,28 +88,62 @@ export default function MyWeekPage() {
     }
   };
 
+  const handleEventClick = (item: DesignItem) => {
+    setSelectedTask(item);
+    setDialogOpen(true);
+  };
+
   if (loading) return <div className="p-6">Cargando...</div>;
 
   const filteredItems = items.filter((it) => !designerId || it.designer_id === designerId);
 
   return (
-    <div className="flex flex-col gap-6 p-6 animate-fade-in">
-      <div className="animate-slide-up">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
-          Mi Semana
-        </h1>
-        <p className="text-gray-600">Tus tareas asignadas</p>
+    <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
+      <div className="flex items-center justify-between animate-slide-up">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
+            Mi Semana
+          </h1>
+          <p className="text-gray-400">Tus tareas asignadas</p>
+        </div>
+        
+        {/* Toggle Lista/Calendario */}
+        <div className="flex items-center gap-2 glass-effect rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-md transition-all duration-200 flex items-center gap-2 ${
+              viewMode === 'list'
+                ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-400'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+            }`}
+          >
+            <List className="h-4 w-4" />
+            <span className="hidden sm:inline">Lista</span>
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`px-4 py-2 rounded-md transition-all duration-200 flex items-center gap-2 ${
+              viewMode === 'calendar'
+                ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-400'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+            }`}
+          >
+            <CalendarDays className="h-4 w-4" />
+            <span className="hidden sm:inline">Calendario</span>
+          </button>
+        </div>
       </div>
 
-      <div className="grid gap-4">
-        {filteredItems.length === 0 ? (
-          <Card>
-            <CardContent className="flex h-64 items-center justify-center">
-              <p className="text-muted-foreground">No tienes tareas asignadas</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredItems.map((task, index) => {
+      {viewMode === 'list' ? (
+        <div className="grid gap-4">
+          {filteredItems.length === 0 ? (
+            <Card>
+              <CardContent className="flex h-64 items-center justify-center">
+                <p className="text-gray-400">No tienes tareas asignadas</p>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredItems.map((task, index) => {
             const nextStatuses = statusFlow[task.status];
             return (
               <Card 
@@ -117,7 +156,7 @@ export default function MyWeekPage() {
                   <CardDescription>
                     {task.player} - {task.match_home} vs {task.match_away}
                   </CardDescription>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-400">
                     <Calendar className="h-4 w-4" />
                     Deadline: {format(new Date(task.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
                   </div>
@@ -172,6 +211,92 @@ export default function MyWeekPage() {
           })
         )}
       </div>
+      ) : (
+        <div className="animate-slide-up">
+          {filteredItems.length === 0 ? (
+            <Card>
+              <CardContent className="flex h-64 items-center justify-center">
+                <p className="text-gray-400">No tienes tareas asignadas</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <DesignCalendar items={filteredItems} onEventClick={handleEventClick} />
+          )}
+        </div>
+      )}
+
+      {/* Dialog para detalles del evento */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="glass-effect border-white/10 text-gray-200 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-gray-200">{selectedTask?.title}</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {selectedTask && (
+                <>
+                  {selectedTask.player} - {selectedTask.match_home} vs {selectedTask.match_away}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTask && (
+            <div className="space-y-4 mt-4">
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Calendar className="h-4 w-4" />
+                Deadline: {format(new Date(selectedTask.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={
+                    selectedTask.status === 'TO_REVIEW'
+                      ? 'default'
+                      : selectedTask.status === 'IN_PROGRESS'
+                        ? 'secondary'
+                        : 'outline'
+                  }
+                >
+                  {selectedTask.status}
+                </Badge>
+                {selectedTask.folder_url && (
+                  <Button variant="ghost" size="sm" asChild>
+                    <a href={selectedTask.folder_url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Carpeta Drive
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              {statusFlow[selectedTask.status].length > 0 && (
+                <div className="flex gap-2 pt-2">
+                  {statusFlow[selectedTask.status].map((nextStatus) => (
+                    <Button
+                      key={nextStatus}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        handleStatusChange(selectedTask.id, nextStatus);
+                        setDialogOpen(false);
+                      }}
+                      disabled={updating === selectedTask.id}
+                      className="flex-1"
+                    >
+                      {updating === selectedTask.id
+                        ? 'Actualizando...'
+                        : nextStatus === 'IN_PROGRESS'
+                          ? 'Comenzar'
+                          : nextStatus === 'TO_REVIEW'
+                            ? 'Marcar para Revisión'
+                            : nextStatus}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

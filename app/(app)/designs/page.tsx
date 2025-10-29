@@ -53,7 +53,7 @@ export default function DesignsPage() {
   if (loading) return <div className="p-6">Cargando...</div>;
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-6 animate-fade-in">
       <div className="flex items-center justify-between animate-slide-up">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
