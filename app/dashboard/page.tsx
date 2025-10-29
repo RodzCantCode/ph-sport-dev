@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
@@ -65,8 +65,8 @@ export default function DashboardPage() {
       const result = await response.json();
       toast.success(result.message || 'Diseños repartidos exitosamente');
       loadDashboard(); // Recargar datos
-    } catch (error: any) {
-      toast.error(error.message || 'Error al repartir diseños');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error al repartir diseños');
     } finally {
       setAssigning(false);
     }

@@ -92,8 +92,8 @@ export const mockMatches: MockMatch[] = [
   },
 ];
 
-// Mock assets - Array mutable para DEMO mode
-export let mockDesigns: MockDesign[] = [
+// Mock assets - Array mutable para DEMO mode (const permite mutación del array)
+export const mockDesigns: MockDesign[] = [
   {
     id: 'd1',
     title: 'Matchday Real Madrid',

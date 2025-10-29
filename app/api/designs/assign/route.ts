@@ -6,7 +6,7 @@ import { mockDesigns, mockUsers } from '@/lib/mock-data';
  * Round-robin balanced assignment algorithm
  * Distribuye diseños sin asignar entre diseñadores de forma equilibrada
  */
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   if (!shouldUseMockData()) {
     return NextResponse.json({ error: 'Not implemented' }, { status: 501 });
   }

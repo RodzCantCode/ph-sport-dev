@@ -69,8 +69,8 @@ export function CreateDesignDialog({ open, onOpenChange, onDesignCreated }: Crea
       });
       onDesignCreated();
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Error al crear diseño');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error al crear diseño');
     } finally {
       setLoading(false);
     }

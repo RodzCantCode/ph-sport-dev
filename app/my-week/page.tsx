@@ -76,8 +76,8 @@ export default function MyWeekPage() {
 
       toast.success('Estado actualizado');
       loadTasks();
-    } catch (error: any) {
-      toast.error(error.message || 'Error al actualizar estado');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar estado');
     } finally {
       setUpdating(null);
     }
