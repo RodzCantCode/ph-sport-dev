@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Palette, Calendar, LogOut, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getCurrentUser, isAdminOrManager } from '@/lib/auth/get-current-user';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -17,10 +18,16 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const navItems: NavItem[] = [
+const navItemsDesigner: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/designs', label: 'Diseños', icon: Palette },
   { href: '/my-week', label: 'Mi Semana', icon: Calendar },
+  { href: '/designs', label: 'Diseños', icon: Palette },
+];
+
+const navItemsManager: NavItem[] = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/my-week', label: 'Mi Semana', icon: Calendar },
+  { href: '/designs', label: 'Diseños', icon: Palette },
 ];
 
 export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
@@ -75,32 +82,36 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-4">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={handleLinkClick}
-              className={cn(
-                'flex items-center gap-3 rounded-lg transition-all duration-200 group',
-                collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3',
-                isActive
-                  ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-400 border-l-2 border-orange-500 shadow-sm shadow-orange-500/10'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-              )}
-            >
-              <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-orange-400' : 'text-gray-400 group-hover:text-orange-400 transition-colors')} />
-              {!collapsed && (
-                <span className={cn('text-sm font-medium transition-opacity duration-300', collapsed ? 'opacity-0 w-0' : 'opacity-100')}>
-                  {item.label}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+        {(() => {
+          const user = typeof window !== 'undefined' ? getCurrentUser() : null;
+          const items = isAdminOrManager(user) ? navItemsManager : navItemsDesigner;
+          return items.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+ 
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={handleLinkClick}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg transition-all duration-200 group',
+                  collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3',
+                  isActive
+                    ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-400 border-l-2 border-orange-500 shadow-sm shadow-orange-500/10'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                )}
+              >
+                <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-orange-400' : 'text-gray-400 group-hover:text-orange-400 transition-colors')} />
+                {!collapsed && (
+                  <span className={cn('text-sm font-medium transition-opacity duration-300', collapsed ? 'opacity-0 w-0' : 'opacity-100')}>
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          });
+        })()}
 
         {/* Separator */}
         <div className="my-4 h-px bg-white/10" />

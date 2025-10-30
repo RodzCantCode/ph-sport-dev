@@ -80,7 +80,7 @@ export function CreateDesignDialog({ open, onOpenChange, onDesignCreated }: Crea
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Crear Nuevo Diseño</DialogTitle>
+          <DialogTitle>Crear nuevo diseño</DialogTitle>
           <DialogDescription>
             Añade un nuevo diseño/tarea para el equipo.
           </DialogDescription>

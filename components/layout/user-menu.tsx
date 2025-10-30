@@ -68,7 +68,16 @@ export function UserMenu() {
             </AvatarFallback>
           </Avatar>
           <div className="hidden md:block text-left">
-            <p className="text-sm font-medium text-gray-200">{user.name}</p>
+            <p className="text-sm font-medium text-gray-200 flex items-center gap-2">
+              {user.name}
+              <span className={
+                (user.role === 'designer')
+                  ? 'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-blue-400 bg-blue-500/15'
+                  : 'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-orange-400 bg-orange-500/15'
+              }>
+                {user.role === 'designer' ? 'Diseñador' : 'Manager'}
+              </span>
+            </p>
             <p className="text-xs text-gray-400">{user.email}</p>
           </div>
         </button>

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
 import type { DesignStatus } from '@/lib/types/filters';
 import RequireAuth from '@/components/auth/require-auth';
+import { cn } from '@/lib/utils';
 
 // Dynamic import para evitar problemas con SSR
 // Importación explícita del default export
@@ -140,7 +141,12 @@ export default function MyWeekPage() {
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
       <div className="flex items-center justify-between animate-slide-up">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
+          <h1 className={cn(
+            'text-4xl font-bold bg-clip-text text-transparent mb-2',
+            isAdminOrManager(user)
+              ? 'bg-gradient-to-r from-orange-700 to-orange-600'
+              : 'bg-gradient-to-r from-blue-700 to-blue-600'
+          )}>
             Mi Semana
           </h1>
           <p className="text-gray-400">Gestiona tus tareas y entregas</p>
@@ -164,13 +170,20 @@ export default function MyWeekPage() {
       {viewMode === 'list' ? (
         <div className="grid gap-4">
           {filteredItems.length === 0 ? (
-            <Card>
+            <Card className={cn('border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}>
               <CardContent className="flex h-64 items-center justify-center">
-                <p className="text-gray-400">
-                  {isAdminOrManager(user) 
-                    ? 'No hay tareas asignadas en el equipo' 
-                    : 'No tienes tareas asignadas'}
-                </p>
+                <div className="text-center space-y-3">
+                  <p className="text-gray-400">
+                    {isAdminOrManager(user) 
+                      ? 'No hay tareas asignadas en el equipo' 
+                      : 'No tienes tareas asignadas'}
+                  </p>
+                  {!isAdminOrManager(user) && (
+                    <Button asChild>
+                      <a href="/designs">Ver backlog</a>
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ) : (
@@ -179,7 +192,7 @@ export default function MyWeekPage() {
             return (
               <Card 
                 key={task.id} 
-                className="animate-slide-up"
+                className={cn('animate-slide-up border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardHeader>
@@ -245,13 +258,20 @@ export default function MyWeekPage() {
       ) : (
         <div className="animate-slide-up">
           {filteredItems.length === 0 ? (
-            <Card>
+            <Card className={cn('border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}>
               <CardContent className="flex h-64 items-center justify-center">
-                <p className="text-gray-400">
-                  {isAdminOrManager(user) 
-                    ? 'No hay tareas asignadas en el equipo' 
-                    : 'No tienes tareas asignadas'}
-                </p>
+                <div className="text-center space-y-3">
+                  <p className="text-gray-400">
+                    {isAdminOrManager(user) 
+                      ? 'No hay tareas asignadas en el equipo' 
+                      : 'No tienes tareas asignadas'}
+                  </p>
+                  {!isAdminOrManager(user) && (
+                    <Button asChild>
+                      <a href="/designs">Ver backlog</a>
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ) : (
