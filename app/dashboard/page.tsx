@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 import { toast } from 'sonner';
 import type { DesignStatus } from '@/lib/types/filters';
+import RequireAuth from '@/components/auth/require-auth';
 
 interface DesignItem {
   id: string;
@@ -92,6 +93,7 @@ export default function DashboardPage() {
   const unassignedCount = items.filter((it) => !it.designer_id).length;
 
   return (
+    <RequireAuth>
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
       <div className="flex items-center justify-between animate-slide-up">
         <div>
@@ -159,6 +161,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
     </div>
+    </RequireAuth>
   );
 }
 

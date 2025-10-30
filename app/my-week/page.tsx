@@ -12,6 +12,7 @@ import { Calendar, ExternalLink, List, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
 import type { DesignStatus } from '@/lib/types/filters';
+import RequireAuth from '@/components/auth/require-auth';
 
 // Dynamic import para evitar problemas con SSR
 // Importación explícita del default export
@@ -120,7 +121,11 @@ export default function MyWeekPage() {
     setDialogOpen(true);
   };
 
-  if (loading) return <div className="p-6">Cargando...</div>;
+  if (loading) {
+    return (
+      <div className="p-6">Cargando...</div>
+    );
+  }
 
   // Filtrar items según rol del usuario
   // Admins/Managers ven todas las tareas, Designers solo las suyas
@@ -128,42 +133,31 @@ export default function MyWeekPage() {
     ? items  // Admins/Managers ven todas las tareas del equipo
     : items.filter((it) => it.designer_id === user?.id);  // Designers solo sus tareas asignadas
 
+  const nextStatuses = (status: DesignStatus) => statusFlow[status] || [];
+
   return (
+    <RequireAuth>
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
       <div className="flex items-center justify-between animate-slide-up">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
-            {isAdminOrManager(user) ? 'Vista del Equipo' : 'Mi Semana'}
+            Mi Semana
           </h1>
-          <p className="text-gray-400">
-            {isAdminOrManager(user) ? 'Tareas de todo el equipo' : 'Tus tareas asignadas'}
-          </p>
+          <p className="text-gray-400">Gestiona tus tareas y entregas</p>
         </div>
-        
-        {/* Toggle Lista/Calendario */}
-        <div className="flex items-center gap-2 glass-effect rounded-lg p-1">
-          <button
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
             onClick={() => setViewMode('list')}
-            className={`px-4 py-2 rounded-md transition-all duration-200 flex items-center gap-2 ${
-              viewMode === 'list'
-                ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-400'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-            }`}
           >
-            <List className="h-4 w-4" />
-            <span className="hidden sm:inline">Lista</span>
-          </button>
-          <button
+            <List className="mr-2 h-4 w-4" /> Lista
+          </Button>
+          <Button
+            variant={viewMode === 'calendar' ? 'default' : 'outline'}
             onClick={() => setViewMode('calendar')}
-            className={`px-4 py-2 rounded-md transition-all duration-200 flex items-center gap-2 ${
-              viewMode === 'calendar'
-                ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-400'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-            }`}
           >
-            <CalendarDays className="h-4 w-4" />
-            <span className="hidden sm:inline">Calendario</span>
-          </button>
+            <CalendarDays className="mr-2 h-4 w-4" /> Calendario
+          </Button>
         </div>
       </div>
 
@@ -262,7 +256,13 @@ export default function MyWeekPage() {
             </Card>
           ) : (
             typeof window !== 'undefined' ? (
-              <DesignCalendar items={filteredItems} onEventClick={handleEventClick} />
+              <DesignCalendar
+                items={filteredItems}
+                onEventClick={(task) => {
+                  setSelectedTask(task);
+                  setDialogOpen(true);
+                }}
+              />
             ) : (
               <Card>
                 <CardContent className="flex h-64 items-center justify-center">
@@ -347,6 +347,7 @@ export default function MyWeekPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </RequireAuth>
   );
 }
 
