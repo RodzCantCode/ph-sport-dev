@@ -10,6 +10,8 @@ import type { EventInput, EventClickArg } from '@fullcalendar/core';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+// FullCalendar v6 includes styles via CSS-in-JS, no separate CSS imports needed
+
 interface DesignItem {
   id: string;
   title: string;
@@ -50,7 +52,7 @@ const statusColors: Record<string, { background: string; border: string; text: s
   },
 };
 
-export function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
+function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
   const calendarRef = useRef<FullCalendar>(null);
 
   // Convertir items a eventos de FullCalendar
@@ -108,4 +110,6 @@ export function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
     </div>
   );
 }
+
+export default DesignCalendar;
 

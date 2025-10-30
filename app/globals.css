@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FullCalendar Base Styles */
+/* Note: FullCalendar v6 may bundle styles, but we add base styles for compatibility */
+@layer base {
+  /* Basic FullCalendar structure styles */
+  .fc {
+    font-family: inherit;
+  }
+  
+  .fc-button-group {
+    display: inline-flex;
+  }
+  
+  .fc-button {
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  
+  .fc-daygrid-day-frame {
+    min-height: 100px;
+  }
+  
+  .fc-daygrid-event {
+    margin: 1px 2px 0;
+    border-radius: 3px;
+    padding: 2px;
+  }
+}
+
 /* Custom CSS Variables for Orange Palette */
 @layer base {
   :root {

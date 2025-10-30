@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,8 +10,22 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar, ExternalLink, List, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
-import { DesignCalendar } from '@/components/calendar/design-calendar';
+import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
 import type { DesignStatus } from '@/lib/types/filters';
+
+// Dynamic import para evitar problemas con SSR
+// Importación explícita del default export
+const DesignCalendar = dynamic(
+  () => import('@/components/calendar/design-calendar'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-64 text-gray-400 glass-effect rounded-xl">
+        Cargando calendario...
+      </div>
+    ),
+  }
+);
 
 interface DesignItem {
   id: string;
@@ -34,16 +49,22 @@ const statusFlow: Record<DesignStatus, DesignStatus[]> = {
 export default function MyWeekPage() {
   const [items, setItems] = useState<DesignItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [designerId, setDesignerId] = useState<string | undefined>(undefined);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [selectedTask, setSelectedTask] = useState<DesignItem | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const loadTasks = () => {
-    const userStr = typeof window !== 'undefined' ? sessionStorage.getItem('user') : null;
-    const user = userStr ? JSON.parse(userStr) : null;
-    setDesignerId(user?.id);
+    // Obtener usuario usando el helper (compatible con futura migración Supabase)
+    // Nota: getCurrentUser() solo funciona en el cliente, por eso se llama aquí en useEffect
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
 
     const now = new Date();
     const weekStart = new Date(now);
@@ -51,11 +72,17 @@ export default function MyWeekPage() {
     const weekEnd = new Date(now);
     weekEnd.setDate(now.getDate() + 21);
 
+    // Si es admin/manager, NO enviar designerId (ver todas las tareas)
+    // Si es designer, enviar designerId (ver solo sus tareas)
     const qs = new URLSearchParams({
       weekStart: format(weekStart, 'yyyy-MM-dd'),
       weekEnd: format(weekEnd, 'yyyy-MM-dd'),
-      designerId: user?.id || '',
+      // Solo añadir designerId si es designer (no admin/manager)
+      ...(currentUser && !isAdminOrManager(currentUser) && currentUser.id
+        ? { designerId: currentUser.id }
+        : {}),
     });
+    
     fetch(`/api/designs?${qs.toString()}`)
       .then((r) => r.json())
       .then((data) => setItems(data.items || []))
@@ -95,16 +122,22 @@ export default function MyWeekPage() {
 
   if (loading) return <div className="p-6">Cargando...</div>;
 
-  const filteredItems = items.filter((it) => !designerId || it.designer_id === designerId);
+  // Filtrar items según rol del usuario
+  // Admins/Managers ven todas las tareas, Designers solo las suyas
+  const filteredItems = isAdminOrManager(user)
+    ? items  // Admins/Managers ven todas las tareas del equipo
+    : items.filter((it) => it.designer_id === user?.id);  // Designers solo sus tareas asignadas
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
       <div className="flex items-center justify-between animate-slide-up">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
-            Mi Semana
+            {isAdminOrManager(user) ? 'Vista del Equipo' : 'Mi Semana'}
           </h1>
-          <p className="text-gray-400">Tus tareas asignadas</p>
+          <p className="text-gray-400">
+            {isAdminOrManager(user) ? 'Tareas de todo el equipo' : 'Tus tareas asignadas'}
+          </p>
         </div>
         
         {/* Toggle Lista/Calendario */}
@@ -139,7 +172,11 @@ export default function MyWeekPage() {
           {filteredItems.length === 0 ? (
             <Card>
               <CardContent className="flex h-64 items-center justify-center">
-                <p className="text-gray-400">No tienes tareas asignadas</p>
+                <p className="text-gray-400">
+                  {isAdminOrManager(user) 
+                    ? 'No hay tareas asignadas en el equipo' 
+                    : 'No tienes tareas asignadas'}
+                </p>
               </CardContent>
             </Card>
           ) : (
@@ -216,11 +253,23 @@ export default function MyWeekPage() {
           {filteredItems.length === 0 ? (
             <Card>
               <CardContent className="flex h-64 items-center justify-center">
-                <p className="text-gray-400">No tienes tareas asignadas</p>
+                <p className="text-gray-400">
+                  {isAdminOrManager(user) 
+                    ? 'No hay tareas asignadas en el equipo' 
+                    : 'No tienes tareas asignadas'}
+                </p>
               </CardContent>
             </Card>
           ) : (
-            <DesignCalendar items={filteredItems} onEventClick={handleEventClick} />
+            typeof window !== 'undefined' ? (
+              <DesignCalendar items={filteredItems} onEventClick={handleEventClick} />
+            ) : (
+              <Card>
+                <CardContent className="flex h-64 items-center justify-center">
+                  <p className="text-gray-400">Cargando calendario...</p>
+                </CardContent>
+              </Card>
+            )
           )}
         </div>
       )}

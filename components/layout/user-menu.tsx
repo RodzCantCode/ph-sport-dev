@@ -12,10 +12,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut, Settings } from 'lucide-react';
+import { ProfileDialog } from '@/components/dialogs/profile-dialog';
+import { SettingsDialog } from '@/components/dialogs/settings-dialog';
 
 export function UserMenu() {
   const router = useRouter();
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -77,11 +81,17 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-white/10" />
-        <DropdownMenuItem className="text-gray-300 hover:text-gray-100 hover:bg-white/5 cursor-pointer">
+        <DropdownMenuItem
+          onClick={() => setProfileOpen(true)}
+          className="text-gray-300 hover:text-gray-100 hover:bg-white/5 cursor-pointer"
+        >
           <User className="mr-2 h-4 w-4" />
           <span>Perfil</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-gray-300 hover:text-gray-100 hover:bg-white/5 cursor-pointer">
+        <DropdownMenuItem
+          onClick={() => setSettingsOpen(true)}
+          className="text-gray-300 hover:text-gray-100 hover:bg-white/5 cursor-pointer"
+        >
           <Settings className="mr-2 h-4 w-4" />
           <span>Configuración</span>
         </DropdownMenuItem>
@@ -94,6 +104,10 @@ export function UserMenu() {
           <span>Cerrar Sesión</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
+      
+      {/* Diálogos */}
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </DropdownMenu>
   );
 }

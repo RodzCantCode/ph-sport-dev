@@ -36,7 +36,7 @@ export const mockUsers: MockUser[] = [
   {
     id: '1',
     email: 'eva@phsport.com',
-    name: 'Eva Martinez',
+    name: 'Eva Alcázar',
     role: 'manager',
   },
   {
