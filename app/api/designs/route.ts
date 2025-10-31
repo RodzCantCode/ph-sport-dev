@@ -55,10 +55,13 @@ export async function POST(request: Request) {
   if (shouldUseMockData()) {
     // En DEMO mode, añadir al array mockDesigns (aunque no persiste entre reinicios del servidor)
     // Para producción usaríamos Supabase
+    const now = new Date().toISOString();
     const newDesign = {
       id: crypto.randomUUID(),
       ...body,
       status: 'BACKLOG' as const,
+      created_at: now,
+      updated_at: now,
     };
     
     // Añadir al array
