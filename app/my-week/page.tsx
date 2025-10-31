@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,10 +118,6 @@ export default function MyWeekPage() {
     }
   };
 
-  const handleEventClick = (item: DesignItem) => {
-    setSelectedTask(item);
-    setDialogOpen(true);
-  };
 
   if (loading) {
     return (
@@ -133,8 +130,6 @@ export default function MyWeekPage() {
   const filteredItems = isAdminOrManager(user)
     ? items  // Admins/Managers ven todas las tareas del equipo
     : items.filter((it) => it.designer_id === user?.id);  // Designers solo sus tareas asignadas
-
-  const nextStatuses = (status: DesignStatus) => statusFlow[status] || [];
 
   return (
     <RequireAuth>
@@ -180,7 +175,7 @@ export default function MyWeekPage() {
                   </p>
                   {!isAdminOrManager(user) && (
                     <Button asChild>
-                      <a href="/designs">Ver backlog</a>
+                      <Link href="/designs">Ver backlog</Link>
                     </Button>
                   )}
                 </div>
@@ -268,7 +263,7 @@ export default function MyWeekPage() {
                   </p>
                   {!isAdminOrManager(user) && (
                     <Button asChild>
-                      <a href="/designs">Ver backlog</a>
+                      <Link href="/designs">Ver backlog</Link>
                     </Button>
                   )}
                 </div>

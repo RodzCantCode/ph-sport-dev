@@ -10,7 +10,7 @@ import type { EventInput, EventClickArg } from '@fullcalendar/core';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { STATUS_COLORS } from '@/lib/types/design';
-import type { Design, DesignStatus } from '@/lib/types/design';
+import type { Design } from '@/lib/types/design';
 
 // FullCalendar v6 includes styles via CSS-in-JS, no separate CSS imports needed
 

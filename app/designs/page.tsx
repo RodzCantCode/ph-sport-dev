@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit2, Trash2, ExternalLink, Filter, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, ExternalLink, Filter } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/dialogs/create-design-dialog';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -81,6 +81,7 @@ export default function DesignsPage() {
     setWeekStartFilter(format(weekStart, 'yyyy-MM-dd'));
     setWeekEndFilter(format(weekEnd, 'yyyy-MM-dd'));
     loadDesigns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -88,7 +89,8 @@ export default function DesignsPage() {
     if (weekStartFilter && weekEndFilter) {
       loadDesigns();
     }
-  }, [statusFilter, designerFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, designerFilter, weekStartFilter, weekEndFilter]);
 
   const handleEdit = (design: Design) => {
     setEditingDesign(design);
