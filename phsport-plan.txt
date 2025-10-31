@@ -1,0 +1,99 @@
+PH SPORT - FASE DE DESARROLLO CON MODO DEMO
+
+Objetivo:
+Optimizar y depurar la interfaz de la aplicación, manteniendo los mocks activos. La prioridad es dejar una UI mínima pero completa, sin redundancias ni secciones de relleno. Se busca eficiencia, claridad y estructura lista para conectar con Supabase más adelante.
+
+---
+Día 1 — Limpieza y estructura
+- Definir mapa de rutas:
+  Manager: /dashboard, /designs, /calendar
+  Designer: /my-week
+  Opcional: /designs/[id]
+- Revisar componentes y mantener solo los esenciales: DesignCard, DesignFormModal, DesignList, DesignCalendar, KpiCard, EmptyState, ErrorState, Loader.
+- Reducir design tokens y estados universales coherentes.
+
+Criterios de hecho:
+- Sin duplicados de componentes.
+- Estados coherentes (Empty, Loader, Error).
+- Navegación clara (2 clics máx).
+
+---
+Día 2 — Dashboard del manager
+- KPI mínimos: diseños semana, % en curso vs entregados, próximos a vencer (48h).
+- Lista compacta (últimos 10 diseños).
+- CTA: Crear design, Ver calendario.
+
+Criterios de hecho:
+- Sin gráficos decorativos.
+- No se repite info del resto de vistas.
+
+---
+Día 3 — CRUD de diseños (mocks)
+- Tabla: título, diseñador, estado, deadline, acciones.
+- Filtros: estado, diseñador, semana.
+- Modal de creación/edición con validación ligera.
+- Detalle: /designs/[id] con historial simulado.
+
+Criterios de hecho:
+- Crear/editar/borrar sin recargar.
+- Filtros funcionales.
+- Formulario con solo campos usados.
+
+---
+Día 4 — Calendario (demo)
+- FullCalendar: dayGridWeek y timeGridWeek.
+- Drag&drop (UI): actualiza deadline en mocks.
+- Click evento → modal.
+- Colores por estado + resaltado de hoy.
+
+Criterios de hecho:
+- Mover evento sincroniza lista y detalle.
+- Sin tooltips innecesarios.
+- Cambio de vista fluido.
+
+---
+Día 5 — Vista del diseñador
+- Cabecera con nombre, pendientes y próxima entrega.
+- Calendario filtrado por designerId.
+- Mini-lista "Hoy" lateral.
+
+Criterios de hecho:
+- Filtrado automático por usuario mock.
+- Sin acceso a tareas ajenas.
+
+---
+Día 6 — Refactor final y stubs
+- Helper único: lib/assignment.ts.
+- Stubs:
+  - lib/integrations/drive.ts (openFolder, validateFolder)
+  - lib/notifications/index.ts (notifyAssignment)
+- Feature flags: DEMO_MODE, ENABLE_NOTIFICATIONS, ENABLE_DRAGDROP.
+
+Criterios de hecho:
+- Fuente de verdad única (store/mock).
+- Integraciones centralizadas por stubs.
+
+---
+Normas generales
+- Nada redundante.
+- Sin “fancy” innecesario.
+- Estados vacíos con CTA útil.
+- Rendimiento razonable.
+
+Quick wins:
+- Botón “Abrir carpeta”.
+- Badges de estado con 4 colores.
+- Atajos N (nuevo) y S (guardar).
+- Copy claro y en español.
+
+Checklist general:
+- Sin duplicación.
+- Navegación estable.
+- Empty/Error/Loader en su sitio.
+- Sin TODO sin dueño.
+
+Se excluye por el momento:
+- Auth real, Supabase RLS, integraciones reales, auditoría visual, tests e2e.
+
+Resultado esperado:
+Una app totalmente navegable, visualmente sólida y consistente, con lógica de mocks mantenida y arquitectura limpia para la futura integración con Supabase.

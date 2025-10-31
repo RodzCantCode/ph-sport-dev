@@ -1,27 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import { KpiCard } from '@/components/ui/kpi-card';
+import { Loader } from '@/components/ui/loader';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Users, Plus, Calendar, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
-import type { DesignStatus } from '@/lib/types/filters';
+import Link from 'next/link';
+import type { Design } from '@/lib/types/design';
+import { mockUsers } from '@/lib/mock-data';
 import RequireAuth from '@/components/auth/require-auth';
-
-interface DesignItem {
-  id: string;
-  title: string;
-  status: DesignStatus;
-  designer_id?: string;
-  deadline_at: string;
-}
+import { CreateDesignDialog } from '@/components/dialogs/create-design-dialog';
 
 export default function DashboardPage() {
-  const [items, setItems] = useState<DesignItem[]>([]);
+  const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const loadDashboard = () => {
     const now = new Date();
@@ -75,20 +75,44 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6">Cargando...</div>
+      <RequireAuth>
+        <Loader className="p-6" />
+      </RequireAuth>
     );
   }
 
-  const statusCount = items.reduce<Record<string, number>>((acc, it) => {
-    acc[it.status] = (acc[it.status] || 0) + 1;
-    return acc;
-  }, {});
+  // Calcular KPIs
+  const now = new Date();
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Lunes
+  const weekEnd = endOfWeek(now, { weekStartsOn: 1 }); // Domingo
 
-  const risky = items.filter((it) => {
-    const t = new Date(it.deadline_at).getTime();
-    const soon = t - Date.now() < 24 * 60 * 60 * 1000;
-    return soon && it.status !== 'TO_REVIEW' && it.status !== 'DELIVERED';
-  });
+  // Diseños esta semana (por deadline_at)
+  const designsThisWeek = items.filter((it) => {
+    const deadline = new Date(it.deadline_at);
+    return isWithinInterval(deadline, { start: weekStart, end: weekEnd });
+  }).length;
+
+  // En curso (IN_PROGRESS + TO_REVIEW) vs Entregados
+  const inProgressCount = items.filter((it) => 
+    it.status === 'IN_PROGRESS' || it.status === 'TO_REVIEW'
+  ).length;
+  const deliveredCount = items.filter((it) => it.status === 'DELIVERED').length;
+  const totalWithProgress = inProgressCount + deliveredCount;
+  const progressPercentage = totalWithProgress > 0 
+    ? Math.round((deliveredCount / totalWithProgress) * 100)
+    : 0;
+
+  // Próximos a vencer (48h)
+  const next48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+  const upcomingDeadlines = items.filter((it) => {
+    const deadline = new Date(it.deadline_at);
+    return deadline > now && deadline <= next48h && it.status !== 'DELIVERED';
+  }).length;
+
+  // Últimos 10 diseños ordenados por deadline ASC (más próximos primero)
+  const recentDesigns = [...items]
+    .sort((a, b) => new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime())
+    .slice(0, 10);
 
   const unassignedCount = items.filter((it) => !it.designer_id).length;
 
@@ -102,64 +126,116 @@ export default function DashboardPage() {
           </h1>
           <p className="text-gray-400">Vista general del equipo de diseño</p>
         </div>
-        {unassignedCount > 0 && (
-          <Button onClick={handleAssign} disabled={assigning} className="animate-slide-up">
-            <Users className="mr-2 h-4 w-4" />
-            {assigning ? 'Repartiendo...' : `Repartir (${unassignedCount} sin asignar)`}
-          </Button>
-        )}
       </div>
 
+      {/* CTAs */}
+      <div className="flex gap-3 animate-slide-up">
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Crear Diseño
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/calendar">
+            <Calendar className="mr-2 h-4 w-4" />
+            Ver Calendario
+          </Link>
+        </Button>
+      </div>
+
+      {/* KPIs */}
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="animate-slide-up [animation-delay:0.1s]">
-          <CardHeader>
-            <CardTitle className="text-orange-700">Backlog</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-orange-600">{statusCount['BACKLOG'] || 0}</div>
-          </CardContent>
-        </Card>
-        <Card className="animate-slide-up [animation-delay:0.2s]">
-          <CardHeader>
-            <CardTitle className="text-orange-700">En curso</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-orange-600">{statusCount['IN_PROGRESS'] || 0}</div>
-          </CardContent>
-        </Card>
-        <Card className="animate-slide-up [animation-delay:0.3s]">
-          <CardHeader>
-            <CardTitle className="text-orange-700">Por revisar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-orange-600">{statusCount['TO_REVIEW'] || 0}</div>
-          </CardContent>
-        </Card>
+        <KpiCard
+          title="Diseños esta semana"
+          value={designsThisWeek}
+          description="Deadlines programados para esta semana"
+          variant="primary"
+        />
+        <KpiCard
+          title="% Entregados"
+          value={`${progressPercentage}%`}
+          description={`${deliveredCount} de ${totalWithProgress} en progreso/entregados`}
+          variant={progressPercentage >= 50 ? 'success' : 'warning'}
+          icon={TrendingUp}
+        />
+        <KpiCard
+          title="Próximos a vencer"
+          value={upcomingDeadlines}
+          description="Diseños con deadline en próximas 48h"
+          variant={upcomingDeadlines > 0 ? 'danger' : 'success'}
+        />
       </div>
 
-      <Card className="animate-slide-up [animation-delay:0.4s]">
+      {/* Lista compacta últimos 10 */}
+      <Card className="animate-slide-up">
         <CardHeader>
-          <CardTitle className="text-orange-700">En riesgo (&lt;24h)</CardTitle>
+          <CardTitle className="text-orange-700">Últimos 10 Diseños</CardTitle>
+          <CardDescription>Ordenados por deadline más próximo</CardDescription>
         </CardHeader>
         <CardContent>
-          {risky.length === 0 ? (
-            <div className="text-sm text-gray-400">Sin diseños en riesgo</div>
+          {recentDesigns.length === 0 ? (
+            <EmptyState
+              title="No hay diseños"
+              description="Crea tu primer diseño para comenzar"
+              actionLabel="Crear Diseño"
+              onAction={() => setDialogOpen(true)}
+              className="border-0"
+            />
           ) : (
-            <div className="grid gap-3">
-              {risky.map((it, index) => (
-                <div 
-                  key={it.id} 
-                  className="flex items-center justify-between rounded-lg border border-red-500/30 bg-red-900/20 backdrop-blur-sm p-4 hover-lift glass-effect"
-                  style={{ animationDelay: `${0.5 + index * 0.1}s` }}
-                >
-                  <div className="font-medium text-gray-200">{it.title}</div>
-                  <Badge variant="destructive" className="animate-pulse-slow">{new Date(it.deadline_at).toLocaleString()}</Badge>
-                </div>
-              ))}
+            <div className="space-y-2">
+              {recentDesigns.map((design) => {
+                const designer = design.designer_id 
+                  ? mockUsers.find((u) => u.id === design.designer_id)
+                  : null;
+                return (
+                  <div
+                    key={design.id}
+                    className="flex items-center justify-between rounded-lg border border-gray-700/30 bg-gray-800/30 p-3 hover:bg-gray-800/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-200 truncate">{design.title}</p>
+                        <Badge status={design.status} className="shrink-0">
+                          {design.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+                        {designer && (
+                          <span>Asignado a: {designer.name}</span>
+                        )}
+                        <span>
+                          {format(new Date(design.deadline_at), "dd 'de' MMMM, yyyy", { locale: es })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Repartir diseños (si hay sin asignar) */}
+      {unassignedCount > 0 && (
+        <Card className="animate-slide-up">
+          <CardHeader>
+            <CardTitle className="text-orange-700">Asignaciones Pendientes</CardTitle>
+            <CardDescription>{unassignedCount} diseño{unassignedCount !== 1 ? 's' : ''} sin asignar</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleAssign} disabled={assigning}>
+              <Users className="mr-2 h-4 w-4" />
+              {assigning ? 'Repartiendo...' : 'Repartir Diseños'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <CreateDesignDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onDesignCreated={loadDashboard}
+      />
     </div>
     </RequireAuth>
   );

@@ -26,8 +26,9 @@ const navItemsDesigner: NavItem[] = [
 
 const navItemsManager: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/my-week', label: 'Mi Semana', icon: Calendar },
   { href: '/designs', label: 'Diseños', icon: Palette },
+  { href: '/calendar', label: 'Calendario', icon: Calendar },
+  { href: '/my-week', label: 'Mi Semana', icon: Calendar },
 ];
 
 export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {

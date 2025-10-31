@@ -8,28 +8,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, ExternalLink } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/dialogs/create-design-dialog';
+import { Loader } from '@/components/ui/loader';
+import { EmptyState } from '@/components/ui/empty-state';
 import { mockUsers } from '@/lib/mock-data';
-import type { DesignStatus } from '@/lib/types/filters';
-
-interface DesignItem {
-  id: string;
-  title: string;
-  player: string;
-  match_home: string;
-  match_away: string;
-  folder_url?: string;
-  status: DesignStatus;
-  designer_id?: string;
-  deadline_at: string;
-}
+import type { Design } from '@/lib/types/design';
 
 export default function DesignsPage() {
-  const [items, setItems] = useState<DesignItem[]>([]);
+  const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const loadDesigns = () => {
     setLoading(true);
+    setError(null);
     const now = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - 7);
@@ -41,8 +33,15 @@ export default function DesignsPage() {
       weekEnd: format(weekEnd, 'yyyy-MM-dd'),
     });
     fetch(`/api/designs?${qs.toString()}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Error al cargar diseños');
+        return r.json();
+      })
       .then((data) => setItems(data.items || []))
+      .catch((err) => {
+        console.error('Designs fetch error:', err);
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -50,7 +49,20 @@ export default function DesignsPage() {
     loadDesigns();
   }, []);
 
-  if (loading) return <div className="p-6">Cargando...</div>;
+  if (loading) return <Loader className="p-6" />;
+  
+  if (error) {
+    return (
+      <div className="p-6">
+        <EmptyState
+          title="Error al cargar diseños"
+          description={error}
+          actionLabel="Reintentar"
+          onAction={loadDesigns}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
@@ -69,11 +81,12 @@ export default function DesignsPage() {
 
       <div className="grid gap-4">
         {items.length === 0 ? (
-          <Card>
-            <CardContent className="flex h-64 items-center justify-center">
-              <p className="text-gray-400">No hay diseños programados</p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            title="No hay diseños programados"
+            description="Crea tu primer diseño para comenzar"
+            actionLabel="Crear Diseño"
+            onAction={() => setDialogOpen(true)}
+          />
         ) : (
           items.map((design, index) => (
             <Card 
@@ -110,15 +123,7 @@ export default function DesignsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Badge
-                    variant={
-                      design.status === 'TO_REVIEW'
-                        ? 'default'
-                        : design.status === 'IN_PROGRESS'
-                          ? 'secondary'
-                          : 'outline'
-                    }
-                  >
+                  <Badge status={design.status}>
                     {design.status}
                   </Badge>
                   {design.designer_id && (
