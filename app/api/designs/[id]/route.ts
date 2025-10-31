@@ -41,8 +41,8 @@ export async function PUT(
       ...existing, 
       ...body,
       updated_at: now,
-      created_at: existing.created_at || now, // Preservar created_at si existe
-    };
+      created_at: existing.created_at || now, // Preservar created_at si existe o usar now
+    } as typeof mockDesigns[number];
     return NextResponse.json(mockDesigns[index]);
   }
   // TODO: update in Supabase with RLS

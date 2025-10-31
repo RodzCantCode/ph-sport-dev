@@ -29,6 +29,11 @@ export interface MockDesign {
   deadline_at: string;
   status: MockStatus;
   designer_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  reviewed_by?: string;
+  delivered_at?: string;
 }
 
 // Mock users
