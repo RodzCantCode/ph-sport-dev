@@ -135,9 +135,9 @@ export default function DashboardPage() {
           Crear Diseño
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/calendar">
+          <Link href="/my-week">
             <Calendar className="mr-2 h-4 w-4" />
-            Ver Calendario
+            Ver Mi Semana
           </Link>
         </Button>
       </div>

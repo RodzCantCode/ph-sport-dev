@@ -5,17 +5,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-500 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] active:translate-y-[1px]',
   {
     variants: {
       variant: {
-        default: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-xl hover-lift transition-all duration-500',
-        destructive: 'bg-red-500 text-white hover:bg-red-600 shadow-lg hover-lift transition-all duration-500',
+        default: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-xl hover-lift transition-all duration-300',
+        destructive: 'bg-red-500 text-white hover:bg-red-600 shadow-lg hover-lift transition-all duration-300',
         outline:
-          'border-2 border-orange-300 bg-white/50 backdrop-blur-sm text-orange-700 hover:bg-orange-50 hover:border-orange-400 hover-lift transition-all duration-500',
-        secondary: 'bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-md hover-lift transition-all duration-500',
-        ghost: 'hover:bg-orange-50 hover:text-orange-700 text-gray-700 transition-all duration-500',
-        link: 'text-orange-600 underline-offset-4 hover:text-orange-700 hover:underline',
+          'bg-stone-50 text-orange-600 shadow-lg hover:bg-stone-100 hover:text-orange-700 hover:shadow-xl hover-lift transition-all duration-300',
+        secondary: 'bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-md hover-lift transition-all duration-300',
+        ghost: 'hover:bg-orange-50 hover:text-orange-700 text-gray-700 transition-all duration-300',
+        link: 'text-orange-600 underline-offset-4 hover:text-orange-700 hover:underline transition-all duration-300',
       },
       size: {
         default: 'h-10 px-4 py-2',

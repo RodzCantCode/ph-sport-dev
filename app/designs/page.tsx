@@ -23,10 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit2, Trash2, ExternalLink, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2 } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/dialogs/create-design-dialog';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
+import { KanbanBoard } from '@/components/kanban/kanban-board';
 import { mockUsers } from '@/lib/mock-data';
 import type { Design } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
@@ -40,6 +41,8 @@ export default function DesignsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   // Filtros
   const [statusFilter, setStatusFilter] = useState<DesignStatus | 'all'>('all');
@@ -133,6 +136,36 @@ export default function DesignsPage() {
     }
   };
 
+  const handleStatusChange = async (designId: string, newStatus: DesignStatus) => {
+    setUpdatingStatus(designId);
+    try {
+      const response = await fetch(`/api/designs/${designId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Error al actualizar estado');
+      }
+
+      // Actualizar estado local optimísticamente
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === designId ? { ...item, status: newStatus } : item
+        )
+      );
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar estado');
+      // Recargar para revertir cambios
+      loadDesigns();
+      throw error;
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
   if (loading && items.length === 0) return <Loader className="p-6" />;
 
   if (error && items.length === 0) {
@@ -157,10 +190,32 @@ export default function DesignsPage() {
           </h1>
           <p className="text-gray-400">Gestión de todas las piezas gráficas</p>
         </div>
-        <Button onClick={() => { setEditingDesign(null); setDialogOpen(true); }} className="animate-slide-up">
-          <Plus className="mr-2 h-4 w-4" />
-          Crear Diseño
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 rounded-lg border border-gray-600/50 bg-gray-800/60 backdrop-blur-sm p-1 shadow-lg">
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="px-3"
+            >
+              <Table2 className="h-4 w-4 mr-2" />
+              Tabla
+            </Button>
+            <Button
+              variant={viewMode === 'kanban' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('kanban')}
+              className="px-3"
+            >
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Kanban
+            </Button>
+          </div>
+          <Button onClick={() => { setEditingDesign(null); setDialogOpen(true); }} className="animate-slide-up">
+            <Plus className="mr-2 h-4 w-4" />
+            Crear Diseño
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -231,7 +286,7 @@ export default function DesignsPage() {
         </CardContent>
       </Card>
 
-      {/* Tabla */}
+      {/* Vista Tabla o Kanban */}
       {items.length === 0 ? (
         <EmptyState
           title="No hay diseños programados"
@@ -239,6 +294,15 @@ export default function DesignsPage() {
           actionLabel="Crear Diseño"
           onAction={() => { setEditingDesign(null); setDialogOpen(true); }}
         />
+      ) : viewMode === 'kanban' ? (
+        <div className="animate-slide-up">
+          <KanbanBoard
+            designs={items}
+            loading={false}
+            onStatusChange={handleStatusChange}
+            onCreateDesign={() => { setEditingDesign(null); setDialogOpen(true); }}
+          />
+        </div>
       ) : (
         <Card className="animate-slide-up">
           <CardHeader>
