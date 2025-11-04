@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Palette, Calendar, LogOut, ChevronLeft } from 'lucide-react';
@@ -32,6 +33,11 @@ const navItemsManager: NavItem[] = [
 
 export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const handleLinkClick = () => {
     // Cerrar sidebar en mobile cuando se hace clic en un link
@@ -39,6 +45,11 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
       onClose();
     }
   };
+  
+  // No renderizar en servidor para evitar hydration mismatch
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <aside
@@ -83,7 +94,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-4">
         {(() => {
-          const user = typeof window !== 'undefined' ? getCurrentUser() : null;
+          const user = getCurrentUser();
           const items = isAdminOrManager(user) ? navItemsManager : navItemsDesigner;
           return items.map((item) => {
             const Icon = item.icon;

@@ -146,18 +146,49 @@ export default function MyWeekPage() {
           </h1>
           <p className="text-gray-400">Gestiona tus tareas y entregas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="relative inline-flex items-center gap-2 rounded-lg glass-effect p-1">
+          {/* Slider deslizante - usando translateX para mejor animación */}
+          <div
+            className={cn(
+              'absolute inset-y-1 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 ease-in-out',
+              viewMode === 'list' 
+                ? 'left-1 right-[calc(50%+4px)]' 
+                : 'right-1 left-[calc(50%+4px)]'
+            )}
+          />
+          
+          {/* Botones - mismo ancho, sin hover effect */}
           <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setViewMode('list')}
+            className={cn(
+              'relative z-10 min-w-[120px] transition-colors duration-300',
+              'hover:bg-transparent hover:text-current',
+              viewMode === 'list' 
+                ? 'text-white' 
+                : 'text-gray-400'
+            )}
           >
-            <List className="mr-2 h-4 w-4" /> Lista
+            <List className="h-5 w-5 mr-2" />
+            Lista
           </Button>
           <Button
-            variant={viewMode === 'calendar' ? 'default' : 'outline'}
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setViewMode('calendar')}
+            className={cn(
+              'relative z-10 min-w-[120px] transition-colors duration-300',
+              'hover:bg-transparent hover:text-current',
+              viewMode === 'calendar' 
+                ? 'text-white' 
+                : 'text-gray-400'
+            )}
           >
-            <CalendarDays className="mr-2 h-4 w-4" /> Calendario
+            <CalendarDays className="h-5 w-5 mr-2" />
+            Calendario
           </Button>
         </div>
       </div>

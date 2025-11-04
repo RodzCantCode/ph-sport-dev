@@ -14,8 +14,16 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Edit, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { mockUsers } from '@/lib/mock-data';
 
 import type { Design } from '@/lib/types/design';
 
@@ -54,6 +62,7 @@ export function CreateDesignDialog({
     match_away: '',
     deadline_at: '',
     folder_url: '',
+    designer_id: null as string | null, // null = asignación automática
   });
 
   // Resetear formulario cuando cambia design o cuando se abre/cierra
@@ -66,6 +75,7 @@ export function CreateDesignDialog({
         match_away: design.match_away || '',
         deadline_at: formatDateTimeLocal(design.deadline_at),
         folder_url: design.folder_url || '',
+        designer_id: design.designer_id || null,
       });
     } else {
       setFormData({
@@ -75,6 +85,7 @@ export function CreateDesignDialog({
         match_away: '',
         deadline_at: '',
         folder_url: '',
+        designer_id: null, // Por defecto: asignación automática
       });
     }
   }, [design, open]);
@@ -106,6 +117,8 @@ export function CreateDesignDialog({
         body: JSON.stringify({
           ...formData,
           deadline_at: deadline.toISOString(),
+          // Enviar designer_id como null para asignación automática, o el ID específico
+          designer_id: formData.designer_id || null,
         }),
       });
 
@@ -123,6 +136,7 @@ export function CreateDesignDialog({
           match_away: '',
           deadline_at: '',
           folder_url: '',
+          designer_id: null,
         });
       }
       onDesignCreated();
@@ -211,6 +225,48 @@ export function CreateDesignDialog({
                       className="glass-effect text-gray-200 placeholder-gray-500"
                     />
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-effect border-white/10">
+              <CardHeader>
+                <CardTitle className="text-lg text-gray-200">Asignación</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Selecciona un diseñador o deja en automático para asignación balanceada
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2">
+                  <Label htmlFor="designer_id" className="text-gray-300">Diseñador</Label>
+                  <Select
+                    value={formData.designer_id || 'auto'}
+                    onValueChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        designer_id: value === 'auto' ? null : value,
+                      });
+                    }}
+                  >
+                    <SelectTrigger id="designer_id" className="glass-effect text-gray-200">
+                      <SelectValue placeholder="Selecciona un diseñador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Automático</SelectItem>
+                      {mockUsers
+                        .filter((u) => u.role === 'designer')
+                        .map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    {formData.designer_id
+                      ? 'El diseño se asignará al diseñador seleccionado'
+                      : 'El sistema asignará automáticamente al diseñador con menor carga de trabajo'}
+                  </p>
                 </div>
               </CardContent>
             </Card>

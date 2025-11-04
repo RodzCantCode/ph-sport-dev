@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { shouldUseMockData } from '@/lib/demo-mode';
 import { mockDesigns } from '@/lib/mock-data';
+import { assignDesignerAutomatically } from '@/lib/utils/assignment';
 import type { WeekFilters, DesignStatus } from '@/lib/types/filters';
 
 export async function GET(request: Request) {
@@ -56,9 +57,21 @@ export async function POST(request: Request) {
     // En DEMO mode, añadir al array mockDesigns (aunque no persiste entre reinicios del servidor)
     // Para producción usaríamos Supabase
     const now = new Date().toISOString();
+    
+    // Si designer_id es null, undefined o 'auto', asignar automáticamente
+    let designerId = body.designer_id;
+    if (!designerId || designerId === 'auto' || designerId === null) {
+      designerId = assignDesignerAutomatically();
+      // Si no hay diseñadores disponibles, crear sin asignar
+      if (!designerId) {
+        designerId = undefined;
+      }
+    }
+    
     const newDesign = {
       id: crypto.randomUUID(),
       ...body,
+      designer_id: designerId,
       status: 'BACKLOG' as const,
       created_at: now,
       updated_at: now,

@@ -33,6 +33,7 @@ import type { Design } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function DesignsPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -191,23 +192,48 @@ export default function DesignsPage() {
           <p className="text-gray-400">Gestión de todas las piezas gráficas</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 rounded-lg border border-gray-600/50 bg-gray-800/60 backdrop-blur-sm p-1 shadow-lg">
+          <div className="relative inline-flex items-center gap-2 rounded-lg glass-effect p-1">
+            {/* Slider deslizante - usando translateX para mejor animación */}
+            <div
+              className={cn(
+                'absolute inset-y-1 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 ease-in-out',
+                viewMode === 'table' 
+                  ? 'left-1 right-[calc(50%+4px)]' 
+                  : 'right-1 left-[calc(50%+4px)]'
+              )}
+            />
+            
+            {/* Botones - mismo ancho, sin hover effect */}
             <Button
-              variant={viewMode === 'table' ? 'default' : 'outline'}
+              type="button"
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode('table')}
-              className="px-3"
+              className={cn(
+                'relative z-10 min-w-[100px] transition-colors duration-300',
+                'hover:bg-transparent hover:text-current',
+                viewMode === 'table' 
+                  ? 'text-white' 
+                  : 'text-gray-400'
+              )}
             >
-              <Table2 className="h-4 w-4 mr-2" />
+              <Table2 className="h-5 w-5 mr-2" />
               Tabla
             </Button>
             <Button
-              variant={viewMode === 'kanban' ? 'default' : 'outline'}
+              type="button"
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode('kanban')}
-              className="px-3"
+              className={cn(
+                'relative z-10 min-w-[100px] transition-colors duration-300',
+                'hover:bg-transparent hover:text-current',
+                viewMode === 'kanban' 
+                  ? 'text-white' 
+                  : 'text-gray-400'
+              )}
             >
-              <LayoutGrid className="h-4 w-4 mr-2" />
+              <LayoutGrid className="h-5 w-5 mr-2" />
               Kanban
             </Button>
           </div>
@@ -295,7 +321,7 @@ export default function DesignsPage() {
           onAction={() => { setEditingDesign(null); setDialogOpen(true); }}
         />
       ) : viewMode === 'kanban' ? (
-        <div className="animate-slide-up">
+        <div className="animate-slide-up w-full">
           <KanbanBoard
             designs={items}
             loading={false}
