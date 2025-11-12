@@ -50,19 +50,12 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto pb-4">
-          <div
-            ref={setNodeRef}
-            className="space-y-3 min-h-[200px]"
-          >
+          <div ref={setNodeRef} className="space-y-3 min-h-[200px]">
             <SortableContext items={designs.map((d) => d.id)} strategy={verticalListSortingStrategy}>
               {designs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 text-sm">
-                  Sin diseños
-                </div>
+                <div className="text-center py-8 text-gray-500 text-sm">Sin diseños</div>
               ) : (
-                designs.map((design) => (
-                  <KanbanCard key={design.id} design={design} />
-                ))
+                designs.map((design) => <KanbanCard key={design.id} design={design} />)
               )}
             </SortableContext>
           </div>
@@ -71,4 +64,8 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
     </div>
   );
 }
+
+
+
+
 

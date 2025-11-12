@@ -12,8 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut, Settings } from 'lucide-react';
-import { ProfileDialog } from '@/components/dialogs/profile-dialog';
-import { SettingsDialog } from '@/components/dialogs/settings-dialog';
+import { ProfileDialog } from '@/components/features/account/profile-dialog';
+import { SettingsDialog } from '@/components/features/account/settings-dialog';
 
 export function UserMenu() {
   const router = useRouter();

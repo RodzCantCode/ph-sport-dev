@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/data/mock-data';
 import { Card } from '@/components/ui/card';
 
 export default function LoginPage() {

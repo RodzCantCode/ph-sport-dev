@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, type MotionProps } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 
@@ -25,9 +25,11 @@ const contentVariants = {
   exit: { opacity: 0, scale: 0.96 },
 };
 
+type DialogOverlayProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> & MotionProps;
+
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+  DialogOverlayProps
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay asChild>
     <motion.div
@@ -38,15 +40,17 @@ const DialogOverlay = React.forwardRef<
       animate="visible"
       exit="exit"
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      {...(props as any)}
+      {...props}
     />
   </DialogPrimitive.Overlay>
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & MotionProps;
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+  DialogContentProps
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
@@ -64,7 +68,7 @@ const DialogContent = React.forwardRef<
           animate="visible"
           exit="exit"
           transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-          {...(props as any)}
+          {...props}
         >
           {children}
           <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">

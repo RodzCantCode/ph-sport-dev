@@ -1,4 +1,4 @@
-// Mock data for demo mode (until Supabase is configured)
+// Mock data for demo mode (hasta integrar Supabase)
 
 export interface MockUser {
   id: string;
@@ -36,7 +36,6 @@ export interface MockDesign {
   delivered_at?: string;
 }
 
-// Mock users
 export const mockUsers: MockUser[] = [
   {
     id: '1',
@@ -70,7 +69,6 @@ export const mockUsers: MockUser[] = [
   },
 ];
 
-// Mock matches
 export const mockMatches: MockMatch[] = [
   {
     id: '1',
@@ -97,7 +95,6 @@ export const mockMatches: MockMatch[] = [
   },
 ];
 
-// Mock assets - Array mutable para DEMO mode (const permite mutación del array)
 export const mockDesigns: MockDesign[] = [
   {
     id: 'd1',
@@ -152,10 +149,13 @@ export const mockDesigns: MockDesign[] = [
   },
 ];
 
-// Asset types
 export const assetTypes = [
   { id: 1, key: 'matchday', label: 'Matchday', default_deadline_offset_hours: 24 },
   { id: 2, key: 'result', label: 'Resultado', default_deadline_offset_hours: 1 },
   { id: 3, key: 'mom', label: 'MVP', default_deadline_offset_hours: 2 },
 ];
+
+
+
+
 

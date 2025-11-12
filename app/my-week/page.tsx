@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 // Dynamic import para evitar problemas con SSR
 // Importación explícita del default export
 const DesignCalendar = dynamic(
-  () => import('@/components/calendar/design-calendar'),
+  () => import('@/components/features/designs/calendar/design-calendar'),
   {
     ssr: false,
     loading: () => (

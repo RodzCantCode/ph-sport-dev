@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Edit, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/data/mock-data';
 
 import type { Design } from '@/lib/types/design';
 
@@ -31,19 +30,18 @@ interface CreateDesignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDesignCreated: () => void;
-  design?: Design | null; // Si se pasa, es modo edición
+  design?: Design | null;
 }
 
-export function CreateDesignDialog({ 
-  open, 
-  onOpenChange, 
-  onDesignCreated, 
-  design 
+export function CreateDesignDialog({
+  open,
+  onOpenChange,
+  onDesignCreated,
+  design,
 }: CreateDesignDialogProps) {
   const [loading, setLoading] = useState(false);
   const isEditMode = !!design;
-  
-  // Convertir deadline_at (ISO) a datetime-local format
+
   const formatDateTimeLocal = (isoString: string) => {
     if (!isoString) return '';
     const date = new Date(isoString);
@@ -62,11 +60,10 @@ export function CreateDesignDialog({
     match_away: '',
     deadline_at: '',
     folder_url: '',
-    designer_id: null as string | null, // null = asignación automática
+    designer_id: null as string | null,
   });
 
-  // Resetear formulario cuando cambia design o cuando se abre/cierra
-  React.useEffect(() => {
+  useEffect(() => {
     if (design) {
       setFormData({
         title: design.title || '',
@@ -85,7 +82,7 @@ export function CreateDesignDialog({
         match_away: '',
         deadline_at: '',
         folder_url: '',
-        designer_id: null, // Por defecto: asignación automática
+        designer_id: null,
       });
     }
   }, [design, open]);
@@ -95,7 +92,6 @@ export function CreateDesignDialog({
     setLoading(true);
 
     try {
-      // Validar fecha (solo en modo creación, edición permite fechas pasadas)
       const deadline = new Date(formData.deadline_at);
       if (isNaN(deadline.getTime())) {
         toast.error('Fecha inválida');
@@ -110,14 +106,13 @@ export function CreateDesignDialog({
 
       const url = isEditMode ? `/api/designs/${design.id}` : '/api/designs';
       const method = isEditMode ? 'PUT' : 'POST';
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           deadline_at: deadline.toISOString(),
-          // Enviar designer_id como null para asignación automática, o el ID específico
           designer_id: formData.designer_id || null,
         }),
       });
@@ -175,13 +170,13 @@ export function CreateDesignDialog({
             <Card className="glass-effect border-white/10">
               <CardHeader>
                 <CardTitle className="text-lg text-gray-200">Información Básica</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Datos principales del diseño
-                </CardDescription>
+                <CardDescription className="text-gray-400">Datos principales del diseño</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="title" className="text-gray-300">Título</Label>
+                  <Label htmlFor="title" className="text-gray-300">
+                    Título
+                  </Label>
                   <Input
                     id="title"
                     placeholder="Matchday Real Madrid"
@@ -192,7 +187,9 @@ export function CreateDesignDialog({
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="player" className="text-gray-300">Jugador/Equipo</Label>
+                  <Label htmlFor="player" className="text-gray-300">
+                    Jugador/Equipo
+                  </Label>
                   <Input
                     id="player"
                     placeholder="Equipo / Jugador X"
@@ -204,7 +201,9 @@ export function CreateDesignDialog({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="match_home" className="text-gray-300">Equipo Local</Label>
+                    <Label htmlFor="match_home" className="text-gray-300">
+                      Equipo Local
+                    </Label>
                     <Input
                       id="match_home"
                       placeholder="Real Madrid"
@@ -215,7 +214,9 @@ export function CreateDesignDialog({
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="match_away" className="text-gray-300">Equipo Visitante</Label>
+                    <Label htmlFor="match_away" className="text-gray-300">
+                      Equipo Visitante
+                    </Label>
                     <Input
                       id="match_away"
                       placeholder="Barcelona"
@@ -238,15 +239,17 @@ export function CreateDesignDialog({
               </CardHeader>
               <CardContent>
                 <div className="grid gap-2">
-                  <Label htmlFor="designer_id" className="text-gray-300">Diseñador</Label>
+                  <Label htmlFor="designer_id" className="text-gray-300">
+                    Diseñador
+                  </Label>
                   <Select
                     value={formData.designer_id || 'auto'}
-                    onValueChange={(value) => {
+                    onValueChange={(value) =>
                       setFormData({
                         ...formData,
                         designer_id: value === 'auto' ? null : value,
-                      });
-                    }}
+                      })
+                    }
                   >
                     <SelectTrigger id="designer_id" className="glass-effect text-gray-200">
                       <SelectValue placeholder="Selecciona un diseñador" />
@@ -274,13 +277,13 @@ export function CreateDesignDialog({
             <Card className="glass-effect border-white/10">
               <CardHeader>
                 <CardTitle className="text-lg text-gray-200">Fechas y Recursos</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Deadline y enlaces a recursos
-                </CardDescription>
+                <CardDescription className="text-gray-400">Deadline y enlaces a recursos</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="deadline_at" className="text-gray-300">Deadline</Label>
+                  <Label htmlFor="deadline_at" className="text-gray-300">
+                    Deadline
+                  </Label>
                   <Input
                     id="deadline_at"
                     type="datetime-local"
@@ -290,13 +293,13 @@ export function CreateDesignDialog({
                     className="glass-effect text-gray-200 placeholder-gray-500"
                   />
                   <p className="text-xs text-gray-500">
-                    {isEditMode 
-                      ? 'Puedes modificar la fecha del deadline' 
-                      : 'La fecha debe ser futura'}
+                    {isEditMode ? 'Puedes modificar la fecha del deadline' : 'La fecha debe ser futura'}
                   </p>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="folder_url" className="text-gray-300">URL Carpeta Drive (opcional)</Label>
+                  <Label htmlFor="folder_url" className="text-gray-300">
+                    URL Carpeta Drive (opcional)
+                  </Label>
                   <Input
                     id="folder_url"
                     type="url"

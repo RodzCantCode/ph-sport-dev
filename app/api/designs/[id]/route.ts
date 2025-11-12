@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { shouldUseMockData } from '@/lib/demo-mode';
-import { mockDesigns } from '@/lib/mock-data';
+import { mockDesigns } from '@/lib/data/mock-data';
 
 export async function GET(
   request: Request,

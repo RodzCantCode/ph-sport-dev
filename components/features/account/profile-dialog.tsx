@@ -47,11 +47,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
       setUser(currentUser);
 
       if (currentUser) {
-        // Cargar estadísticas
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() - 60); // Últimos 60 días para estadísticas
+        weekStart.setDate(now.getDate() - 60);
         const weekEnd = new Date(now);
         weekEnd.setDate(now.getDate() + 60);
 
@@ -74,7 +73,6 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             const toReview = items.filter((d: DesignItem) => d.status === 'TO_REVIEW').length;
             const backlog = items.filter((d: DesignItem) => d.status === 'BACKLOG').length;
 
-            // Tareas entregadas este mes
             const deliveredThisMonth = items.filter((d: DesignItem) => {
               if (d.status !== 'DELIVERED') return false;
               const deliveredDate = new Date(d.deadline_at);
@@ -133,13 +131,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             <User className="h-6 w-6 text-orange-400" />
             Mi Perfil
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Información y estadísticas de tu cuenta
-          </DialogDescription>
+          <DialogDescription className="text-gray-400">Información y estadísticas de tu cuenta</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Información Personal */}
           <Card className="glass-effect border-white/10">
             <CardContent className="p-6">
               <div className="flex items-start gap-6">
@@ -167,7 +162,6 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             </CardContent>
           </Card>
 
-          {/* Estadísticas */}
           <div>
             <h4 className="text-lg font-semibold text-gray-200 mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-orange-400" />
@@ -239,4 +233,8 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     </Dialog>
   );
 }
+
+
+
+
 

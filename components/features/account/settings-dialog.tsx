@@ -59,14 +59,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         setName(currentUser.name);
       }
 
-      // Cargar preferencias desde localStorage
       if (typeof window !== 'undefined') {
         const savedPrefs = localStorage.getItem('user-preferences');
         if (savedPrefs) {
           try {
             setPreferences(JSON.parse(savedPrefs));
           } catch {
-            // Usar valores por defecto
+            // Valores por defecto
           }
         }
 
@@ -81,12 +80,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const handleSavePreferences = async () => {
     setSaving(true);
     try {
-      // Guardar preferencias en localStorage (en el futuro, en Supabase)
       if (typeof window !== 'undefined') {
         localStorage.setItem('user-preferences', JSON.stringify(preferences));
         localStorage.setItem('default-view', preferences.defaultView);
 
-        // Actualizar nombre en sessionStorage
         if (user) {
           const updatedUser = { ...user, name };
           sessionStorage.setItem('user', JSON.stringify(updatedUser));
@@ -123,16 +120,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Información de Cuenta */}
           <Card className="glass-effect border-white/10">
             <CardHeader>
               <CardTitle className="text-lg text-gray-200 flex items-center gap-2">
                 <User className="h-5 w-5 text-orange-400" />
                 Información de Cuenta
               </CardTitle>
-              <CardDescription className="text-gray-400">
-                Actualiza tu información personal
-              </CardDescription>
+              <CardDescription className="text-gray-400">Actualiza tu información personal</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -162,16 +156,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </CardContent>
           </Card>
 
-          {/* Preferencias de Visualización */}
           <Card className="glass-effect border-white/10">
             <CardHeader>
               <CardTitle className="text-lg text-gray-200 flex items-center gap-2">
                 <Eye className="h-5 w-5 text-orange-400" />
                 Preferencias de Visualización
               </CardTitle>
-              <CardDescription className="text-gray-400">
-                Personaliza cómo ves la información
-              </CardDescription>
+              <CardDescription className="text-gray-400">Personaliza cómo ves la información</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -202,7 +193,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </CardContent>
           </Card>
 
-          {/* Notificaciones */}
           <Card className="glass-effect border-white/10">
             <CardHeader>
               <CardTitle className="text-lg text-gray-200 flex items-center gap-2">
@@ -219,9 +209,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <Label htmlFor="newAssignments" className="text-gray-300 cursor-pointer">
                     Nuevas Asignaciones
                   </Label>
-                  <p className="text-xs text-gray-500">
-                    Recibir alertas cuando se te asignen nuevas tareas
-                  </p>
+                  <p className="text-xs text-gray-500">Recibir alertas cuando se te asignen nuevas tareas</p>
                 </div>
                 <input
                   id="newAssignments"
@@ -244,9 +232,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <Label htmlFor="statusChanges" className="text-gray-300 cursor-pointer">
                     Cambios de Estado
                   </Label>
-                  <p className="text-xs text-gray-500">
-                    Recibir alertas cuando cambien el estado de tus tareas
-                  </p>
+                  <p className="text-xs text-gray-500">Recibir alertas cuando cambien el estado de tus tareas</p>
                 </div>
                 <input
                   id="statusChanges"
@@ -269,9 +255,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <Label htmlFor="upcomingDeadlines" className="text-gray-300 cursor-pointer">
                     Deadlines Próximos
                   </Label>
-                  <p className="text-xs text-gray-500">
-                    Recibir recordatorios de deadlines cercanos
-                  </p>
+                  <p className="text-xs text-gray-500">Recibir recordatorios de deadlines cercanos</p>
                 </div>
                 <input
                   id="upcomingDeadlines"
@@ -322,4 +306,5 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     </Dialog>
   );
 }
+
 

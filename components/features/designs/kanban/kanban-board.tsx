@@ -9,6 +9,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  closestCorners,
 } from '@dnd-kit/core';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
@@ -26,7 +27,7 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS: Array<{ status: DesignStatus; title: string }> = [
-  { status: 'BACKLOG', title: 'Backlog' },
+  { status: 'BACKLOG', title: 'Pendiente' },
   { status: 'IN_PROGRESS', title: 'En Progreso' },
   { status: 'TO_REVIEW', title: 'Por Revisar' },
   { status: 'DELIVERED', title: 'Entregado' },
@@ -43,12 +44,11 @@ export function KanbanBoard({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Requiere mover 8px para activar el drag (evita conflictos con clicks)
+        distance: 8,
       },
     })
   );
 
-  // Agrupar diseños por estado
   const designsByStatus = COLUMNS.reduce(
     (acc, column) => {
       acc[column.status] = designs.filter((d) => d.status === column.status);
@@ -68,18 +68,30 @@ export function KanbanBoard({
     if (!over) return;
 
     const designId = active.id as string;
-    const newStatus = over.id as DesignStatus;
+    // over.id puede ser el ID de una tarjeta (sortable) o el ID del contenedor (estado)
+    let newStatus = over.id as DesignStatus;
 
-    // Encontrar el diseño actual
+    const validStatuses: DesignStatus[] = ['BACKLOG', 'IN_PROGRESS', 'TO_REVIEW', 'DELIVERED'];
+
+    // Si el over.id no es un estado válido, intentar obtener el contenedor del elemento sobre el que se soltó
+    if (!validStatuses.includes(newStatus)) {
+      type OverData = { sortable?: { containerId?: string } } | undefined;
+      const overData = over.data?.current as OverData;
+      const containerId = overData?.sortable?.containerId;
+      if (containerId && validStatuses.includes(containerId as DesignStatus)) {
+        newStatus = containerId as DesignStatus;
+      } else {
+        // No se pudo determinar un estado destino válido
+        return;
+      }
+    }
+
     const design = designs.find((d) => d.id === designId);
     if (!design) return;
 
-    // Si el estado no cambió, no hacer nada
     if (design.status === newStatus) return;
 
-    // Verificar que el nuevo estado sea válido
-    const validStatuses: DesignStatus[] = ['BACKLOG', 'IN_PROGRESS', 'TO_REVIEW', 'DELIVERED'];
-    if (!validStatuses.includes(newStatus)) return;
+    // En este punto newStatus es un estado válido
 
     try {
       await onStatusChange(designId, newStatus);
@@ -110,6 +122,7 @@ export function KanbanBoard({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -127,7 +140,7 @@ export function KanbanBoard({
 
       <DragOverlay>
         {activeDesign ? (
-          <div className="rotate-3 opacity-90">
+          <div className="opacity-80 scale-105 transition-all duration-200">
             <KanbanCard design={activeDesign} />
           </div>
         ) : null}
@@ -135,4 +148,7 @@ export function KanbanBoard({
     </DndContext>
   );
 }
+
+
+
 

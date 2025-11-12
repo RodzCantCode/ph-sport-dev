@@ -9,21 +9,14 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import type { Design } from '@/lib/types/design';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/data/mock-data';
 
 interface KanbanCardProps {
   design: Design;
 }
 
 export function KanbanCard({ design }: KanbanCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: design.id,
     data: {
       type: 'design',
@@ -33,13 +26,11 @@ export function KanbanCard({ design }: KanbanCardProps) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition || 'transform 250ms ease',
+    opacity: isDragging ? 0.3 : 1,
   };
 
-  const designer = design.designer_id
-    ? mockUsers.find((u) => u.id === design.designer_id)
-    : null;
+  const designer = design.designer_id ? mockUsers.find((u) => u.id === design.designer_id) : null;
 
   return (
     <Card
@@ -49,9 +40,9 @@ export function KanbanCard({ design }: KanbanCardProps) {
       {...listeners}
       className={`
         cursor-grab active:cursor-grabbing
-        hover:shadow-lg transition-all duration-300
+        hover:shadow-lg hover:scale-[1.02] transition-all duration-200
         border border-gray-700/30 bg-gray-800/50
-        ${isDragging ? 'ring-2 ring-orange-500/50' : ''}
+        ${isDragging ? 'ring-2 ring-orange-500/50 scale-105' : ''}
       `}
     >
       <div className="p-4 space-y-3">
@@ -89,9 +80,7 @@ export function KanbanCard({ design }: KanbanCardProps) {
 
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <Calendar className="h-3 w-3" />
-            <span>
-              {format(new Date(design.deadline_at), "dd MMM, yyyy", { locale: es })}
-            </span>
+            <span>{format(new Date(design.deadline_at), 'dd MMM, yyyy', { locale: es })}</span>
           </div>
 
           {design.folder_url && (
@@ -111,4 +100,5 @@ export function KanbanCard({ design }: KanbanCardProps) {
     </Card>
   );
 }
+
 

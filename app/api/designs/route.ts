@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { shouldUseMockData } from '@/lib/demo-mode';
-import { mockDesigns } from '@/lib/mock-data';
-import { assignDesignerAutomatically } from '@/lib/utils/assignment';
+import { mockDesigns } from '@/lib/data/mock-data';
+import { assignDesignerAutomatically } from '@/lib/services/designs/assignment';
 import type { WeekFilters, DesignStatus } from '@/lib/types/filters';
 
 export async function GET(request: Request) {

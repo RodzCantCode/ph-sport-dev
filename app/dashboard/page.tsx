@@ -13,9 +13,9 @@ import { Users, Plus, Calendar, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import type { Design } from '@/lib/types/design';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/data/mock-data';
 import RequireAuth from '@/components/auth/require-auth';
-import { CreateDesignDialog } from '@/components/dialogs/create-design-dialog';
+import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 
 export default function DashboardPage() {
   const [items, setItems] = useState<Design[]>([]);

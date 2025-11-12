@@ -24,12 +24,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2 } from 'lucide-react';
-import { CreateDesignDialog } from '@/components/dialogs/create-design-dialog';
+import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
-import { KanbanBoard } from '@/components/kanban/kanban-board';
-import { mockUsers } from '@/lib/mock-data';
+import { KanbanBoard } from '@/components/features/designs/kanban/kanban-board';
+import { mockUsers } from '@/lib/data/mock-data';
 import type { Design } from '@/lib/types/design';
+import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -43,7 +44,6 @@ export default function DesignsPage() {
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   // Filtros
   const [statusFilter, setStatusFilter] = useState<DesignStatus | 'all'>('all');
@@ -138,7 +138,6 @@ export default function DesignsPage() {
   };
 
   const handleStatusChange = async (designId: string, newStatus: DesignStatus) => {
-    setUpdatingStatus(designId);
     try {
       const response = await fetch(`/api/designs/${designId}`, {
         method: 'PUT',
@@ -162,8 +161,6 @@ export default function DesignsPage() {
       // Recargar para revertir cambios
       loadDesigns();
       throw error;
-    } finally {
-      setUpdatingStatus(null);
     }
   };
 
@@ -262,7 +259,7 @@ export default function DesignsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="BACKLOG">Backlog</SelectItem>
+                  <SelectItem value="BACKLOG">Pendiente</SelectItem>
                   <SelectItem value="IN_PROGRESS">En Progreso</SelectItem>
                   <SelectItem value="TO_REVIEW">Por Revisar</SelectItem>
                   <SelectItem value="DELIVERED">Entregado</SelectItem>
@@ -369,7 +366,7 @@ export default function DesignsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge status={design.status}>
-                          {design.status}
+                          {STATUS_LABELS[design.status]}
                         </Badge>
                       </TableCell>
                       <TableCell>

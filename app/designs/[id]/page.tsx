@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { ErrorState } from '@/components/ui/error-state';
 import { ArrowLeft, Edit2, ExternalLink, Calendar, User } from 'lucide-react';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/data/mock-data';
 import type { Design } from '@/lib/types/design';
+import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignHistoryItem } from '@/lib/types/design';
 import Link from 'next/link';
 
@@ -191,7 +192,7 @@ export default function DesignDetailPage() {
             <div>
               <label className="text-sm font-medium text-gray-400">Estado</label>
               <div className="mt-1">
-                <Badge status={design.status}>{design.status}</Badge>
+                <Badge status={design.status}>{STATUS_LABELS[design.status]}</Badge>
               </div>
             </div>
             <div>

@@ -12,8 +12,6 @@ import { es } from 'date-fns/locale';
 import { STATUS_COLORS } from '@/lib/types/design';
 import type { Design } from '@/lib/types/design';
 
-// FullCalendar v6 includes styles via CSS-in-JS, no separate CSS imports needed
-
 interface DesignCalendarProps {
   items: Design[];
   onEventClick?: (item: Design) => void;
@@ -22,7 +20,6 @@ interface DesignCalendarProps {
 function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
   const calendarRef = useRef<FullCalendar>(null);
 
-  // Convertir items a eventos de FullCalendar
   const events: EventInput[] = items.map((item) => {
     const statusColor = STATUS_COLORS[item.status] || STATUS_COLORS.BACKLOG;
     return {
@@ -61,16 +58,19 @@ function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
         }}
         locales={[esLocale]}
         locale="es"
-        firstDay={1} // Lunes
+        firstDay={1}
         height="auto"
         contentHeight="auto"
         eventDisplay="block"
         dayMaxEvents={4}
         moreLinkText="más"
         eventMouseEnter={(info) => {
-          // Tooltip en hover con información adicional
           const item = info.event.extendedProps.item as Design;
-          info.el.title = `${item.title}\n${item.match_home} vs ${item.match_away}\n${item.player}\nEstado: ${item.status}\n${format(new Date(item.deadline_at), "dd 'de' MMMM 'a las' HH:mm", { locale: es })}`;
+          info.el.title = `${item.title}\n${item.match_home} vs ${item.match_away}\n${item.player}\nEstado: ${item.status}\n${format(
+            new Date(item.deadline_at),
+            "dd 'de' MMMM 'a las' HH:mm",
+            { locale: es }
+          )}`;
         }}
         eventClassNames="fc-event-custom"
       />
@@ -79,4 +79,8 @@ function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
 }
 
 export default DesignCalendar;
+
+
+
+
 
