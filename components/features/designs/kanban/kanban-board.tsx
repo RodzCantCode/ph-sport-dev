@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import type { Design } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger';
 
 interface KanbanBoardProps {
   designs: Design[];
@@ -116,7 +117,7 @@ export function KanbanBoard({
       toast.success(`Diseño movido a ${COLUMNS.find((c) => c.status === newStatus)?.title}`);
     } catch (error) {
       toast.error('Error al actualizar el estado del diseño');
-      console.error('Error updating design status:', error);
+      logger.error('Error updating design status:', error);
     }
   };
 

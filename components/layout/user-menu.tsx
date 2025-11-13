@@ -14,6 +14,7 @@ import {
 import { User, LogOut, Settings } from 'lucide-react';
 import { ProfileDialog } from '@/components/features/account/profile-dialog';
 import { SettingsDialog } from '@/components/features/account/settings-dialog';
+import { logger } from '@/lib/utils/logger';
 
 export function UserMenu() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export function UserMenu() {
         try {
           setUser(JSON.parse(userStr));
         } catch (e) {
-          console.error('Error parsing user:', e);
+          logger.error('Error parsing user:', e);
         }
       }
     }

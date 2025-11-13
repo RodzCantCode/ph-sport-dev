@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { isDemoMode } from '@/lib/demo-mode';
+import { logger } from '@/lib/utils/logger';
 
 export default function HomePage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function HomePage() {
           }
           return;
         } catch (e) {
-          console.error('Error parsing user:', e);
+          logger.error('Error parsing user:', e);
         }
       }
     }

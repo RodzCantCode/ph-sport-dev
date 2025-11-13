@@ -3,6 +3,7 @@ import { shouldUseMockData } from '@/lib/demo-mode';
 import { mockDesigns } from '@/lib/data/mock-data';
 import { assignDesignerAutomatically } from '@/lib/services/designs/assignment';
 import type { WeekFilters, DesignStatus } from '@/lib/types/filters';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   const useMock = shouldUseMockData();
-  console.log('[API] shouldUseMockData:', useMock, 'mockDesigns count:', mockDesigns.length);
+  logger.log('[API] shouldUseMockData:', useMock, 'mockDesigns count:', mockDesigns.length);
   
   if (useMock) {
     // Normalize dates to start of day for comparison
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
       const designerOk = filters.designerId ? d.designer_id === filters.designerId : true;
       return inWeek && statusOk && designerOk;
     });
-    console.log('[API] Filtered items:', items.length, 'filters:', filters);
+    logger.log('[API] Filtered items:', items.length, 'filters:', filters);
     return NextResponse.json({ items, count: items.length });
   }
 

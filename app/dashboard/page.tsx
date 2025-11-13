@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { useEffect, useState, useMemo } from 'react';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ import { getDefaultWeekRange } from '@/lib/utils';
 import { getDesignerById } from '@/lib/data/mock-data';
 import RequireAuth from '@/components/auth/require-auth';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
+import { logger } from '@/lib/utils/logger';
+import { useDashboardKPIs } from '@/lib/hooks/use-dashboard-kpis';
 
 export default function DashboardPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -34,11 +36,12 @@ export default function DashboardPage() {
     fetch(`/api/designs?${qs.toString()}`)
       .then((r) => r.json())
       .then((data) => {
-        console.log('Dashboard fetch result:', data);
+        logger.log('Dashboard fetch result:', data);
         setItems(data.items || []);
       })
       .catch((err) => {
-        console.error('Dashboard fetch error:', err);
+        logger.error('Dashboard fetch error:', err);
+        toast.error('Error al cargar los datos. Por favor, intenta de nuevo.');
         setItems([]);
       })
       .finally(() => setLoading(false));
@@ -47,6 +50,39 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  // Calcular KPIs usando hook personalizado - DEBE estar antes de cualquier return condicional
+  const { designsThisWeek, progressPercentage, deliveredCount, totalWithProgress, upcomingDeadlines } = useDashboardKPIs(items);
+
+  // Últimos 10 diseños ordenados por deadline ASC (más próximos primero)
+  const recentDesigns = useMemo(() => {
+    return [...items]
+      .sort((a, b) => new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime())
+      .slice(0, 10);
+  }, [items]);
+
+  // Memoizar cálculos de tiempo restante para cada diseño
+  type DesignWithCalculations = Design & {
+    hoursUntilDeadline: number;
+    isUrgent: boolean;
+    isCritical: boolean;
+  };
+
+  const recentDesignsWithCalculations = useMemo<DesignWithCalculations[]>(() => {
+    const now = new Date();
+    return recentDesigns.map((design) => {
+      const deadline = new Date(design.deadline_at);
+      const hoursUntilDeadline = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+      return {
+        ...design,
+        hoursUntilDeadline,
+        isUrgent: hoursUntilDeadline < 48 && hoursUntilDeadline > 0 && design.status !== 'DELIVERED',
+        isCritical: hoursUntilDeadline < 24 && hoursUntilDeadline > 0 && design.status !== 'DELIVERED',
+      };
+    });
+  }, [recentDesigns]);
+
+  const unassignedCount = items.filter((it) => !it.designer_id).length;
 
   const handleAssign = async () => {
     setAssigning(true);
@@ -77,41 +113,6 @@ export default function DashboardPage() {
       </RequireAuth>
     );
   }
-
-  // Calcular KPIs
-  const now = new Date();
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Lunes
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 }); // Domingo
-
-  // Diseños esta semana (por deadline_at)
-  const designsThisWeek = items.filter((it) => {
-    const deadline = new Date(it.deadline_at);
-    return isWithinInterval(deadline, { start: weekStart, end: weekEnd });
-  }).length;
-
-  // En curso (IN_PROGRESS + TO_REVIEW) vs Entregados
-  const inProgressCount = items.filter((it) => 
-    it.status === 'IN_PROGRESS' || it.status === 'TO_REVIEW'
-  ).length;
-  const deliveredCount = items.filter((it) => it.status === 'DELIVERED').length;
-  const totalWithProgress = inProgressCount + deliveredCount;
-  const progressPercentage = totalWithProgress > 0 
-    ? Math.round((deliveredCount / totalWithProgress) * 100)
-    : 0;
-
-  // Próximos a vencer (48h)
-  const next48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-  const upcomingDeadlines = items.filter((it) => {
-    const deadline = new Date(it.deadline_at);
-    return deadline > now && deadline <= next48h && it.status !== 'DELIVERED';
-  }).length;
-
-  // Últimos 10 diseños ordenados por deadline ASC (más próximos primero)
-  const recentDesigns = [...items]
-    .sort((a, b) => new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime())
-    .slice(0, 10);
-
-  const unassignedCount = items.filter((it) => !it.designer_id).length;
 
   return (
     <RequireAuth>
@@ -179,19 +180,30 @@ export default function DashboardPage() {
             />
           ) : (
             <div className="space-y-2">
-              {recentDesigns.map((design) => {
+              {recentDesignsWithCalculations.map((design) => {
                 const designer = getDesignerById(design.designer_id);
+                
                 return (
                   <div
                     key={design.id}
                     className="flex items-center justify-between rounded-lg border border-gray-700/30 bg-gray-800/30 p-3 hover:bg-gray-800/50 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-gray-200 truncate">{design.title}</p>
                         <Badge status={design.status} className="shrink-0">
                           {design.status}
                         </Badge>
+                        {design.isCritical && (
+                          <Badge variant="destructive" className="animate-pulse shrink-0">
+                            🔥 {Math.floor(design.hoursUntilDeadline)}h
+                          </Badge>
+                        )}
+                        {design.isUrgent && !design.isCritical && (
+                          <Badge className="bg-yellow-500/30 text-yellow-400 border-yellow-500/50 shrink-0">
+                            ⚠️ Urgente
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
                         {designer && (

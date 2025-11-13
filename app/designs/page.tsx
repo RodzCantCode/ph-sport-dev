@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -35,6 +35,8 @@ import type { DesignStatus } from '@/lib/types/filters';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { cn, getDefaultWeekRange } from '@/lib/utils';
+import { logger } from '@/lib/utils/logger';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 
 export default function DesignsPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -50,6 +52,16 @@ export default function DesignsPage() {
   const [designerFilter, setDesignerFilter] = useState<string | 'all'>('all');
   const [weekStartFilter, setWeekStartFilter] = useState<string>('');
   const [weekEndFilter, setWeekEndFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Debounce para searchQuery (solo afecta filtrado local, no fetch)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  
+  // Paginación y ordenamiento
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<'title' | 'player' | 'deadline' | 'status' | null>('deadline');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const loadDesigns = () => {
     setLoading(true);
@@ -71,8 +83,10 @@ export default function DesignsPage() {
       })
       .then((data) => setItems(data.items || []))
       .catch((err) => {
-        console.error('Designs fetch error:', err);
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        logger.error('Designs fetch error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        setError(errorMessage);
+        toast.error(`Error al cargar los diseños: ${errorMessage}`);
       })
       .finally(() => setLoading(false));
   };
@@ -86,6 +100,8 @@ export default function DesignsPage() {
     setWeekEndFilter(format(weekEnd, 'yyyy-MM-dd'));
     loadDesigns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Necesario: Este efecto solo debe ejecutarse una vez al montar el componente
+    // para inicializar los filtros. loadDesigns depende de filtros que se establecen aquí.
   }, []);
 
   useEffect(() => {
@@ -94,6 +110,9 @@ export default function DesignsPage() {
       loadDesigns();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Necesario: loadDesigns depende de filtros que cambian dinámicamente.
+    // Incluir loadDesigns en dependencias causaría un loop infinito.
+    // TODO: Refactorizar para incluir loadDesigns en dependencias de forma segura usando useCallback.
   }, [statusFilter, designerFilter, weekStartFilter, weekEndFilter]);
 
   const handleEdit = (design: Design) => {
@@ -137,6 +156,18 @@ export default function DesignsPage() {
     }
   };
 
+  const handleSort = (column: typeof sortColumn) => {
+    if (sortColumn === column) {
+      // Toggle direction si es la misma columna
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nueva columna, empezar con asc
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // Reset a página 1 al ordenar
+  };
+
   const handleStatusChange = async (designId: string, newStatus: DesignStatus) => {
     try {
       const response = await fetch(`/api/designs/${designId}`, {
@@ -163,6 +194,54 @@ export default function DesignsPage() {
       throw error;
     }
   };
+
+  // Filtrar items localmente basado en searchQuery (usando debounced)
+  const filteredItems = items.filter((design) => {
+    // Aplicar búsqueda
+    if (debouncedSearchQuery) {
+      const query = debouncedSearchQuery.toLowerCase();
+      const matchesSearch = (
+        design.title.toLowerCase().includes(query) ||
+        design.player.toLowerCase().includes(query) ||
+        design.match_home.toLowerCase().includes(query) ||
+        design.match_away.toLowerCase().includes(query)
+      );
+      if (!matchesSearch) return false;
+    }
+    
+    return true;
+  });
+
+  // Ordenar items
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    let comparison = 0;
+    
+    switch (sortColumn) {
+      case 'title':
+        comparison = a.title.localeCompare(b.title);
+        break;
+      case 'player':
+        comparison = a.player.localeCompare(b.player);
+        break;
+      case 'deadline':
+        comparison = new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime();
+        break;
+      case 'status':
+        comparison = a.status.localeCompare(b.status);
+        break;
+    }
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  // Paginar items
+  const totalItems = sortedItems.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
   if (loading && items.length === 0) return <Loader className="p-6" />;
 
@@ -241,12 +320,28 @@ export default function DesignsPage() {
         </div>
       </div>
 
+      {/* Buscador */}
+      <Card className="animate-slide-up">
+        <CardContent className="pt-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Buscar por título, jugador o partido..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-white/5 border-white/10 text-gray-200 placeholder:text-gray-500 focus:bg-white/10 focus:border-orange-500/50"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Filtros */}
       <Card className="animate-slide-up">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filtros
+            Filtros Avanzados
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -310,17 +405,24 @@ export default function DesignsPage() {
       </Card>
 
       {/* Vista Tabla o Kanban */}
-      {items.length === 0 ? (
+      {filteredItems.length === 0 ? (
         <EmptyState
-          title="No hay diseños programados"
-          description="Crea tu primer diseño para comenzar"
-          actionLabel="Crear Diseño"
-          onAction={() => { setEditingDesign(null); setDialogOpen(true); }}
+          title={debouncedSearchQuery ? "No se encontraron resultados" : "No hay diseños programados"}
+          description={debouncedSearchQuery ? "Intenta con otros términos de búsqueda" : "Crea tu primer diseño para comenzar"}
+          actionLabel={debouncedSearchQuery ? "Limpiar búsqueda" : "Crear Diseño"}
+          onAction={() => { 
+            if (debouncedSearchQuery) {
+              setSearchQuery('');
+            } else {
+              setEditingDesign(null); 
+              setDialogOpen(true);
+            }
+          }}
         />
       ) : viewMode === 'kanban' ? (
         <div className="animate-slide-up w-full">
           <KanbanBoard
-            designs={items}
+            designs={sortedItems}
             loading={false}
             onStatusChange={handleStatusChange}
             onCreateDesign={() => { setEditingDesign(null); setDialogOpen(true); }}
@@ -329,25 +431,108 @@ export default function DesignsPage() {
       ) : (
         <Card className="animate-slide-up">
           <CardHeader>
-            <CardTitle>Lista de Diseños</CardTitle>
-            <CardDescription>{items.length} diseño{items.length !== 1 ? 's' : ''} encontrado{items.length !== 1 ? 's' : ''}</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Lista de Diseños</CardTitle>
+                <CardDescription>
+                  {totalItems} diseño{totalItems !== 1 ? 's' : ''} encontrado{totalItems !== 1 ? 's' : ''}
+                  {debouncedSearchQuery && ` (filtrado de ${items.length} total${items.length !== 1 ? 'es' : ''})`}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-gray-400">Mostrar</Label>
+                <Select 
+                  value={itemsPerPage.toString()} 
+                  onValueChange={(v) => {
+                    setItemsPerPage(Number(v));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Jugador/Equipo</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:text-orange-400 transition-colors select-none"
+                    onClick={() => handleSort('title')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Título
+                      {sortColumn === 'title' && (
+                        sortDirection === 'asc' 
+                          ? <ArrowUp className="h-4 w-4" />
+                          : <ArrowDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:text-orange-400 transition-colors select-none"
+                    onClick={() => handleSort('player')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Jugador/Equipo
+                      {sortColumn === 'player' && (
+                        sortDirection === 'asc' 
+                          ? <ArrowUp className="h-4 w-4" />
+                          : <ArrowDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead>Partido</TableHead>
                   <TableHead>Diseñador</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Deadline</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:text-orange-400 transition-colors select-none"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Estado
+                      {sortColumn === 'status' && (
+                        sortDirection === 'asc' 
+                          ? <ArrowUp className="h-4 w-4" />
+                          : <ArrowDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:text-orange-400 transition-colors select-none"
+                    onClick={() => handleSort('deadline')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Deadline
+                      {sortColumn === 'deadline' && (
+                        sortDirection === 'asc' 
+                          ? <ArrowUp className="h-4 w-4" />
+                          : <ArrowDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((design) => {
+                {paginatedItems.map((design) => {
                   const designer = getDesignerById(design.designer_id);
+                  
+                  // Calcular tiempo restante hasta deadline
+                  const now = new Date();
+                  const deadline = new Date(design.deadline_at);
+                  const hoursUntilDeadline = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+                  const isUrgent = hoursUntilDeadline < 48 && hoursUntilDeadline > 0 && design.status !== 'DELIVERED';
+                  const isCritical = hoursUntilDeadline < 24 && hoursUntilDeadline > 0 && design.status !== 'DELIVERED';
+                  
                   return (
                     <TableRow key={design.id}>
                       <TableCell className="font-medium">
@@ -363,9 +548,21 @@ export default function DesignsPage() {
                         {designer ? designer.name : <span className="text-gray-500">Sin asignar</span>}
                       </TableCell>
                       <TableCell>
-                        <Badge status={design.status}>
-                          {STATUS_LABELS[design.status]}
-                        </Badge>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge status={design.status}>
+                            {STATUS_LABELS[design.status]}
+                          </Badge>
+                          {isCritical && (
+                            <Badge variant="destructive" className="animate-pulse">
+                              🔥 {Math.floor(hoursUntilDeadline)}h
+                            </Badge>
+                          )}
+                          {isUrgent && !isCritical && (
+                            <Badge className="bg-yellow-500/30 text-yellow-400 border-yellow-500/50">
+                              ⚠️ Urgente
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {format(new Date(design.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
@@ -379,6 +576,7 @@ export default function DesignsPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="Abrir carpeta Drive"
+                                aria-label="Abrir carpeta Drive"
                               >
                                 <ExternalLink className="h-4 w-4" />
                               </a>
@@ -389,6 +587,7 @@ export default function DesignsPage() {
                             size="sm"
                             onClick={() => handleEdit(design)}
                             title="Editar diseño"
+                            aria-label="Editar diseño"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -398,6 +597,7 @@ export default function DesignsPage() {
                             onClick={() => handleDelete(design.id)}
                             disabled={deletingId === design.id}
                             title="Eliminar diseño"
+                            aria-label="Eliminar diseño"
                             className="text-red-400 hover:text-red-300"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -409,6 +609,38 @@ export default function DesignsPage() {
                 })}
               </TableBody>
             </Table>
+            
+            {/* Controles de paginación */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+                <p className="text-sm text-gray-400">
+                  Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <span className="flex items-center px-3 text-sm text-gray-400">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

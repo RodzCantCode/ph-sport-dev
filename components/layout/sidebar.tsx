@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Palette, Calendar, LogOut, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getCurrentUser, isAdminOrManager } from '@/lib/auth/get-current-user';
+import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -19,24 +19,36 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const navItemsDesigner: NavItem[] = [
+// Array único de items de navegación
+const allNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/my-week', label: 'Mi Semana', icon: Calendar },
   { href: '/designs', label: 'Diseños', icon: Palette },
+  { href: '/my-week', label: 'Mi Semana', icon: Calendar },
 ];
 
-const navItemsManager: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/designs', label: 'Diseños', icon: Palette },
-  { href: '/my-week', label: 'Mi Semana', icon: Calendar },
-];
+// Función para obtener items ordenados según rol
+const getNavItemsForRole = (user: CurrentUser | null): NavItem[] => {
+  if (isAdminOrManager(user)) {
+    // Managers: Dashboard, Diseños, Mi Semana
+    return allNavItems;
+  }
+  // Designers: Dashboard, Mi Semana, Diseños
+  return [
+    allNavItems[0], // Dashboard
+    allNavItems[2], // Mi Semana
+    allNavItems[1], // Diseños
+  ];
+};
 
 export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   
   useEffect(() => {
     setMounted(true);
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
   }, []);
   
   const handleLinkClick = () => {
@@ -94,8 +106,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-4">
         {(() => {
-          const user = getCurrentUser();
-          const items = isAdminOrManager(user) ? navItemsManager : navItemsDesigner;
+          const items = getNavItemsForRole(user);
           return items.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;

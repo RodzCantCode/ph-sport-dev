@@ -50,12 +50,12 @@
     --orange-800: #9a3412;
     --orange-900: #7c2d12;
     --orange-950: #431407;
-    
+
     /* Glass effect colors for dark background */
     --glass-bg: rgba(20, 20, 20, 0.25);
     --glass-border: rgba(249, 115, 22, 0.3);
     --glass-shadow: rgba(0, 0, 0, 0.3);
-    
+
     /* Background gradients - dark with subtle variations */
     --bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
   }
@@ -76,22 +76,22 @@
   }
   
   .glass-effect {
-    background: 
+    background:
       linear-gradient(135deg, rgba(10, 10, 10, 0.5) 0%, rgba(26, 26, 26, 0.45) 50%, rgba(15, 15, 15, 0.5) 100%);
     backdrop-filter: blur(5px) saturate(200%);
     -webkit-backdrop-filter: blur(5px) saturate(200%);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 
+    box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.3),
       inset 0 1px 1px rgba(255, 255, 255, 0.08);
   }
-  
+
   .glass-effect-strong {
     background: rgba(10, 10, 10, 0.65);
     backdrop-filter: blur(25px) saturate(200%);
     -webkit-backdrop-filter: blur(25px) saturate(200%);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 
+    box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.5),
       inset 0 1px 1px rgba(255, 255, 255, 0.08);
   }
@@ -143,14 +143,34 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Body background gradient - dark theme with subtle football image */
+/* Body background gradient - dark theme with subtle orange glow (minimalista) */
 body {
-  background: 
-    linear-gradient(135deg, rgba(10, 10, 10, 0.92) 0%, rgba(26, 26, 26, 0.88) 50%, rgba(15, 15, 15, 0.92) 100%),
-    url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1920&q=80') center center / cover fixed;
+  background: linear-gradient(
+    135deg,
+    #0a0a0a 0%,
+    #1a0f0a 20%,
+    #2d1710 40%,
+    #1a0f0a 60%,
+    #0f0a08 80%,
+    #0a0a0a 100%
+  );
   min-height: 100vh;
   color: #d1d5db; /* default text color: gray-300 */
-  background-attachment: fixed;
+  position: relative;
+}
+
+/* Glow sutil naranja en el centro */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(234, 88, 12, 0.06) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* FullCalendar Dark Theme Styles */

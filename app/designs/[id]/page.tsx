@@ -15,6 +15,7 @@ import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignHistoryItem } from '@/lib/types/design';
 import Link from 'next/link';
+import { logger } from '@/lib/utils/logger';
 
 // Historial simulado para demo
 function generateHistory(design: Design): DesignHistoryItem[] {
@@ -122,7 +123,7 @@ export default function DesignDetailPage() {
         setHistory(generateHistory(data));
       })
       .catch((err) => {
-        console.error('Design fetch error:', err);
+        logger.error('Design fetch error:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
       })
       .finally(() => setLoading(false));
