@@ -7,5 +7,3 @@ export interface WeekFilters {
   designerId?: string;
 }
 
-
-

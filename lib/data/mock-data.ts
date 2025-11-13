@@ -1,5 +1,7 @@
 // Mock data for demo mode (hasta integrar Supabase)
 
+import type { Design } from '@/lib/types/design';
+
 export interface MockUser {
   id: string;
   email: string;
@@ -15,25 +17,6 @@ export interface MockMatch {
   competition: string;
   drive_folder_id?: string;
   notes?: string;
-}
-
-export type MockStatus = 'BACKLOG' | 'IN_PROGRESS' | 'TO_REVIEW' | 'DELIVERED';
-
-export interface MockDesign {
-  id: string;
-  title: string;
-  player: string;
-  match_home: string;
-  match_away: string;
-  folder_url?: string;
-  deadline_at: string;
-  status: MockStatus;
-  designer_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  created_by?: string;
-  reviewed_by?: string;
-  delivered_at?: string;
 }
 
 export const mockUsers: MockUser[] = [
@@ -95,7 +78,7 @@ export const mockMatches: MockMatch[] = [
   },
 ];
 
-export const mockDesigns: MockDesign[] = [
+export const mockDesigns: Design[] = [
   {
     id: 'd1',
     title: 'Matchday Real Madrid',
@@ -147,6 +130,59 @@ export const mockDesigns: MockDesign[] = [
     status: 'BACKLOG',
     designer_id: '2',
   },
+  {
+    id: 'd6',
+    title: 'Matchday Valencia',
+    player: 'Equipo',
+    match_home: 'Valencia',
+    match_away: 'Real Betis',
+    folder_url: 'https://drive.google.com/drive/folders/abc126',
+    deadline_at: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'IN_PROGRESS',
+    designer_id: '3',
+  },
+  {
+    id: 'd7',
+    title: 'MVP Vinicius Jr',
+    player: 'Vinicius Jr',
+    match_home: 'Real Madrid',
+    match_away: 'Barcelona',
+    folder_url: 'https://drive.google.com/drive/folders/abc127',
+    deadline_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'TO_REVIEW',
+    designer_id: '2',
+  },
+  {
+    id: 'd8',
+    title: 'Resultado Villarreal',
+    player: 'Equipo',
+    match_home: 'Villarreal',
+    match_away: 'Athletic Bilbao',
+    deadline_at: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'BACKLOG',
+    designer_id: '4',
+  },
+  {
+    id: 'd9',
+    title: 'Matchday Getafe',
+    player: 'Equipo',
+    match_home: 'Getafe',
+    match_away: 'Real Sociedad',
+    folder_url: 'https://drive.google.com/drive/folders/abc128',
+    deadline_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'DELIVERED',
+    designer_id: '5',
+  },
+  {
+    id: 'd10',
+    title: 'MVP Griezmann',
+    player: 'Antoine Griezmann',
+    match_home: 'Atlético',
+    match_away: 'Sevilla',
+    deadline_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'BACKLOG',
+    designer_id: '3',
+  },
 ];
 
 export const assetTypes = [
@@ -155,7 +191,10 @@ export const assetTypes = [
   { id: 3, key: 'mom', label: 'MVP', default_deadline_offset_hours: 2 },
 ];
 
+export function getDesigners() {
+  return mockUsers.filter(u => u.role === 'designer');
+}
 
-
-
-
+export function getDesignerById(designerId?: string) {
+  return designerId ? mockUsers.find(u => u.id === designerId) : null;
+}

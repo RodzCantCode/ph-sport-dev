@@ -28,13 +28,13 @@ import { CreateDesignDialog } from '@/components/features/designs/dialogs/create
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
 import { KanbanBoard } from '@/components/features/designs/kanban/kanban-board';
-import { mockUsers } from '@/lib/data/mock-data';
+import { getDesigners, getDesignerById } from '@/lib/data/mock-data';
 import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { cn, getDefaultWeekRange } from '@/lib/utils';
 
 export default function DesignsPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -54,9 +54,9 @@ export default function DesignsPage() {
   const loadDesigns = () => {
     setLoading(true);
     setError(null);
-    const now = new Date();
-    const weekStart = weekStartFilter || format(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
-    const weekEnd = weekEndFilter || format(new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+    const { weekStart: defaultStart, weekEnd: defaultEnd } = getDefaultWeekRange();
+    const weekStart = weekStartFilter || format(defaultStart, 'yyyy-MM-dd');
+    const weekEnd = weekEndFilter || format(defaultEnd, 'yyyy-MM-dd');
 
     const qs = new URLSearchParams({
       weekStart,
@@ -274,7 +274,7 @@ export default function DesignsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  {mockUsers.filter(u => u.role === 'designer').map((user) => (
+                  {getDesigners().map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
@@ -347,9 +347,7 @@ export default function DesignsPage() {
               </TableHeader>
               <TableBody>
                 {items.map((design) => {
-                  const designer = design.designer_id 
-                    ? mockUsers.find((u) => u.id === design.designer_id)
-                    : null;
+                  const designer = getDesignerById(design.designer_id);
                   return (
                     <TableRow key={design.id}>
                       <TableCell className="font-medium">

@@ -24,15 +24,16 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
   const colors = STATUS_COLORS[status];
 
   return (
-    <div className="flex flex-col h-full min-h-[700px]">
+    <div className="flex flex-col h-full min-h-[600px] max-h-[calc(100vh-200px)]">
       <Card
+        ref={setNodeRef}
         className={`
-          flex-1 flex flex-col
+          flex-1 flex flex-col overflow-hidden
           border-2 transition-colors duration-200
           ${isOver ? 'border-orange-400 bg-orange-500/10' : 'border-gray-700/30 bg-gray-800/30'}
         `}
       >
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold text-gray-200 flex items-center gap-2">
               {title}
@@ -49,11 +50,22 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto pb-4">
-          <div ref={setNodeRef} className="space-y-3 min-h-[200px]">
+        <CardContent className="flex-1 overflow-y-auto overflow-x-hidden pb-8 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+          <div className="space-y-3 min-h-[300px] pb-4">
             <SortableContext items={designs.map((d) => d.id)} strategy={verticalListSortingStrategy}>
               {designs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 text-sm">Sin diseños</div>
+                <div className={`
+                  text-center py-12 px-4 rounded-lg border-2 border-dashed
+                  transition-colors duration-200
+                  ${isOver 
+                    ? 'border-orange-400 bg-orange-500/10 text-orange-400' 
+                    : 'border-gray-700/30 text-gray-500'
+                  }
+                `}>
+                  <p className="text-sm font-medium">
+                    {isOver ? '¡Suelta aquí!' : 'Sin diseños'}
+                  </p>
+                </div>
               ) : (
                 designs.map((design) => <KanbanCard key={design.id} design={design} />)
               )}
@@ -64,8 +76,4 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
     </div>
   );
 }
-
-
-
-
 

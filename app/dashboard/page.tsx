@@ -13,7 +13,8 @@ import { Users, Plus, Calendar, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import type { Design } from '@/lib/types/design';
-import { mockUsers } from '@/lib/data/mock-data';
+import { getDefaultWeekRange } from '@/lib/utils';
+import { getDesignerById } from '@/lib/data/mock-data';
 import RequireAuth from '@/components/auth/require-auth';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 
@@ -24,11 +25,7 @@ export default function DashboardPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const loadDashboard = () => {
-    const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - 7); // rango más amplio para DEMO
-    const weekEnd = new Date(now);
-    weekEnd.setDate(now.getDate() + 21);
+    const { weekStart, weekEnd } = getDefaultWeekRange();
 
     const qs = new URLSearchParams({
       weekStart: format(weekStart, 'yyyy-MM-dd'),
@@ -183,9 +180,7 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-2">
               {recentDesigns.map((design) => {
-                const designer = design.designer_id 
-                  ? mockUsers.find((u) => u.id === design.designer_id)
-                  : null;
+                const designer = getDesignerById(design.designer_id);
                 return (
                   <div
                     key={design.id}

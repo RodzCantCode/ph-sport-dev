@@ -301,3 +301,48 @@ body {
 .fc-scroller::-webkit-scrollbar-thumb:hover {
   background: rgba(249, 115, 22, 0.5);
 }
+
+/* Custom scrollbar for Kanban columns */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(107, 114, 128, 0.5);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 114, 128, 0.7);
+  }
+
+  .scrollbar-thumb-gray-700 {
+    scrollbar-color: rgba(55, 65, 81, 0.5) transparent;
+  }
+
+  .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
+    background: rgba(55, 65, 81, 0.5);
+  }
+
+  .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb:hover {
+    background: rgba(55, 65, 81, 0.8);
+  }
+
+  .scrollbar-track-transparent {
+    scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+  }
+
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

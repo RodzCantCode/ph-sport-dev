@@ -1,6 +1,6 @@
 'use client';
 
-import { useSortable } from '@dnd-kit/sortable';
+import { useSortable, AnimateLayoutChanges, defaultAnimateLayoutChanges } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -10,6 +10,17 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import type { Design } from '@/lib/types/design';
 import { mockUsers } from '@/lib/data/mock-data';
+
+const animateLayoutChanges: AnimateLayoutChanges = (args) => {
+  const { isSorting, wasDragging } = args;
+  
+  // No animar cuando se está arrastrando o clasificando
+  if (isSorting || wasDragging) {
+    return false;
+  }
+  
+  return defaultAnimateLayoutChanges(args);
+};
 
 interface KanbanCardProps {
   design: Design;
@@ -22,12 +33,18 @@ export function KanbanCard({ design }: KanbanCardProps) {
       type: 'design',
       design,
     },
+    animateLayoutChanges,
+    transition: {
+      duration: 350,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 250ms ease',
-    opacity: isDragging ? 0.3 : 1,
+    transition: transition || 'transform 350ms cubic-bezier(0.25, 1, 0.5, 1), opacity 200ms ease',
+    opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
   };
 
   const designer = design.designer_id ? mockUsers.find((u) => u.id === design.designer_id) : null;
@@ -40,9 +57,10 @@ export function KanbanCard({ design }: KanbanCardProps) {
       {...listeners}
       className={`
         cursor-grab active:cursor-grabbing
-        hover:shadow-lg hover:scale-[1.02] transition-all duration-200
+        hover:shadow-lg hover:scale-[1.01] 
+        transition-all duration-300 ease-out
         border border-gray-700/30 bg-gray-800/50
-        ${isDragging ? 'ring-2 ring-orange-500/50 scale-105' : ''}
+        ${isDragging ? 'ring-2 ring-orange-500/50 shadow-2xl' : ''}
       `}
     >
       <div className="p-4 space-y-3">
@@ -100,5 +118,3 @@ export function KanbanCard({ design }: KanbanCardProps) {
     </Card>
   );
 }
-
-

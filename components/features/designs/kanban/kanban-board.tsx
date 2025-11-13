@@ -6,10 +6,13 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  DragOverEvent,
   PointerSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  pointerWithin,
+  closestCenter,
+  rectIntersection,
 } from '@dnd-kit/core';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
@@ -44,7 +47,9 @@ export function KanbanBoard({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
+        delay: 100,
+        tolerance: 5,
       },
     })
   );
@@ -59,6 +64,19 @@ export function KanbanBoard({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    // Proporcionar feedback visual durante el drag
+    const { over } = event;
+    if (!over) return;
+    
+    // Esto ayuda a que el usuario vea dónde puede soltar
+    console.debug('Dragging over:', over.id);
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -122,8 +140,10 @@ export function KanbanBoard({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragCancel={handleDragCancel}
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
@@ -140,7 +160,7 @@ export function KanbanBoard({
 
       <DragOverlay>
         {activeDesign ? (
-          <div className="opacity-80 scale-105 transition-all duration-200">
+          <div className="rotate-3 scale-105 transition-all duration-200 shadow-2xl">
             <KanbanCard design={activeDesign} />
           </div>
         ) : null}
@@ -148,7 +168,4 @@ export function KanbanBoard({
     </DndContext>
   );
 }
-
-
-
 

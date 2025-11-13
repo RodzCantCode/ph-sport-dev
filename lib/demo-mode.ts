@@ -29,4 +29,3 @@ export function shouldUseMockData(): boolean {
   return DEMO_MODE_ENABLED;
 }
 
-

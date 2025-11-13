@@ -22,7 +22,8 @@ import {
 } from '@/components/ui/select';
 import { Plus, Edit, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { mockUsers } from '@/lib/data/mock-data';
+import { formatDateTimeLocal } from '@/lib/utils';
+import { getDesigners } from '@/lib/data/mock-data';
 
 import type { Design } from '@/lib/types/design';
 
@@ -41,17 +42,6 @@ export function CreateDesignDialog({
 }: CreateDesignDialogProps) {
   const [loading, setLoading] = useState(false);
   const isEditMode = !!design;
-
-  const formatDateTimeLocal = (isoString: string) => {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -256,13 +246,11 @@ export function CreateDesignDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="auto">Automático</SelectItem>
-                      {mockUsers
-                        .filter((u) => u.role === 'designer')
-                        .map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
+                      {getDesigners().map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500">

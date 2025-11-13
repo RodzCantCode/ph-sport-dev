@@ -13,8 +13,9 @@ import { Calendar, ExternalLink, List, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
 import type { DesignStatus } from '@/lib/types/filters';
+import { STATUS_FLOW } from '@/lib/types/design';
 import RequireAuth from '@/components/auth/require-auth';
-import { cn } from '@/lib/utils';
+import { cn, getDefaultWeekRange } from '@/lib/utils';
 
 // Dynamic import para evitar problemas con SSR
 // Importación explícita del default export
@@ -42,13 +43,6 @@ interface DesignItem {
   deadline_at: string;
 }
 
-const statusFlow: Record<DesignStatus, DesignStatus[]> = {
-  BACKLOG: ['IN_PROGRESS'],
-  IN_PROGRESS: ['TO_REVIEW'],
-  TO_REVIEW: [],
-  DELIVERED: [],
-};
-
 export default function MyWeekPage() {
   const [items, setItems] = useState<DesignItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,11 +63,7 @@ export default function MyWeekPage() {
       return;
     }
 
-    const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - 7);
-    const weekEnd = new Date(now);
-    weekEnd.setDate(now.getDate() + 21);
+    const { weekStart, weekEnd } = getDefaultWeekRange();
 
     // Si es admin/manager, NO enviar designerId (ver todas las tareas)
     // Si es designer, enviar designerId (ver solo sus tareas)
@@ -214,7 +204,7 @@ export default function MyWeekPage() {
             </Card>
           ) : (
             filteredItems.map((task, index) => {
-            const nextStatuses = statusFlow[task.status];
+            const nextStatuses = STATUS_FLOW[task.status];
             return (
               <Card 
                 key={task.id} 
@@ -363,9 +353,9 @@ export default function MyWeekPage() {
                 )}
               </div>
 
-              {statusFlow[selectedTask.status].length > 0 && (
+              {STATUS_FLOW[selectedTask.status].length > 0 && (
                 <div className="flex gap-2 pt-2">
-                  {statusFlow[selectedTask.status].map((nextStatus) => (
+                  {STATUS_FLOW[selectedTask.status].map((nextStatus) => (
                     <Button
                       key={nextStatus}
                       size="sm"

@@ -42,6 +42,14 @@ export const STATUS_LABELS: Record<DesignStatus, string> = {
   DELIVERED: 'Entregado',
 };
 
+// Flujo de transiciones permitidas entre estados
+export const STATUS_FLOW: Record<DesignStatus, DesignStatus[]> = {
+  BACKLOG: ['IN_PROGRESS'],
+  IN_PROGRESS: ['TO_REVIEW'],
+  TO_REVIEW: ['DELIVERED'],
+  DELIVERED: [],
+};
+
 // Interfaz unificada para Design (compatible con MockDesign y Supabase)
 export interface Design {
   id: string;
@@ -93,6 +101,3 @@ export interface DesignHistoryItem {
   payload?: Record<string, unknown>;
   created_at: string; // ISO 8601 string
 }
-
-
-
