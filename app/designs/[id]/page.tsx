@@ -173,7 +173,7 @@ export default function DesignDetailPage() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
             {design.title}
           </h1>
-          <p className="text-gray-400">{design.player} - {design.match_home} vs {design.match_away}</p>
+          <p className="text-gray-600 dark:text-gray-400">{design.player} - {design.match_home} vs {design.match_away}</p>
         </div>
         <Button variant="outline" asChild>
           <Link href={`/designs?edit=${design.id}`}>
@@ -191,33 +191,33 @@ export default function DesignDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-400">Estado</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Estado</label>
               <div className="mt-1">
                 <Badge status={design.status}>{STATUS_LABELS[design.status]}</Badge>
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-400 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Deadline
               </label>
-              <p className="mt-1 text-gray-200">
+              <p className="mt-1 text-gray-800 dark:text-gray-200">
                 {format(new Date(design.deadline_at), "dd 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
               </p>
             </div>
             {designer && (
               <div>
-                <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-400 flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Diseñador asignado
                 </label>
-                <p className="mt-1 text-gray-200">{designer.name}</p>
-                <p className="text-sm text-gray-400">{designer.email}</p>
+                <p className="mt-1 text-gray-800 dark:text-gray-200">{designer.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{designer.email}</p>
               </div>
             )}
             {design.folder_url && (
               <div>
-                <label className="text-sm font-medium text-gray-400">Carpeta Drive</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-400">Carpeta Drive</label>
                 <div className="mt-1">
                   <Button variant="outline" size="sm" asChild>
                     <a
@@ -244,26 +244,26 @@ export default function DesignDetailPage() {
           </CardHeader>
           <CardContent>
             {history.length === 0 ? (
-              <p className="text-gray-400 text-sm">No hay historial disponible</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">No hay historial disponible</p>
             ) : (
               <div className="space-y-4">
                 {history.map((item) => (
-                  <div key={item.id} className="border-l-2 border-gray-700 pl-4 pb-4 last:pb-0">
+                  <div key={item.id} className="border-l-2 border-gray-300 dark:border-gray-700 pl-4 pb-4 last:pb-0">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-gray-200">
+                        <p className="font-medium text-gray-800 dark:text-gray-200">
                           {actionLabels[item.action] || item.action}
                         </p>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           Por: {item.actor_name}
                         </p>
                         {item.payload && Object.keys(item.payload).length > 0 && (
-                          <div className="mt-2 text-xs text-gray-500">
+                          <div className="mt-2 text-xs text-gray-600 dark:text-gray-500">
                             {JSON.stringify(item.payload, null, 2)}
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-600 dark:text-gray-500">
                         {format(new Date(item.created_at), "dd MMM, HH:mm", { locale: es })}
                       </p>
                     </div>

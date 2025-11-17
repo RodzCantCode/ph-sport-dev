@@ -108,65 +108,65 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-effect border-white/10 text-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="glass-effect border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-gray-200 flex items-center gap-3">
+          <DialogTitle className="text-2xl text-gray-800 dark:text-gray-200 flex items-center gap-3">
             <Settings className="h-6 w-6 text-orange-400" />
             Configuración
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-600 dark:text-gray-400">
             Gestiona tus preferencias y configuración de cuenta
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          <Card className="glass-effect border-white/10">
+          <Card className="glass-effect border-orange-200/20 dark:border-white/10">
             <CardHeader>
-              <CardTitle className="text-lg text-gray-200 flex items-center gap-2">
+              <CardTitle className="text-lg text-gray-800 dark:text-gray-200 flex items-center gap-2">
                 <User className="h-5 w-5 text-orange-400" />
                 Información de Cuenta
               </CardTitle>
-              <CardDescription className="text-gray-400">Actualiza tu información personal</CardDescription>
+              <CardDescription className="text-gray-600 dark:text-gray-400">Actualiza tu información personal</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-300">
+                <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
                   Nombre
                 </Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="glass-effect text-gray-200 placeholder-gray-500"
+                  className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                   placeholder="Tu nombre"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-300">
+                <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
                   Email
                 </Label>
                 <Input
                   id="email"
                   value={user.email}
                   disabled
-                  className="glass-effect text-gray-400 bg-white/5 cursor-not-allowed"
+                  className="glass-effect text-gray-600 dark:text-gray-400 bg-white/5 cursor-not-allowed"
                 />
-                <p className="text-xs text-gray-500">El email no se puede cambiar en modo demo</p>
+                <p className="text-xs text-gray-600 dark:text-gray-500">El email no se puede cambiar en modo demo</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="glass-effect border-white/10">
+          <Card className="glass-effect border-orange-200/20 dark:border-white/10">
             <CardHeader>
-              <CardTitle className="text-lg text-gray-200 flex items-center gap-2">
+              <CardTitle className="text-lg text-gray-800 dark:text-gray-200 flex items-center gap-2">
                 <Eye className="h-5 w-5 text-orange-400" />
                 Preferencias de Visualización
               </CardTitle>
-              <CardDescription className="text-gray-400">Personaliza cómo ves la información</CardDescription>
+              <CardDescription className="text-gray-600 dark:text-gray-400">Personaliza cómo ves la información</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="defaultView" className="text-gray-300">
+                <Label htmlFor="defaultView" className="text-gray-700 dark:text-gray-300">
                   Vista Predeterminada
                 </Label>
                 <Select
@@ -186,30 +186,30 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     <SelectItem value="calendar">Calendario</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-600 dark:text-gray-500">
                   Vista que se mostrará por defecto en &quot;Mi Semana&quot;
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="glass-effect border-white/10">
+          <Card className="glass-effect border-orange-200/20 dark:border-white/10">
             <CardHeader>
-              <CardTitle className="text-lg text-gray-200 flex items-center gap-2">
+              <CardTitle className="text-lg text-gray-800 dark:text-gray-200 flex items-center gap-2">
                 <Bell className="h-5 w-5 text-orange-400" />
                 Notificaciones
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-gray-600 dark:text-gray-400">
                 Configura las alertas que deseas recibir (futura implementación)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="newAssignments" className="text-gray-300 cursor-pointer">
+                  <Label htmlFor="newAssignments" className="text-gray-700 dark:text-gray-300 cursor-pointer">
                     Nuevas Asignaciones
                   </Label>
-                  <p className="text-xs text-gray-500">Recibir alertas cuando se te asignen nuevas tareas</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-500">Recibir alertas cuando se te asignen nuevas tareas</p>
                 </div>
                 <input
                   id="newAssignments"
@@ -229,10 +229,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="statusChanges" className="text-gray-300 cursor-pointer">
+                  <Label htmlFor="statusChanges" className="text-gray-700 dark:text-gray-300 cursor-pointer">
                     Cambios de Estado
                   </Label>
-                  <p className="text-xs text-gray-500">Recibir alertas cuando cambien el estado de tus tareas</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-500">Recibir alertas cuando cambien el estado de tus tareas</p>
                 </div>
                 <input
                   id="statusChanges"
@@ -252,10 +252,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="upcomingDeadlines" className="text-gray-300 cursor-pointer">
+                  <Label htmlFor="upcomingDeadlines" className="text-gray-700 dark:text-gray-300 cursor-pointer">
                     Deadlines Próximos
                   </Label>
-                  <p className="text-xs text-gray-500">Recibir recordatorios de deadlines cercanos</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-500">Recibir recordatorios de deadlines cercanos</p>
                 </div>
                 <input
                   id="upcomingDeadlines"
@@ -282,7 +282,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-white/10 text-gray-300 hover:bg-white/5"
+            className="border-orange-200/20 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-white/5 dark:hover:bg-white/5"
           >
             Cancelar
           </Button>

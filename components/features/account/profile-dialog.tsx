@@ -125,17 +125,17 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-effect border-white/10 text-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="glass-effect border-orange-200/20 dark:border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-gray-200 flex items-center gap-3">
+          <DialogTitle className="text-2xl text-gray-800 dark:text-gray-200 flex items-center gap-3">
             <User className="h-6 w-6 text-orange-400" />
             Mi Perfil
           </DialogTitle>
-          <DialogDescription className="text-gray-400">Información y estadísticas de tu cuenta</DialogDescription>
+          <DialogDescription className="text-gray-600 dark:text-gray-400">Información y estadísticas de tu cuenta</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          <Card className="glass-effect border-white/10">
+          <Card className="glass-effect border-orange-200/20 dark:border-white/10">
             <CardContent className="p-6">
               <div className="flex items-start gap-6">
                 <Avatar className="h-20 w-20 border-2 border-orange-500/30">
@@ -145,14 +145,14 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                 </Avatar>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-200 mb-1">{user.name}</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-1">{user.name}</h3>
                     <Badge className={`bg-gradient-to-r ${getRoleColor(user.role)} border-0`}>
                       <Briefcase className="h-3 w-3 mr-1" />
                       {getRoleLabel(user.role)}
                     </Badge>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                       <Mail className="h-4 w-4" />
                       <span>{user.email}</span>
                     </div>
@@ -163,63 +163,63 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           </Card>
 
           <div>
-            <h4 className="text-lg font-semibold text-gray-200 mb-4 flex items-center gap-2">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-orange-400" />
               Estadísticas
             </h4>
             {loading ? (
-              <div className="text-center py-8 text-gray-400">Cargando estadísticas...</div>
+              <div className="text-center py-8 text-gray-600 dark:text-gray-400">Cargando estadísticas...</div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <Card className="glass-effect border-white/10">
+                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-gray-200 mb-1">{stats.total}</div>
-                    <div className="text-sm text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-1">{stats.total}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
                       <AlertCircle className="h-4 w-4" />
                       Total
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-white/10">
+                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
                   <CardContent className="p-4 text-center">
                     <div className="text-3xl font-bold text-green-400 mb-1">{stats.completed}</div>
-                    <div className="text-sm text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
                       <CheckCircle2 className="h-4 w-4" />
                       Completadas
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-white/10">
+                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
                   <CardContent className="p-4 text-center">
                     <div className="text-3xl font-bold text-orange-400 mb-1">{stats.inProgress}</div>
-                    <div className="text-sm text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
                       <Clock className="h-4 w-4" />
                       En Progreso
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-white/10">
+                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
                   <CardContent className="p-4 text-center">
                     <div className="text-3xl font-bold text-yellow-400 mb-1">{stats.toReview}</div>
-                    <div className="text-sm text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
                       <AlertCircle className="h-4 w-4" />
                       Pendientes Revisión
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-white/10">
+                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-gray-400 mb-1">{stats.backlog}</div>
-                    <div className="text-sm text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-gray-600 dark:text-gray-400 mb-1">{stats.backlog}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
                       <Calendar className="h-4 w-4" />
                       Pendientes
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-white/10">
+                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
                   <CardContent className="p-4 text-center">
                     <div className="text-3xl font-bold text-blue-400 mb-1">{stats.deliveredThisMonth}</div>
-                    <div className="text-sm text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
                       <TrendingUp className="h-4 w-4" />
                       Este Mes
                     </div>

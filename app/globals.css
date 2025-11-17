@@ -51,13 +51,35 @@
     --orange-900: #7c2d12;
     --orange-950: #431407;
 
-    /* Glass effect colors for dark background */
+    /* Light theme - Glass effect colors */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(249, 115, 22, 0.2);
+    --glass-shadow: rgba(0, 0, 0, 0.1);
+
+    /* Light theme - Background gradients */
+    --bg-gradient: linear-gradient(135deg, #fef3e7 0%, #fff7ed 50%, #fef3e7 100%);
+
+    /* Semantic colors - Light theme */
+    --background: #fef3e7;
+    --foreground: #1f2937;
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
+  }
+
+  .dark {
+    /* Dark theme - Glass effect colors */
     --glass-bg: rgba(20, 20, 20, 0.25);
     --glass-border: rgba(249, 115, 22, 0.3);
     --glass-shadow: rgba(0, 0, 0, 0.3);
 
-    /* Background gradients - dark with subtle variations */
+    /* Dark theme - Background gradients */
     --bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+
+    /* Semantic colors - Dark theme */
+    --background: #0a0a0a;
+    --foreground: #d1d5db;
+    --muted: #1f2937;
+    --muted-foreground: #9ca3af;
   }
 }
 
@@ -76,8 +98,19 @@
   }
   
   .glass-effect {
-    background:
-      linear-gradient(135deg, rgba(10, 10, 10, 0.5) 0%, rgba(26, 26, 26, 0.45) 50%, rgba(15, 15, 15, 0.5) 100%);
+    /* Light theme */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 247, 237, 0.6) 50%, rgba(255, 255, 255, 0.7) 100%);
+    backdrop-filter: blur(5px) saturate(200%);
+    -webkit-backdrop-filter: blur(5px) saturate(200%);
+    border: 1px solid rgba(249, 115, 22, 0.15);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  }
+
+  .dark .glass-effect {
+    /* Dark theme */
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.5) 0%, rgba(26, 26, 26, 0.45) 50%, rgba(15, 15, 15, 0.5) 100%);
     backdrop-filter: blur(5px) saturate(200%);
     -webkit-backdrop-filter: blur(5px) saturate(200%);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -87,6 +120,18 @@
   }
 
   .glass-effect-strong {
+    /* Light theme */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(25px) saturate(200%);
+    -webkit-backdrop-filter: blur(25px) saturate(200%);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.15),
+      inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  }
+
+  .dark .glass-effect-strong {
+    /* Dark theme */
     background: rgba(10, 10, 10, 0.65);
     backdrop-filter: blur(25px) saturate(200%);
     -webkit-backdrop-filter: blur(25px) saturate(200%);
@@ -143,8 +188,39 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Body background gradient - dark theme with subtle orange glow (minimalista) */
+/* Body background gradient - Light theme */
 body {
+  background: linear-gradient(
+    135deg,
+    #fef3e7 0%,
+    #fff7ed 20%,
+    #ffedd5 40%,
+    #fff7ed 60%,
+    #fef3e7 80%,
+    #fef3e7 100%
+  );
+  min-height: 100vh;
+  color: #1f2937; /* default text color: gray-800 */
+  position: relative;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Glow sutil naranja en el centro - Light theme */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(249, 115, 22, 0.08) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Body background gradient - Dark theme */
+.dark body {
   background: linear-gradient(
     135deg,
     #0a0a0a 0%,
@@ -154,35 +230,28 @@ body {
     #0f0a08 80%,
     #0a0a0a 100%
   );
-  min-height: 100vh;
   color: #d1d5db; /* default text color: gray-300 */
-  position: relative;
 }
 
-/* Glow sutil naranja en el centro */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
+/* Glow sutil naranja en el centro - Dark theme */
+.dark body::before {
   background: radial-gradient(
     circle at 50% 30%,
     rgba(234, 88, 12, 0.06) 0%,
     transparent 50%
   );
-  pointer-events: none;
-  z-index: -1;
 }
 
-/* FullCalendar Dark Theme Styles */
+/* FullCalendar Styles */
 .fc-calendar-custom {
   font-family: inherit;
 }
 
+/* Light theme - FullCalendar */
 .fc {
-  color: #d1d5db;
+  color: #1f2937;
 }
 
-/* Header toolbar */
 .fc .fc-toolbar {
   margin-bottom: 1.5rem;
 }
@@ -190,78 +259,76 @@ body::before {
 .fc .fc-toolbar-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #d1d5db;
+  color: #1f2937;
 }
 
 .fc .fc-button {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #d1d5db;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  color: #1f2937;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   transition: all 0.2s;
 }
 
 .fc .fc-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(249, 115, 22, 0.5);
-  color: #fb923c;
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.4);
+  color: #ea580c;
 }
 
 .fc .fc-button:active,
 .fc .fc-button:focus {
-  background: rgba(249, 115, 22, 0.2);
-  border-color: rgba(249, 115, 22, 0.8);
-  color: #fb923c;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3);
+  background: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.6);
+  color: #ea580c;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
 }
 
 .fc .fc-button-primary:disabled {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.3);
   opacity: 0.5;
 }
 
-/* Calendar grid */
 .fc .fc-daygrid-day {
-  background: rgba(255, 255, 255, 0.01);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(249, 115, 22, 0.15);
 }
 
 .fc .fc-daygrid-day:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(249, 115, 22, 0.05);
 }
 
 .fc .fc-daygrid-day.fc-day-today {
-  background: rgba(249, 115, 22, 0.1);
+  background: rgba(249, 115, 22, 0.15);
 }
 
 .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  color: #fb923c;
+  color: #ea580c;
   font-weight: 600;
 }
 
 .fc .fc-daygrid-day-number {
-  color: #d1d5db;
+  color: #1f2937;
   padding: 0.5rem;
 }
 
 .fc .fc-col-header-cell {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(249, 115, 22, 0.15);
   padding: 0.75rem;
 }
 
 .fc .fc-col-header-cell-cushion {
-  color: #9ca3af;
+  color: #6b7280;
   font-weight: 500;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
 }
 
-/* Events */
 .fc-event-custom {
   border-radius: 0.375rem;
   padding: 0.25rem 0.5rem;
@@ -273,7 +340,7 @@ body::before {
 
 .fc-event-custom:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10;
 }
 
@@ -288,17 +355,15 @@ body::before {
   margin: 0.125rem 0;
 }
 
-/* More link */
 .fc-more-link {
-  color: #9ca3af;
+  color: #6b7280;
   font-size: 0.875rem;
 }
 
 .fc-more-link:hover {
-  color: #fb923c;
+  color: #ea580c;
 }
 
-/* Scrollbar styling for calendar */
 .fc-scroller {
   scrollbar-width: thin;
   scrollbar-color: rgba(249, 115, 22, 0.3) transparent;
@@ -309,7 +374,7 @@ body::before {
 }
 
 .fc-scroller::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 4px;
 }
 
@@ -320,6 +385,83 @@ body::before {
 
 .fc-scroller::-webkit-scrollbar-thumb:hover {
   background: rgba(249, 115, 22, 0.5);
+}
+
+/* Dark theme - FullCalendar */
+.dark .fc {
+  color: #d1d5db;
+}
+
+.dark .fc .fc-toolbar-title {
+  color: #d1d5db;
+}
+
+.dark .fc .fc-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d1d5db;
+}
+
+.dark .fc .fc-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(249, 115, 22, 0.5);
+  color: #fb923c;
+}
+
+.dark .fc .fc-button:active,
+.dark .fc .fc-button:focus {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: rgba(249, 115, 22, 0.8);
+  color: #fb923c;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3);
+}
+
+.dark .fc .fc-button-primary:disabled {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.dark .fc .fc-daygrid-day {
+  background: rgba(255, 255, 255, 0.01);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .fc .fc-daygrid-day:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .fc .fc-daygrid-day.fc-day-today {
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.dark .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: #fb923c;
+}
+
+.dark .fc .fc-daygrid-day-number {
+  color: #d1d5db;
+}
+
+.dark .fc .fc-col-header-cell {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .fc .fc-col-header-cell-cushion {
+  color: #9ca3af;
+}
+
+.dark .fc-more-link {
+  color: #9ca3af;
+}
+
+.dark .fc-more-link:hover {
+  color: #fb923c;
+}
+
+.dark .fc-scroller::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* Custom scrollbar for Kanban columns */

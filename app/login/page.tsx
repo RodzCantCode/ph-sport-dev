@@ -52,7 +52,7 @@ export default function LoginPage() {
             <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
               PH Sport Dashboard
             </h2>
-            <p className="text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400">
               Inicia sesión en tu cuenta
             </p>
           </div>
@@ -67,7 +67,7 @@ export default function LoginPage() {
                   name="email"
                   type="email"
                   required
-                  className="glass-effect w-full px-4 py-3 rounded-lg placeholder-gray-500 text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-white/20 transition-all duration-300"
+                  className="glass-effect w-full px-4 py-3 rounded-lg placeholder-gray-500 dark:placeholder-gray-500 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-200/20 dark:focus:border-white/20 transition-all duration-300"
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -82,7 +82,7 @@ export default function LoginPage() {
                   name="password"
                   type="password"
                   required
-                  className="glass-effect w-full px-4 py-3 rounded-lg placeholder-gray-500 text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-white/20 transition-all duration-300"
+                  className="glass-effect w-full px-4 py-3 rounded-lg placeholder-gray-500 dark:placeholder-gray-500 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-200/20 dark:focus:border-white/20 transition-all duration-300"
                   placeholder="Contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -100,7 +100,7 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <div className="text-center text-sm text-gray-400">
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
               Demo: Usa cualquier email/contraseña
             </div>
           </form>

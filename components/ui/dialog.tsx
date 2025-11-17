@@ -34,7 +34,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay asChild>
     <motion.div
       ref={ref as unknown as React.Ref<HTMLDivElement>}
-      className={cn('fixed inset-0 z-50 bg-black/80', className)}
+      className={cn('fixed inset-0 z-50 bg-black/50 dark:bg-black/80', className)}
       variants={overlayVariants}
       initial="hidden"
       animate="visible"
@@ -60,7 +60,7 @@ const DialogContent = React.forwardRef<
         <motion.div
           ref={ref as unknown as React.Ref<HTMLDivElement>}
           className={cn(
-            'w-full max-w-lg border bg-background p-6 shadow-lg sm:rounded-lg',
+            'w-full max-w-lg border glass-effect border-orange-200/20 dark:border-white/10 p-6 shadow-lg sm:rounded-lg text-gray-800 dark:text-gray-200',
             className
           )}
           variants={contentVariants}
@@ -108,7 +108,7 @@ const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
+    <DialogPrimitive.Description ref={ref} className={cn('text-sm text-gray-600 dark:text-gray-400', className)} {...props} />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 

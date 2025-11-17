@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import type { Design } from '@/lib/types/design';
+import { STATUS_LABELS } from '@/lib/types/design';
 import { mockUsers } from '@/lib/data/mock-data';
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) => {
@@ -59,7 +60,7 @@ export function KanbanCard({ design }: KanbanCardProps) {
         cursor-grab active:cursor-grabbing
         hover:shadow-lg hover:scale-[1.01] 
         transition-all duration-300 ease-out
-        border border-gray-700/30 bg-gray-800/50
+        border border-gray-300/30 dark:border-gray-700/30 bg-gray-100/50 dark:bg-gray-800/50
         ${isDragging ? 'ring-2 ring-orange-500/50 shadow-2xl' : ''}
       `}
     >
@@ -68,35 +69,35 @@ export function KanbanCard({ design }: KanbanCardProps) {
           <Link
             href={`/designs/${design.id}`}
             onClick={(e) => e.stopPropagation()}
-            className="font-semibold text-gray-200 hover:text-orange-400 transition-colors flex-1 hover:underline"
+            className="font-semibold text-gray-800 dark:text-gray-200 hover:text-orange-400 transition-colors flex-1 hover:underline"
           >
             {design.title}
           </Link>
           <Badge status={design.status} className="shrink-0">
-            {design.status}
+            {STATUS_LABELS[design.status]}
           </Badge>
         </div>
 
         <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-gray-400">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
             <User className="h-3.5 w-3.5" />
             <span className="truncate">{design.player}</span>
           </div>
 
-          <div className="text-gray-300">
+          <div className="text-gray-700 dark:text-gray-300">
             <div className="font-medium">{design.match_home}</div>
-            <div className="text-xs text-gray-500">vs</div>
+            <div className="text-xs text-gray-600 dark:text-gray-500">vs</div>
             <div className="font-medium">{design.match_away}</div>
           </div>
 
           {designer && (
-            <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
               <User className="h-3 w-3" />
               <span className="truncate">{designer.name}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-500">
             <Calendar className="h-3 w-3" />
             <span>{format(new Date(design.deadline_at), 'dd MMM, yyyy', { locale: es })}</span>
           </div>

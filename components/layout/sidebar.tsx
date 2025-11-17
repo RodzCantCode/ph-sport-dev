@@ -66,14 +66,14 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen glass-effect-strong border-r border-white/10 transition-all duration-300 ease-in-out',
+        'fixed left-0 top-0 z-40 h-screen glass-effect-strong border-r border-orange-200/20 dark:border-white/10 transition-all duration-300 ease-in-out',
         'flex flex-col',
         collapsed ? 'w-20' : 'w-64',
         'hidden md:flex' // Solo oculto en mobile cuando no está en overlay mode
       )}
     >
       {/* Logo/Header */}
-      <div className={cn('flex h-16 items-center border-b border-white/10 relative', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
+      <div className={cn('flex h-16 items-center border-b border-orange-200/20 dark:border-white/10 relative', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
         {!collapsed ? (
           <>
             <Link href="/dashboard" className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
@@ -81,7 +81,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
             </Link>
             <button
               onClick={onToggle}
-              className="p-2 rounded-lg hover:bg-white/5 transition-colors text-gray-400 hover:text-orange-400"
+              className="p-2 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-gray-600 dark:text-gray-400 hover:text-orange-400"
               aria-label="Collapse sidebar"
             >
               <ChevronLeft className="h-5 w-5 transition-transform duration-300" />
@@ -94,7 +94,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
             </Link>
             <button
               onClick={onToggle}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full glass-effect border border-white/10 hover:bg-white/10 transition-colors text-gray-400 hover:text-orange-400 shadow-lg"
+              className="absolute -right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full glass-effect border border-orange-200/20 dark:border-white/10 hover:bg-white/10 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400 hover:text-orange-400 shadow-lg"
               aria-label="Expand sidebar"
             >
               <ChevronLeft className="h-4 w-4 rotate-180" />
@@ -120,11 +120,11 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
                   'flex items-center gap-3 rounded-lg transition-all duration-200 group',
                   collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3',
                   isActive
-                    ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-400 border-l-2 border-orange-500 shadow-sm shadow-orange-500/10'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-600 dark:text-orange-400 border-l-2 border-orange-500 shadow-sm shadow-orange-500/10'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/5 dark:hover:bg-white/5'
                 )}
               >
-                <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-orange-400' : 'text-gray-400 group-hover:text-orange-400 transition-colors')} />
+                <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400 group-hover:text-orange-400 transition-colors')} />
                 {!collapsed && (
                   <span className={cn('text-sm font-medium transition-opacity duration-300', collapsed ? 'opacity-0 w-0' : 'opacity-100')}>
                     {item.label}
@@ -136,7 +136,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
         })()}
 
         {/* Separator */}
-        <div className="my-4 h-px bg-white/10" />
+        <div className="my-4 h-px bg-orange-200/20 dark:bg-white/10" />
 
         {/* Logout */}
         <button
@@ -147,7 +147,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
             }
           }}
           className={cn(
-            'flex items-center gap-3 rounded-lg transition-all duration-200 text-gray-400 hover:text-red-400 hover:bg-red-500/10',
+            'flex items-center gap-3 rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10',
             collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'
           )}
         >

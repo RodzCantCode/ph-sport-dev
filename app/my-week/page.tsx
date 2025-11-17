@@ -22,7 +22,7 @@ import { Calendar, ExternalLink, List, CalendarDays, ChevronLeft, ChevronRight }
 import { toast } from 'sonner';
 import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
 import type { DesignStatus } from '@/lib/types/filters';
-import { STATUS_FLOW } from '@/lib/types/design';
+import { STATUS_FLOW, STATUS_LABELS } from '@/lib/types/design';
 import RequireAuth from '@/components/auth/require-auth';
 import { cn, getDefaultWeekRange } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
@@ -35,7 +35,7 @@ const DesignCalendar = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-64 text-gray-400 glass-effect rounded-xl">
+      <div className="flex items-center justify-center h-64 text-gray-600 dark:text-gray-400 glass-effect rounded-xl">
         Cargando calendario...
       </div>
     ),
@@ -154,7 +154,7 @@ export default function MyWeekPage() {
           )}>
             Mi Semana
           </h1>
-          <p className="text-gray-400">Gestiona tus tareas y entregas</p>
+          <p className="text-gray-600 dark:text-gray-400">Gestiona tus tareas y entregas</p>
         </div>
         <div className="relative inline-flex items-center gap-2 rounded-lg glass-effect p-1">
           {/* Slider deslizante - usando translateX para mejor animación */}
@@ -178,7 +178,7 @@ export default function MyWeekPage() {
               'hover:bg-transparent hover:text-current',
               viewMode === 'list' 
                 ? 'text-white' 
-                : 'text-gray-400'
+                : 'text-gray-600 dark:text-gray-400'
             )}
           >
             <List className="h-5 w-5 mr-2" />
@@ -194,7 +194,7 @@ export default function MyWeekPage() {
               'hover:bg-transparent hover:text-current',
               viewMode === 'calendar' 
                 ? 'text-white' 
-                : 'text-gray-400'
+                : 'text-gray-600 dark:text-gray-400'
             )}
           >
             <CalendarDays className="h-5 w-5 mr-2" />
@@ -208,11 +208,11 @@ export default function MyWeekPage() {
           {/* Controles de paginación arriba */}
           {filteredItems.length > 0 && (
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {totalItems} tarea{totalItems !== 1 ? 's' : ''} en total
               </p>
               <div className="flex items-center gap-2">
-                <Label className="text-sm text-gray-400">Mostrar</Label>
+                <Label className="text-sm text-gray-600 dark:text-gray-400">Mostrar</Label>
                 <Select 
                   value={itemsPerPage.toString()} 
                   onValueChange={(v) => {
@@ -238,7 +238,7 @@ export default function MyWeekPage() {
             <Card className={cn('border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}>
               <CardContent className="flex h-64 items-center justify-center">
                 <div className="text-center space-y-3">
-                  <p className="text-gray-400">
+                  <p className="text-gray-600 dark:text-gray-400">
                     {isAdminOrManager(user) 
                       ? 'No hay tareas asignadas en el equipo' 
                       : 'No tienes tareas asignadas'}
@@ -265,7 +265,7 @@ export default function MyWeekPage() {
                   <CardDescription>
                     {task.player} - {task.match_home} vs {task.match_away}
                   </CardDescription>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-400">
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Calendar className="h-4 w-4" />
                     Deadline: {format(new Date(task.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
                   </div>
@@ -282,7 +282,7 @@ export default function MyWeekPage() {
                               : 'outline'
                         }
                       >
-                        {task.status}
+                        {STATUS_LABELS[task.status]}
                       </Badge>
                       {task.folder_url && (
                         <Button variant="ghost" size="sm" asChild>
@@ -324,7 +324,7 @@ export default function MyWeekPage() {
           {/* Controles de paginación abajo */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
               </p>
               <div className="flex items-center gap-2">
@@ -337,7 +337,7 @@ export default function MyWeekPage() {
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
                 </Button>
-                <span className="flex items-center px-3 text-sm text-gray-400">
+                <span className="flex items-center px-3 text-sm text-gray-600 dark:text-gray-400">
                   Página {currentPage} de {totalPages}
                 </span>
                 <Button
@@ -359,7 +359,7 @@ export default function MyWeekPage() {
             <Card className={cn('border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}>
               <CardContent className="flex h-64 items-center justify-center">
                 <div className="text-center space-y-3">
-                  <p className="text-gray-400">
+                  <p className="text-gray-600 dark:text-gray-400">
                     {isAdminOrManager(user) 
                       ? 'No hay tareas asignadas en el equipo' 
                       : 'No tienes tareas asignadas'}
@@ -384,7 +384,7 @@ export default function MyWeekPage() {
             ) : (
               <Card>
                 <CardContent className="flex h-64 items-center justify-center">
-                  <p className="text-gray-400">Cargando calendario...</p>
+                  <p className="text-gray-600 dark:text-gray-400">Cargando calendario...</p>
                 </CardContent>
               </Card>
             )
@@ -394,10 +394,10 @@ export default function MyWeekPage() {
 
       {/* Dialog para detalles del evento */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="glass-effect border-white/10 text-gray-200 max-w-md">
+        <DialogContent className="glass-effect border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-200 max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-gray-200">{selectedTask?.title}</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className="text-2xl text-gray-800 dark:text-gray-200">{selectedTask?.title}</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
               {selectedTask && (
                 <>
                   {selectedTask.player} - {selectedTask.match_home} vs {selectedTask.match_away}
@@ -408,7 +408,7 @@ export default function MyWeekPage() {
           
           {selectedTask && (
             <div className="space-y-4 mt-4">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Calendar className="h-4 w-4" />
                 Deadline: {format(new Date(selectedTask.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
               </div>
@@ -423,7 +423,7 @@ export default function MyWeekPage() {
                         : 'outline'
                   }
                 >
-                  {selectedTask.status}
+                  {STATUS_LABELS[selectedTask.status]}
                 </Badge>
                 {selectedTask.folder_url && (
                   <Button variant="ghost" size="sm" asChild>

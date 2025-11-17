@@ -10,7 +10,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          'flex h-10 w-full rounded-lg glass-effect px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 text-gray-200',
+          'flex h-10 w-full rounded-lg glass-effect px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 dark:placeholder:text-gray-500 text-gray-800 dark:text-gray-200',
           // Focus: naranja más claro, visible y sin halo blanco
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/90 focus-visible:ring-offset-0 focus:border-orange-400/50',
           // Glow muy sutil cercano al color de los botones

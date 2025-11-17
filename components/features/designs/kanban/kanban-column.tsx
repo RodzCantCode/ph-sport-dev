@@ -30,12 +30,12 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
         className={`
           flex-1 flex flex-col overflow-hidden
           border-2 transition-colors duration-200
-          ${isOver ? 'border-orange-400 bg-orange-500/10' : 'border-gray-700/30 bg-gray-800/30'}
+          ${isOver ? 'border-orange-400 bg-orange-500/10' : 'border-gray-300/30 dark:border-gray-700/30 bg-gray-100/30 dark:bg-gray-800/30'}
         `}
       >
         <CardHeader className="pb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-gray-200 flex items-center gap-2">
+            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
               {title}
             </CardTitle>
             <Badge
@@ -59,7 +59,7 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
                   transition-colors duration-200
                   ${isOver 
                     ? 'border-orange-400 bg-orange-500/10 text-orange-400' 
-                    : 'border-gray-700/30 text-gray-500'
+                    : 'border-gray-300/30 dark:border-gray-700/30 text-gray-600 dark:text-gray-500'
                   }
                 `}>
                   <p className="text-sm font-medium">

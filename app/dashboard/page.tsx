@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Users, Plus, Calendar, TrendingUp } from 'lucide-react';
+import { Users, Plus, Calendar, TrendingUp, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import type { Design } from '@/lib/types/design';
@@ -19,6 +19,7 @@ import RequireAuth from '@/components/auth/require-auth';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { logger } from '@/lib/utils/logger';
 import { useDashboardKPIs } from '@/lib/hooks/use-dashboard-kpis';
+import { STATUS_LABELS } from '@/lib/types/design';
 
 export default function DashboardPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -122,7 +123,7 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
             Dashboard del Equipo
           </h1>
-          <p className="text-gray-400">Vista general del equipo de diseño</p>
+          <p className="text-gray-600 dark:text-gray-400">Vista general del equipo de diseño</p>
         </div>
       </div>
 
@@ -166,7 +167,7 @@ export default function DashboardPage() {
       {/* Lista compacta últimos 10 */}
       <Card className="animate-slide-up">
         <CardHeader>
-          <CardTitle className="text-orange-700">Últimos 10 Diseños</CardTitle>
+          <CardTitle className="text-orange-700 dark:text-orange-600">Últimos 10 Diseños</CardTitle>
           <CardDescription>Ordenados por deadline más próximo</CardDescription>
         </CardHeader>
         <CardContent>
@@ -179,20 +180,21 @@ export default function DashboardPage() {
               className="border-0"
             />
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {recentDesignsWithCalculations.map((design) => {
                 const designer = getDesignerById(design.designer_id);
                 
                 return (
-                  <div
+                  <Link
                     key={design.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-700/30 bg-gray-800/30 p-3 hover:bg-gray-800/50 transition-colors"
+                    href={`/designs/${design.id}`}
+                    className="flex items-center justify-between rounded-lg border border-orange-200/30 dark:border-gray-700/30 bg-orange-50/40 dark:bg-gray-800/30 p-4 hover:bg-orange-100/60 dark:hover:bg-gray-800/50 transition-all cursor-pointer group"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-200 truncate">{design.title}</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{design.title}</p>
                         <Badge status={design.status} className="shrink-0">
-                          {design.status}
+                          {STATUS_LABELS[design.status]}
                         </Badge>
                         {design.isCritical && (
                           <Badge variant="destructive" className="animate-pulse shrink-0">
@@ -205,7 +207,7 @@ export default function DashboardPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
                         {designer && (
                           <span>Asignado a: {designer.name}</span>
                         )}
@@ -214,7 +216,8 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                  </div>
+                    <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors ml-4 shrink-0" />
+                  </Link>
                 );
               })}
             </div>
@@ -226,7 +229,7 @@ export default function DashboardPage() {
       {unassignedCount > 0 && (
         <Card className="animate-slide-up">
           <CardHeader>
-            <CardTitle className="text-orange-700">Asignaciones Pendientes</CardTitle>
+            <CardTitle className="text-orange-700 dark:text-orange-600">Asignaciones Pendientes</CardTitle>
             <CardDescription>{unassignedCount} diseño{unassignedCount !== 1 ? 's' : ''} sin asignar</CardDescription>
           </CardHeader>
           <CardContent>

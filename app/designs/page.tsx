@@ -265,7 +265,7 @@ export default function DesignsPage() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
             Diseños
           </h1>
-          <p className="text-gray-400">Gestión de todas las piezas gráficas</p>
+          <p className="text-gray-600 dark:text-gray-400">Gestión de todas las piezas gráficas</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative inline-flex items-center gap-2 rounded-lg glass-effect p-1">
@@ -290,7 +290,7 @@ export default function DesignsPage() {
                 'hover:bg-transparent hover:text-current',
                 viewMode === 'table' 
                   ? 'text-white' 
-                  : 'text-gray-400'
+                  : 'text-gray-600 dark:text-gray-400'
               )}
             >
               <Table2 className="h-5 w-5 mr-2" />
@@ -306,7 +306,7 @@ export default function DesignsPage() {
                 'hover:bg-transparent hover:text-current',
                 viewMode === 'kanban' 
                   ? 'text-white' 
-                  : 'text-gray-400'
+                  : 'text-gray-600 dark:text-gray-400'
               )}
             >
               <LayoutGrid className="h-5 w-5 mr-2" />
@@ -324,13 +324,13 @@ export default function DesignsPage() {
       <Card className="animate-slide-up">
         <CardContent className="pt-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 dark:text-gray-400" />
             <Input
               type="text"
               placeholder="Buscar por título, jugador o partido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/5 border-white/10 text-gray-200 placeholder:text-gray-500 focus:bg-white/10 focus:border-orange-500/50"
+              className="pl-10 bg-white/5 dark:bg-white/5 border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-200 placeholder:text-gray-500 focus:bg-white/10 focus:border-orange-500/50"
             />
           </div>
         </CardContent>
@@ -440,7 +440,7 @@ export default function DesignsPage() {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-sm text-gray-400">Mostrar</Label>
+                <Label className="text-sm text-gray-600 dark:text-gray-400">Mostrar</Label>
                 <Select 
                   value={itemsPerPage.toString()} 
                   onValueChange={(v) => {
@@ -545,7 +545,7 @@ export default function DesignsPage() {
                         {design.match_home} vs {design.match_away}
                       </TableCell>
                       <TableCell>
-                        {designer ? designer.name : <span className="text-gray-500">Sin asignar</span>}
+                        {designer ? designer.name : <span className="text-gray-600 dark:text-gray-500">Sin asignar</span>}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -613,7 +613,7 @@ export default function DesignsPage() {
             {/* Controles de paginación */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
                 </p>
                 <div className="flex items-center gap-2">
@@ -626,7 +626,7 @@ export default function DesignsPage() {
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     Anterior
                   </Button>
-                  <span className="flex items-center px-3 text-sm text-gray-400">
+                  <span className="flex items-center px-3 text-sm text-gray-600 dark:text-gray-400">
                     Página {currentPage} de {totalPages}
                   </span>
                   <Button
