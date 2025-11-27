@@ -108,8 +108,3 @@ function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
 }
 
 export default DesignCalendar;
-
-
-
-
-

@@ -76,4 +76,3 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
     </div>
   );
 }
-
