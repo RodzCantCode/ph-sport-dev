@@ -56,10 +56,10 @@ export default function MyWeekPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadTasks = () => {
-    // Obtener usuario usando el helper (compatible con futura migración Supabase)
-    // Nota: getCurrentUser() solo funciona en el cliente, por eso se llama aquí en useEffect
-    const currentUser = getCurrentUser();
+  const loadTasks = async () => {
+    // Obtener usuario usando el helper
+    // Nota: getCurrentUser() solo funciona en el cliente
+    const currentUser = await getCurrentUser();
     setUser(currentUser);
 
     if (!currentUser) {

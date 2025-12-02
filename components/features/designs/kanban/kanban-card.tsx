@@ -8,7 +8,6 @@ import { Calendar, ExternalLink, User } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import type { Design } from '@/lib/types/design';
-import { mockUsers } from '@/lib/data/mock-data';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) => {
@@ -21,9 +20,10 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) => {
 
 interface KanbanCardProps {
   design: Design;
+  designer?: { name: string } | null;
 }
 
-export function KanbanCard({ design }: KanbanCardProps) {
+export function KanbanCard({ design, designer }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -44,8 +44,6 @@ export function KanbanCard({ design }: KanbanCardProps) {
     transform: CSS.Translate.toString(transform),
     transition,
   };
-
-  const designer = design.designer_id ? mockUsers.find((u) => u.id === design.designer_id) : null;
 
   return (
     <Card

@@ -1,43 +1,53 @@
 import { NextResponse } from 'next/server';
-import { shouldUseMockData } from '@/lib/demo-mode';
-import { mockDesigns } from '@/lib/data/mock-data';
 import { assignDesignerAutomatically } from '@/lib/services/designs/assignment';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * Round-robin balanced assignment algorithm
  * Distribuye diseños sin asignar entre diseñadores de forma equilibrada
  */
 export async function POST(_request: Request) {
-  if (!shouldUseMockData()) {
-    return NextResponse.json({ error: 'Not implemented' }, { status: 501 });
-  }
+  const supabase = await createClient();
 
   // Obtener todos los diseños sin asignar (BACKLOG y sin designer_id)
-  const unassigned = mockDesigns.filter(
-    (d) => !d.designer_id && (d.status === 'BACKLOG' || d.status === 'IN_PROGRESS')
-  );
+  const { data: unassigned, error } = await supabase
+    .from('designs')
+    .select('id')
+    .is('designer_id', null)
+    .in('status', ['BACKLOG', 'IN_PROGRESS']);
 
-  if (unassigned.length === 0) {
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!unassigned || unassigned.length === 0) {
     return NextResponse.json({ message: 'No hay diseños sin asignar', assigned: 0 });
   }
 
-  // Asignar cada diseño sin asignar usando la función helper
-  let assigned = 0;
-  unassigned.forEach((design) => {
-    const designerId = assignDesignerAutomatically(design.id);
+  let assignedCount = 0;
+  
+  // Asignar cada diseño
+  for (const design of unassigned) {
+    const designerId = await assignDesignerAutomatically(design.id);
     if (designerId) {
-      design.designer_id = designerId;
-      assigned++;
+      const { error: updateError } = await supabase
+        .from('designs')
+        .update({ designer_id: designerId })
+        .eq('id', design.id);
+        
+      if (!updateError) {
+        assignedCount++;
+      }
     }
-  });
+  }
 
-  if (assigned === 0) {
-    return NextResponse.json({ error: 'No hay diseñadores disponibles' }, { status: 400 });
+  if (assignedCount === 0) {
+    return NextResponse.json({ error: 'No se pudo asignar ningún diseño (posible falta de diseñadores)' }, { status: 400 });
   }
 
   return NextResponse.json({
-    message: `Se asignaron ${assigned} diseño(s)`,
-    assigned,
+    message: `Se asignaron ${assignedCount} diseño(s)`,
+    assigned: assignedCount,
   });
 }
 

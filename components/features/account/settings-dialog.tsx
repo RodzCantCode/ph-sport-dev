@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, User, Bell, Eye, Save } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { getCurrentUser, type CurrentUser } from '@/lib/auth/get-current-user';
 import { toast } from 'sonner';
 
 interface UserPreferences {
@@ -39,7 +39,7 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const [user, setUser] = useState<ReturnType<typeof getCurrentUser> | null>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState<UserPreferences>({
     defaultView: 'list',
@@ -53,11 +53,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   useEffect(() => {
     if (open) {
-      const currentUser = getCurrentUser();
-      setUser(currentUser);
-      if (currentUser) {
-        setName(currentUser.name);
-      }
+      const loadUser = async () => {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        if (currentUser) {
+          setName(currentUser.name);
+        }
+      };
+      loadUser();
 
       if (typeof window !== 'undefined') {
         const savedPrefs = localStorage.getItem('user-preferences');
@@ -85,9 +88,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         localStorage.setItem('default-view', preferences.defaultView);
 
         if (user) {
-          const updatedUser = { ...user, name };
-          sessionStorage.setItem('user', JSON.stringify(updatedUser));
-          setUser(updatedUser);
+          // TODO: Actualizar nombre en Supabase profiles
+          setUser({ ...user, name });
         }
       }
 

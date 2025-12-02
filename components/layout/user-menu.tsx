@@ -15,7 +15,7 @@ import { User, LogOut, Settings } from 'lucide-react';
 import { ProfileDialog } from '@/components/features/account/profile-dialog';
 import { SettingsDialog } from '@/components/features/account/settings-dialog';
 import { logger } from '@/lib/utils/logger';
-import { getCurrentUserAsync } from '@/lib/auth/get-current-user';
+import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { config } from '@/lib/config';
 import { createClient } from '@/lib/supabase/client';
 
@@ -28,7 +28,7 @@ export function UserMenu() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await getCurrentUserAsync();
+        const currentUser = await getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
         }
@@ -41,16 +41,10 @@ export function UserMenu() {
 
   const handleLogout = async () => {
     if (typeof window !== 'undefined') {
-      // Demo Mode
-      if (config.demoMode) {
-        sessionStorage.removeItem('user');
-      } else {
-        // Real Mode
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        // Limpiar también localStorage por si acaso
-        localStorage.removeItem('sb-' + config.supabase.url.split('//')[1].split('.')[0] + '-auth-token');
-      }
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      // Limpiar también localStorage por si acaso
+      localStorage.removeItem('sb-' + config.supabase.url.split('//')[1].split('.')[0] + '-auth-token');
       router.push('/login');
     }
   };

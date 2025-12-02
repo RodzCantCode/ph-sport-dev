@@ -2,34 +2,12 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { isDemoMode } from '@/lib/demo-mode';
-import { logger } from '@/lib/utils/logger';
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Verificar si hay usuario en sessionStorage (DEMO mode)
-    if (isDemoMode()) {
-      const userStr = sessionStorage.getItem('user');
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          // Redirigir según rol
-          if (user.role === 'manager' || user.role === 'admin') {
-            router.replace('/dashboard');
-          } else {
-            router.replace('/my-week');
-          }
-          return;
-        } catch (e) {
-          logger.error('Error parsing user:', e);
-        }
-      }
-    }
-    
-    // Sin sesión, redirigir a login
-    router.replace('/login');
+    router.replace('/dashboard');
   }, [router]);
 
   return (

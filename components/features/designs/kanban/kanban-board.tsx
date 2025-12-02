@@ -29,6 +29,7 @@ interface KanbanBoardProps {
   loading?: boolean;
   onStatusChange: (designId: string, newStatus: DesignStatus) => Promise<void>;
   onCreateDesign?: () => void;
+  designers?: { id: string; name: string }[];
 }
 
 const COLUMNS: Array<{ status: DesignStatus; title: string }> = [
@@ -64,6 +65,7 @@ export function KanbanBoard({
   loading = false,
   onStatusChange,
   onCreateDesign,
+  designers,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -174,6 +176,7 @@ export function KanbanBoard({
             title={column.title}
             designs={designsByStatus[column.status] || []}
             count={designsByStatus[column.status]?.length || 0}
+            designers={designers}
           />
         ))}
       </div>
@@ -181,7 +184,10 @@ export function KanbanBoard({
       <DragOverlay>
         {activeDesign ? (
           <div className="rotate-3 scale-105 transition-all duration-200 shadow-2xl">
-            <KanbanCard design={activeDesign} />
+            <KanbanCard 
+              design={activeDesign} 
+              designer={designers?.find(d => d.id === activeDesign.designer_id)}
+            />
           </div>
         ) : null}
       </DragOverlay>

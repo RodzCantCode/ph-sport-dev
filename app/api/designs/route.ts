@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { shouldUseMockData } from '@/lib/demo-mode';
-import { mockDesigns } from '@/lib/data/mock-data';
 import { assignDesignerAutomatically } from '@/lib/services/designs/assignment';
 import type { WeekFilters, DesignStatus } from '@/lib/types/filters';
 import { logger } from '@/lib/utils/logger';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -18,29 +17,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'weekStart and weekEnd are required' }, { status: 400 });
   }
 
-  const useMock = shouldUseMockData();
-  logger.log('[API] shouldUseMockData:', useMock, 'mockDesigns count:', mockDesigns.length);
-  
-  if (useMock) {
-    // Normalize dates to start of day for comparison
-    const start = new Date(filters.weekStart);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(filters.weekEnd);
-    end.setHours(23, 59, 59, 999);
-    
-    const items = mockDesigns.filter((d) => {
-      const dDate = new Date(d.deadline_at);
-      const inWeek = dDate >= start && dDate <= end;
-      const statusOk = filters.status ? d.status === filters.status : true;
-      const designerOk = filters.designerId ? d.designer_id === filters.designerId : true;
-      return inWeek && statusOk && designerOk;
-    });
-    logger.log('[API] Filtered items:', items.length, 'filters:', filters);
-    return NextResponse.json({ items, count: items.length });
-  }
-
-  // MODO REAL: Query Supabase
-  const { createClient } = await import('@/lib/supabase/server');
   const supabase = await createClient();
   
   let query = supabase
@@ -77,38 +53,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'deadline_at must be in the future' }, { status: 400 });
   }
 
-  if (shouldUseMockData()) {
-    // En DEMO mode, añadir al array mockDesigns (aunque no persiste entre reinicios del servidor)
-    // Para producción usaríamos Supabase
-    const now = new Date().toISOString();
-    
-    // Si designer_id es null, undefined o 'auto', asignar automáticamente
-    let designerId = body.designer_id;
-    if (!designerId || designerId === 'auto' || designerId === null) {
-      designerId = assignDesignerAutomatically();
-      // Si no hay diseñadores disponibles, crear sin asignar
-      if (!designerId) {
-        designerId = undefined;
-      }
-    }
-    
-    const newDesign = {
-      id: crypto.randomUUID(),
-      ...body,
-      designer_id: designerId,
-      status: 'BACKLOG' as const,
-      created_at: now,
-      updated_at: now,
-    };
-    
-    // Añadir al array
-    mockDesigns.push(newDesign);
-    
-    return NextResponse.json(newDesign, { status: 201 });
-  }
-
-  // MODO REAL: Insert into Supabase
-  const { createClient } = await import('@/lib/supabase/server');
   const supabase = await createClient();
   
   // Obtener usuario actual
@@ -120,7 +64,7 @@ export async function POST(request: Request) {
   // Si designer_id es null, undefined o 'auto', asignar automáticamente
   let designerId = body.designer_id;
   if (!designerId || designerId === 'auto' || designerId === null) {
-    designerId = assignDesignerAutomatically();
+    designerId = await assignDesignerAutomatically();
   }
   
   const { data: newDesign, error } = await supabase
@@ -135,6 +79,7 @@ export async function POST(request: Request) {
       designer_id: designerId || null,
       created_by: user.id,
       status: 'BACKLOG',
+      player_status: body.player_status || null,
     })
     .select()
     .single();

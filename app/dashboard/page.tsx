@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import type { Design } from '@/lib/types/design';
 import { getDefaultWeekRange } from '@/lib/utils';
-import { getDesignerById } from '@/lib/data/mock-data';
+import { useDesigners } from '@/lib/hooks/use-designers';
 import RequireAuth from '@/components/auth/require-auth';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { logger } from '@/lib/utils/logger';
@@ -27,6 +27,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  const { designers } = useDesigners();
 
   const loadDashboard = () => {
     const { weekStart, weekEnd } = getDefaultWeekRange();
@@ -183,7 +185,7 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {recentDesignsWithCalculations.map((design) => {
-                const designer = getDesignerById(design.designer_id);
+                const designer = designers.find(d => d.id === design.designer_id);
                 
                 return (
                   <Link

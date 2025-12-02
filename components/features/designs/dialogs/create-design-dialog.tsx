@@ -23,7 +23,7 @@ import {
 import { Plus, Edit, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDateTimeLocal } from '@/lib/utils';
-import { getDesigners } from '@/lib/data/mock-data';
+import { useDesigners } from '@/lib/hooks/use-designers';
 import { PLAYER_STATUS_CONFIG } from '@/components/features/designs/tags/player-status-tag';
 
 import type { Design } from '@/lib/types/design';
@@ -42,6 +42,7 @@ export function CreateDesignDialog({
   design,
 }: CreateDesignDialogProps) {
   const [loading, setLoading] = useState(false);
+  const { designers, loading: loadingDesigners } = useDesigners();
   const isEditMode = !!design;
 
   const [formData, setFormData] = useState({
@@ -282,11 +283,15 @@ export function CreateDesignDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="auto">Automático</SelectItem>
-                      {getDesigners().map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
+                      {loadingDesigners ? (
+                        <SelectItem value="loading" disabled>Cargando...</SelectItem>
+                      ) : (
+                        designers.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-600 dark:text-gray-500">

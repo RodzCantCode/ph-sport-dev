@@ -12,7 +12,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Mail, Briefcase, CheckCircle2, Clock, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { getCurrentUser, type CurrentUser } from '@/lib/auth/get-current-user';
 import { format } from 'date-fns';
 
 interface ProfileStats {
@@ -30,7 +30,7 @@ interface ProfileDialogProps {
 }
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
-  const [user, setUser] = useState<ReturnType<typeof getCurrentUser> | null>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [stats, setStats] = useState<ProfileStats>({
     total: 0,
     completed: 0,
@@ -43,10 +43,11 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   useEffect(() => {
     if (open) {
-      const currentUser = getCurrentUser();
-      setUser(currentUser);
+      const loadUser = async () => {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
 
-      if (currentUser) {
+        if (currentUser) {
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const weekStart = new Date(now);
@@ -93,6 +94,8 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
       } else {
         setLoading(false);
       }
+      };
+      loadUser();
     }
   }, [open]);
 

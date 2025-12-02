@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers } from '@/lib/data/mock-data';
 import { Card } from '@/components/ui/card';
-import { shouldUseMockData } from '@/lib/demo-mode';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,71 +17,42 @@ export default function LoginPage() {
     setError('');
 
     try {
-      if (shouldUseMockData()) {
-        // MODO DEMO: Buscar usuario en mockUsers por email
-        const user = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-        
-        // Si no existe, crear uno temporal basado en el email
-        const userData = user || {
-          id: `temp-${Date.now()}`,
-          email,
-          name: email.split('@')[0],
-          role: email.includes('eva') || email.includes('manager') || email.includes('admin') 
-            ? 'manager' 
-            : 'designer',
-        };
+      // Autenticar con Supabase
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
 
-        sessionStorage.setItem('user', JSON.stringify({
-          id: userData.id,
-          email: userData.email,
-          name: userData.name,
-          role: userData.role,
-        }));
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        // Redirigir directamente según rol
-        if (userData.role === 'manager' || userData.role === 'admin') {
-          router.replace('/dashboard');
-        } else {
-          router.replace('/my-week');
-        }
+      if (authError) {
+        setError(authError.message === 'Invalid login credentials' 
+          ? 'Email o contraseña incorrectos' 
+          : authError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Verificar que el usuario tiene perfil
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        setError('Usuario sin perfil configurado. Contacta al administrador.');
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      // Redirigir según rol
+      if (profile.role === 'ADMIN') {
+        router.replace('/dashboard');
       } else {
-        // MODO REAL: Autenticar con Supabase
-        const { createClient } = await import('@/lib/supabase/client');
-        const supabase = createClient();
-
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (authError) {
-          setError(authError.message === 'Invalid login credentials' 
-            ? 'Email o contraseña incorrectos' 
-            : authError.message);
-          setLoading(false);
-          return;
-        }
-
-        // Verificar que el usuario tiene perfil
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, full_name, role')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profileError || !profile) {
-          setError('Usuario sin perfil configurado. Contacta al administrador.');
-          await supabase.auth.signOut();
-          setLoading(false);
-          return;
-        }
-
-        // Redirigir según rol
-        if (profile.role === 'ADMIN') {
-          router.replace('/dashboard');
-        } else {
-          router.replace('/my-week');
-        }
+        router.replace('/my-week');
       }
     } catch (_err) {
       setError('Error al iniciar sesión. Intenta de nuevo.');
@@ -152,10 +121,6 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
-
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-              {shouldUseMockData() ? 'Demo: Usa cualquier email/contraseña' : 'Modo Producción'}
-            </div>
           </form>
         </Card>
       </div>

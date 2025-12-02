@@ -14,9 +14,10 @@ interface KanbanColumnProps {
   title: string;
   designs: Design[];
   count: number;
+  designers?: { id: string; name: string }[];
 }
 
-export function KanbanColumn({ status, title, designs, count }: KanbanColumnProps) {
+export function KanbanColumn({ status, title, designs, count, designers }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
   });
@@ -67,7 +68,13 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
                   </p>
                 </div>
               ) : (
-                designs.map((design) => <KanbanCard key={design.id} design={design} />)
+                designs.map((design) => (
+                  <KanbanCard 
+                    key={design.id} 
+                    design={design} 
+                    designer={designers?.find(d => d.id === design.designer_id)}
+                  />
+                ))
               )}
             </SortableContext>
           </div>

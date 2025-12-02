@@ -47,14 +47,26 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   
   useEffect(() => {
     setMounted(true);
-    const currentUser = getCurrentUser();
-    setUser(currentUser);
+    const loadUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    };
+    loadUser();
   }, []);
   
   const handleLinkClick = () => {
     // Cerrar sidebar en mobile cuando se hace clic en un link
     if (typeof window !== 'undefined' && window.innerWidth < 768 && onClose) {
       onClose();
+    }
+  };
+
+  const handleLogout = async () => {
+    if (typeof window !== 'undefined') {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      window.location.href = '/login';
     }
   };
   
@@ -140,12 +152,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
 
         {/* Logout */}
         <button
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              sessionStorage.removeItem('user');
-              window.location.href = '/login';
-            }
-          }}
+          onClick={handleLogout}
           className={cn(
             'flex items-center gap-3 rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10',
             collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'

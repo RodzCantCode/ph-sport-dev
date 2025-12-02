@@ -10,88 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { ErrorState } from '@/components/ui/error-state';
 import { ArrowLeft, Edit2, ExternalLink, Calendar, User } from 'lucide-react';
-import { mockUsers } from '@/lib/data/mock-data';
+import { useDesigners } from '@/lib/hooks/use-designers';
 import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
-import type { DesignHistoryItem } from '@/lib/types/design';
 import Link from 'next/link';
 import { logger } from '@/lib/utils/logger';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
-
-// Historial simulado para demo
-function generateHistory(design: Design): DesignHistoryItem[] {
-  const history: DesignHistoryItem[] = [];
-  const now = new Date();
-
-  // Creación
-  if (design.created_at) {
-    history.push({
-      id: `h-${design.id}-1`,
-      design_id: design.id,
-      action: 'created',
-      actor_id: design.created_by,
-      actor_name: mockUsers.find(u => u.id === design.created_by)?.name || 'Sistema',
-      payload: { title: design.title },
-      created_at: design.created_at,
-    });
-  } else {
-    // Si no hay created_at, simulamos
-    history.push({
-      id: `h-${design.id}-1`,
-      design_id: design.id,
-      action: 'created',
-      actor_id: 'system',
-      actor_name: 'Sistema',
-      payload: { title: design.title },
-      created_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    });
-  }
-
-  // Asignación
-  if (design.designer_id) {
-    const designer = mockUsers.find(u => u.id === design.designer_id);
-    history.push({
-      id: `h-${design.id}-2`,
-      design_id: design.id,
-      action: 'assigned',
-      actor_id: 'system',
-      actor_name: 'Sistema',
-      payload: { designer_id: design.designer_id, designer_name: designer?.name },
-      created_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    });
-  }
-
-  // Cambio de estado
-  if (design.status !== 'BACKLOG') {
-    history.push({
-      id: `h-${design.id}-3`,
-      design_id: design.id,
-      action: 'status_changed',
-      actor_id: design.designer_id,
-      actor_name: mockUsers.find(u => u.id === design.designer_id)?.name || 'Usuario',
-      payload: { status: design.status },
-      created_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    });
-  }
-
-  // Última actualización
-  if (design.updated_at) {
-    history.push({
-      id: `h-${design.id}-4`,
-      design_id: design.id,
-      action: 'updated',
-      actor_id: design.designer_id || 'system',
-      actor_name: mockUsers.find(u => u.id === design.designer_id)?.name || 'Sistema',
-      payload: {},
-      created_at: design.updated_at,
-    });
-  }
-
-  // Ordenar por fecha descendente (más reciente primero)
-  return history.sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-}
 
 export default function DesignDetailPage() {
   const params = useParams();
@@ -100,8 +24,9 @@ export default function DesignDetailPage() {
   const [design, setDesign] = useState<Design | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<DesignHistoryItem[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  const { designers } = useDesigners();
 
   useEffect(() => {
     if (!id) {
@@ -122,7 +47,6 @@ export default function DesignDetailPage() {
       })
       .then((data) => {
         setDesign(data);
-        setHistory(generateHistory(data));
       })
       .catch((err) => {
         logger.error('Design fetch error:', err);
@@ -152,15 +76,8 @@ export default function DesignDetailPage() {
   }
 
   const designer = design.designer_id 
-    ? mockUsers.find((u) => u.id === design.designer_id)
+    ? designers.find((u) => u.id === design.designer_id)
     : null;
-
-  const actionLabels: Record<string, string> = {
-    created: 'Creado',
-    assigned: 'Asignado',
-    status_changed: 'Estado cambiado',
-    updated: 'Actualizado',
-  };
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
@@ -193,7 +110,6 @@ export default function DesignDetailPage() {
             .then((r) => r.json())
             .then((data) => {
               setDesign(data);
-              setHistory(generateHistory(data));
             })
             .finally(() => setLoading(false));
         }}
@@ -253,43 +169,8 @@ export default function DesignDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Historial */}
-        <Card className="animate-slide-up">
-          <CardHeader>
-            <CardTitle>Historial</CardTitle>
-            <CardDescription>Registro de cambios y acciones</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {history.length === 0 ? (
-              <p className="text-gray-600 dark:text-gray-400 text-sm">No hay historial disponible</p>
-            ) : (
-              <div className="space-y-4">
-                {history.map((item) => (
-                  <div key={item.id} className="border-l-2 border-gray-300 dark:border-gray-700 pl-4 pb-4 last:pb-0">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">
-                          {actionLabels[item.action] || item.action}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Por: {item.actor_name}
-                        </p>
-                        {item.payload && Object.keys(item.payload).length > 0 && (
-                          <div className="mt-2 text-xs text-gray-600 dark:text-gray-500">
-                            {JSON.stringify(item.payload, null, 2)}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-500">
-                        {format(new Date(item.created_at), "dd MMM, HH:mm", { locale: es })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Historial (Placeholder o eliminado por ahora) */}
+        {/* TODO: Implementar historial real con Supabase */}
       </div>
     </div>
   );

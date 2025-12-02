@@ -28,7 +28,7 @@ import { CreateDesignDialog } from '@/components/features/designs/dialogs/create
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
 import { KanbanBoard } from '@/components/features/designs/kanban/kanban-board';
-import { getDesigners, getDesignerById } from '@/lib/data/mock-data';
+import { useDesigners } from '@/lib/hooks/use-designers';
 import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
@@ -47,6 +47,9 @@ export default function DesignsPage() {
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+
+  // Hook de diseñadores
+  const { designers, loading: loadingDesigners } = useDesigners();
 
   // Filtros
   const [statusFilter, setStatusFilter] = useState<DesignStatus | 'all'>('all');
@@ -370,7 +373,7 @@ export default function DesignsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  {getDesigners().map((user) => (
+                  {designers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
@@ -427,6 +430,7 @@ export default function DesignsPage() {
             loading={false}
             onStatusChange={handleStatusChange}
             onCreateDesign={() => { setEditingDesign(null); setDialogOpen(true); }}
+            designers={designers}
           />
         </div>
       ) : (
@@ -524,7 +528,7 @@ export default function DesignsPage() {
               </TableHeader>
               <TableBody>
                 {paginatedItems.map((design) => {
-                  const designer = getDesignerById(design.designer_id);
+                  const designer = designers.find(d => d.id === design.designer_id);
                   
                   // Calcular tiempo restante hasta deadline
                   const now = new Date();
