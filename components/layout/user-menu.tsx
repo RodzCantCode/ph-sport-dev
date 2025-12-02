@@ -15,6 +15,9 @@ import { User, LogOut, Settings } from 'lucide-react';
 import { ProfileDialog } from '@/components/features/account/profile-dialog';
 import { SettingsDialog } from '@/components/features/account/settings-dialog';
 import { logger } from '@/lib/utils/logger';
+import { getCurrentUserAsync } from '@/lib/auth/get-current-user';
+import { config } from '@/lib/config';
+import { createClient } from '@/lib/supabase/client';
 
 export function UserMenu() {
   const router = useRouter();
@@ -23,21 +26,31 @@ export function UserMenu() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const userStr = sessionStorage.getItem('user');
-      if (userStr) {
-        try {
-          setUser(JSON.parse(userStr));
-        } catch (e) {
-          logger.error('Error parsing user:', e);
+    const loadUser = async () => {
+      try {
+        const currentUser = await getCurrentUserAsync();
+        if (currentUser) {
+          setUser(currentUser);
         }
+      } catch (e) {
+        logger.error('Error loading user:', e);
       }
-    }
+    };
+    loadUser();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('user');
+      // Demo Mode
+      if (config.demoMode) {
+        sessionStorage.removeItem('user');
+      } else {
+        // Real Mode
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        // Limpiar también localStorage por si acaso
+        localStorage.removeItem('sb-' + config.supabase.url.split('//')[1].split('.')[0] + '-auth-token');
+      }
       router.push('/login');
     }
   };
