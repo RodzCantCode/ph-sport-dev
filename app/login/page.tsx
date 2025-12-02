@@ -54,8 +54,8 @@ export default function LoginPage() {
       } else {
         router.replace('/my-week');
       }
-    } catch (_err) {
-      setError('Error al iniciar sesión. Intenta de nuevo.');
+      } catch (error) {
+        setError('Error al iniciar sesión. Intenta de nuevo.');
       setLoading(false);
     }
   };

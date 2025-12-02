@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,7 +49,7 @@ export default function DesignsPage() {
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
 
   // Hook de diseñadores
-  const { designers, loading: loadingDesigners } = useDesigners();
+  const { designers } = useDesigners();
 
   // Filtros
   const [statusFilter, setStatusFilter] = useState<DesignStatus | 'all'>('all');
@@ -67,7 +67,7 @@ export default function DesignsPage() {
   const [sortColumn, setSortColumn] = useState<'title' | 'player' | 'deadline' | 'status' | null>('deadline');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const loadDesigns = () => {
+  const loadDesigns = useCallback(() => {
     setLoading(true);
     setError(null);
     const { weekStart: defaultStart, weekEnd: defaultEnd } = getDefaultWeekRange();
@@ -93,7 +93,7 @@ export default function DesignsPage() {
         toast.error(`Error al cargar los diseños: ${errorMessage}`);
       })
       .finally(() => setLoading(false));
-  };
+  }, [weekStartFilter, weekEndFilter, statusFilter, designerFilter]);
 
   useEffect(() => {
     // Inicializar filtros de semana
@@ -102,10 +102,7 @@ export default function DesignsPage() {
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
     setWeekStartFilter(format(weekStart, 'yyyy-MM-dd'));
     setWeekEndFilter(format(weekEnd, 'yyyy-MM-dd'));
-    loadDesigns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // Necesario: Este efecto solo debe ejecutarse una vez al montar el componente
-    // para inicializar los filtros. loadDesigns depende de filtros que se establecen aquí.
   }, []);
 
   useEffect(() => {
@@ -113,11 +110,7 @@ export default function DesignsPage() {
     if (weekStartFilter && weekEndFilter) {
       loadDesigns();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // Necesario: loadDesigns depende de filtros que cambian dinámicamente.
-    // Incluir loadDesigns en dependencias causaría un loop infinito.
-    // TODO: Refactorizar para incluir loadDesigns en dependencias de forma segura usando useCallback.
-  }, [statusFilter, designerFilter, weekStartFilter, weekEndFilter]);
+  }, [loadDesigns, weekStartFilter, weekEndFilter]);
 
   const handleEdit = (design: Design) => {
     setEditingDesign(design);

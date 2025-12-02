@@ -205,7 +205,7 @@ export function CreateDesignDialog({
                       onValueChange={(value) =>
                         setFormData({
                           ...formData,
-                          player_status: value === 'none' ? null : (value as any),
+                          player_status: value === 'none' ? null : (value as 'injured' | 'suspended' | 'doubt' | 'last_minute'),
                         })
                       }
                     >
