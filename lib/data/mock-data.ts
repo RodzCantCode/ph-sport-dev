@@ -108,6 +108,7 @@ export const mockDesigns: Design[] = [
     match_away: 'Barcelona',
     deadline_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'TO_REVIEW',
+    player_status: 'injured',
     designer_id: '4',
   },
   {
@@ -150,6 +151,7 @@ export const mockDesigns: Design[] = [
     folder_url: 'https://drive.google.com/drive/folders/abc127',
     deadline_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'TO_REVIEW',
+    player_status: 'suspended',
     designer_id: '2',
   },
   {
@@ -171,6 +173,7 @@ export const mockDesigns: Design[] = [
     folder_url: 'https://drive.google.com/drive/folders/abc128',
     deadline_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'DELIVERED',
+    player_status: 'last_minute',
     designer_id: '5',
   },
   {
@@ -181,6 +184,7 @@ export const mockDesigns: Design[] = [
     match_away: 'Sevilla',
     deadline_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
     status: 'BACKLOG',
+    player_status: 'doubt',
     designer_id: '3',
   },
 ];
@@ -198,3 +202,4 @@ export function getDesigners() {
 export function getDesignerById(designerId?: string) {
   return designerId ? mockUsers.find(u => u.id === designerId) : null;
 }
+

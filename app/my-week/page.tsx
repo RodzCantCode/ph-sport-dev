@@ -27,6 +27,7 @@ import RequireAuth from '@/components/auth/require-auth';
 import { cn, getDefaultWeekRange } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 import type { Design } from '@/lib/types/design';
+import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 
 // Dynamic import para evitar problemas con SSR
 // Importación explícita del default export
@@ -262,8 +263,10 @@ export default function MyWeekPage() {
               >
                 <CardHeader>
                   <CardTitle>{task.title}</CardTitle>
-                  <CardDescription>
-                    {task.player} - {task.match_home} vs {task.match_away}
+                  <CardDescription className="flex items-center gap-2 flex-wrap">
+                    <span>{task.player}</span>
+                    {task.player_status && <PlayerStatusTag status={task.player_status} />}
+                    <span>- {task.match_home} vs {task.match_away}</span>
                   </CardDescription>
                   <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Calendar className="h-4 w-4" />

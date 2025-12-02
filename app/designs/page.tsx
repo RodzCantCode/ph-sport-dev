@@ -37,6 +37,7 @@ import Link from 'next/link';
 import { cn, getDefaultWeekRange } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 import { useDebounce } from '@/lib/hooks/use-debounce';
+import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 
 export default function DesignsPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -483,7 +484,7 @@ export default function DesignsPage() {
                     onClick={() => handleSort('player')}
                   >
                     <div className="flex items-center gap-1">
-                      Jugador/Equipo
+                      Contexto
                       {sortColumn === 'player' && (
                         sortDirection === 'asc' 
                           ? <ArrowUp className="h-4 w-4" />
@@ -491,7 +492,6 @@ export default function DesignsPage() {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead>Partido</TableHead>
                   <TableHead>Diseñador</TableHead>
                   <TableHead 
                     className="cursor-pointer hover:text-orange-400 transition-colors select-none"
@@ -540,32 +540,51 @@ export default function DesignsPage() {
                           {design.title}
                         </Link>
                       </TableCell>
-                      <TableCell>{design.player}</TableCell>
                       <TableCell>
-                        {design.match_home} vs {design.match_away}
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{design.player}</span>
+                            {design.player_status && <PlayerStatusTag status={design.player_status} variant="compact" />}
+                          </div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {design.match_home} vs {design.match_away}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
-                        {designer ? designer.name : <span className="text-gray-600 dark:text-gray-500">Sin asignar</span>}
+                        {designer ? (
+                          <div className="flex items-center gap-2" title={designer.name}>
+                            <div className="h-6 w-6 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-xs font-medium text-orange-700 dark:text-orange-300">
+                              {designer.name.charAt(0)}
+                            </div>
+                            <span className="text-sm truncate max-w-[100px]">{designer.name.split(' ')[0]}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Badge status={design.status}>
+                          <Badge status={design.status} className="h-6">
                             {STATUS_LABELS[design.status]}
                           </Badge>
                           {isCritical && (
-                            <Badge variant="destructive" className="animate-pulse">
+                            <Badge variant="destructive" className="animate-pulse h-6 px-1.5">
                               🔥 {Math.floor(hoursUntilDeadline)}h
                             </Badge>
                           )}
                           {isUrgent && !isCritical && (
-                            <Badge className="bg-yellow-500/30 text-yellow-400 border-yellow-500/50">
-                              ⚠️ Urgente
+                            <Badge className="bg-yellow-500/30 text-yellow-400 border-yellow-500/50 h-6 px-1.5">
+                              ⚠️
                             </Badge>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {format(new Date(design.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
+                        <div className="flex flex-col text-sm">
+                          <span>{format(new Date(design.deadline_at), "dd MMM", { locale: es })}</span>
+                          <span className="text-xs text-gray-500">{format(new Date(design.deadline_at), "HH:mm")}</span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

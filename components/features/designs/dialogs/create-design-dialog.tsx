@@ -24,6 +24,7 @@ import { Plus, Edit, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDateTimeLocal } from '@/lib/utils';
 import { getDesigners } from '@/lib/data/mock-data';
+import { PLAYER_STATUS_CONFIG } from '@/components/features/designs/tags/player-status-tag';
 
 import type { Design } from '@/lib/types/design';
 
@@ -51,6 +52,7 @@ export function CreateDesignDialog({
     deadline_at: '',
     folder_url: '',
     designer_id: null as string | null,
+    player_status: null as 'injured' | 'suspended' | 'doubt' | 'last_minute' | null,
   });
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export function CreateDesignDialog({
         deadline_at: formatDateTimeLocal(design.deadline_at),
         folder_url: design.folder_url || '',
         designer_id: design.designer_id || null,
+        player_status: design.player_status || null,
       });
     } else {
       setFormData({
@@ -73,6 +76,7 @@ export function CreateDesignDialog({
         deadline_at: '',
         folder_url: '',
         designer_id: null,
+        player_status: null,
       });
     }
   }, [design, open]);
@@ -122,6 +126,7 @@ export function CreateDesignDialog({
           deadline_at: '',
           folder_url: '',
           designer_id: null,
+          player_status: null,
         });
       }
       onDesignCreated();
@@ -176,18 +181,49 @@ export function CreateDesignDialog({
                     className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="player" className="text-gray-700 dark:text-gray-300">
-                    Jugador/Equipo
-                  </Label>
-                  <Input
-                    id="player"
-                    placeholder="Equipo / Jugador X"
-                    required
-                    value={formData.player}
-                    onChange={(e) => setFormData({ ...formData, player: e.target.value })}
-                    className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="player" className="text-gray-700 dark:text-gray-300">
+                      Jugador/Equipo
+                    </Label>
+                    <Input
+                      id="player"
+                      placeholder="Equipo / Jugador X"
+                      required
+                      value={formData.player}
+                      onChange={(e) => setFormData({ ...formData, player: e.target.value })}
+                      className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="player_status" className="text-gray-700 dark:text-gray-300">
+                      Estado Jugador (Opcional)
+                    </Label>
+                    <Select
+                      value={formData.player_status || 'none'}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          player_status: value === 'none' ? null : (value as any),
+                        })
+                      }
+                    >
+                      <SelectTrigger id="player_status" className="glass-effect text-gray-800 dark:text-gray-200">
+                        <SelectValue placeholder="Sin estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin estado</SelectItem>
+                        {Object.entries(PLAYER_STATUS_CONFIG).map(([key, config]) => (
+                          <SelectItem key={key} value={key}>
+                            <div className="flex items-center gap-2">
+                              <config.icon className="h-4 w-4" />
+                              <span>{config.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">

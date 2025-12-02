@@ -16,8 +16,21 @@ export async function GET(
     }
     return NextResponse.json(design);
   }
-  // TODO: fetch from Supabase
-  return NextResponse.json({ error: 'Not implemented' }, { status: 501 });
+  
+  // MODO REAL: fetch from Supabase
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+  
+  const { data: design, error } = await supabase
+    .from('designs')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error || !design) {
+    return NextResponse.json({ error: 'Design not found' }, { status: 404 });
+  }
+  return NextResponse.json(design);
 }
 
 export async function PUT(
@@ -45,8 +58,22 @@ export async function PUT(
     } as typeof mockDesigns[number];
     return NextResponse.json(mockDesigns[index]);
   }
-  // TODO: update in Supabase with RLS
-  return NextResponse.json({ error: 'Not implemented' }, { status: 501 });
+  
+  // MODO REAL: update in Supabase
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+  
+  const { data: updated, error } = await supabase
+    .from('designs')
+    .update(body)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  return NextResponse.json(updated);
 }
 
 export async function DELETE(
@@ -64,7 +91,19 @@ export async function DELETE(
     mockDesigns.splice(index, 1);
     return NextResponse.json({ ok: true, message: 'Design deleted successfully' });
   }
-  // TODO: delete in Supabase with RLS
-  return NextResponse.json({ error: 'Not implemented' }, { status: 501 });
+  
+  // MODO REAL: delete in Supabase
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from('designs')
+    .delete()
+    .eq('id', id);
+  
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  return NextResponse.json({ ok: true, message: 'Design deleted successfully' });
 }
 

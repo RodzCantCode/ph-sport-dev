@@ -38,8 +38,52 @@ export function getCurrentUser(): CurrentUser | null {
     }
   }
 
-  // TODO: Migrar a Supabase - Ver docs/supabase-migration.md
+  // Modo real: requiere usar getCurrentUserAsync()
   return null;
+}
+
+/**
+ * Obtiene el usuario actual autenticado (versión asíncrona)
+ * 
+ * Esta versión soporta tanto modo demo como Supabase.
+ * Usar esta función en lugar de getCurrentUser() para nuevos componentes.
+ * 
+ * @returns Usuario actual o null si no hay sesión
+ */
+export async function getCurrentUserAsync(): Promise<CurrentUser | null> {
+  // DEMO MODE: usar función síncrona existente
+  if (shouldUseMockData()) {
+    return getCurrentUser();
+  }
+
+  // MODO REAL: consultar Supabase
+  // Solo en cliente
+  if (typeof window === 'undefined') return null;
+
+  const { createClient } = await import('@/lib/supabase/client');
+  const supabase = createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return null;
+  
+  // Obtener perfil del usuario
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, full_name, role')
+    .eq('id', user.id)
+    .single();
+  
+  if (profileError || !profile) return null;
+  
+  // Mapear role de Supabase a formato de la app
+  const role = profile.role === 'ADMIN' ? 'admin' : 'designer';
+  
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: profile.full_name || user.email?.split('@')[0] || '',
+    role: role as 'designer' | 'manager' | 'admin',
+  };
 }
 
 /**

@@ -6,21 +6,17 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar, ExternalLink, User } from 'lucide-react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import type { Design } from '@/lib/types/design';
-import { STATUS_LABELS } from '@/lib/types/design';
 import { mockUsers } from '@/lib/data/mock-data';
+import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) => {
   const { isSorting, wasDragging } = args;
-  
-  // No animar cuando se está arrastrando o clasificando
   if (isSorting || wasDragging) {
-    return false;
+    return defaultAnimateLayoutChanges(args);
   }
-  
-  return defaultAnimateLayoutChanges(args);
+  return true;
 };
 
 interface KanbanCardProps {
@@ -28,24 +24,25 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ design }: KanbanCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: design.id,
     data: {
-      type: 'design',
+      type: 'Design',
       design,
     },
     animateLayoutChanges,
-    transition: {
-      duration: 350,
-      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
-    },
   });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 350ms cubic-bezier(0.25, 1, 0.5, 1), opacity 200ms ease',
-    opacity: isDragging ? 0.5 : 1,
-    cursor: isDragging ? 'grabbing' : 'grab',
+    transform: CSS.Translate.toString(transform),
+    transition,
   };
 
   const designer = design.designer_id ? mockUsers.find((u) => u.id === design.designer_id) : null;
@@ -57,63 +54,62 @@ export function KanbanCard({ design }: KanbanCardProps) {
       {...attributes}
       {...listeners}
       className={`
-        cursor-grab active:cursor-grabbing
         hover:shadow-lg hover:scale-[1.01] 
         transition-all duration-300 ease-out
         border border-gray-300/30 dark:border-gray-700/30 bg-gray-100/50 dark:bg-gray-800/50
+        relative overflow-hidden
         ${isDragging ? 'ring-2 ring-orange-500/50 shadow-2xl' : ''}
       `}
     >
-      <div className="p-4 space-y-3">
+      <div className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <Link
             href={`/designs/${design.id}`}
             onClick={(e) => e.stopPropagation()}
-            className="font-semibold text-gray-800 dark:text-gray-200 hover:text-orange-400 transition-colors flex-1 hover:underline"
+            className="font-semibold text-gray-800 dark:text-gray-200 hover:text-orange-400 transition-colors flex-1 hover:underline leading-tight"
           >
             {design.title}
           </Link>
-          <Badge status={design.status} className="shrink-0">
-            {STATUS_LABELS[design.status]}
-          </Badge>
+          
+          {design.player_status && (
+            <PlayerStatusTag status={design.player_status} />
+          )}
         </div>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-            <User className="h-3.5 w-3.5" />
-            <span className="truncate">{design.player}</span>
+        <div className="space-y-1.5 text-sm">
+          {/* Partido en una línea */}
+          <div className="text-gray-700 dark:text-gray-300 font-medium text-sm truncate">
+            {design.match_home} vs {design.match_away}
           </div>
 
-          <div className="text-gray-700 dark:text-gray-300">
-            <div className="font-medium">{design.match_home}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-500">vs</div>
-            <div className="font-medium">{design.match_away}</div>
+          {/* Meta info compacta en una línea */}
+          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+            {designer && (
+              <>
+                <User className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate max-w-[80px]">{designer.name}</span>
+                <span className="text-gray-500 dark:text-gray-600">•</span>
+              </>
+            )}
+            <Calendar className="h-3 w-3 flex-shrink-0" />
+            <span className="whitespace-nowrap">{format(new Date(design.deadline_at), 'dd MMM', { locale: es })}</span>
+            {design.folder_url && (
+              <>
+                <span className="text-gray-500 dark:text-gray-600">•</span>
+                <a
+                  href={design.folder_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center text-orange-400 hover:text-orange-300 transition-colors"
+                  title="Abrir carpeta Drive"
+                  aria-label="Abrir carpeta Drive"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </>
+            )}
           </div>
-
-          {designer && (
-            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-              <User className="h-3 w-3" />
-              <span className="truncate">{designer.name}</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-500">
-            <Calendar className="h-3 w-3" />
-            <span>{format(new Date(design.deadline_at), 'dd MMM, yyyy', { locale: es })}</span>
-          </div>
-
-          {design.folder_url && (
-            <a
-              href={design.folder_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 transition-colors"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Abrir carpeta
-            </a>
-          )}
         </div>
       </div>
     </Card>

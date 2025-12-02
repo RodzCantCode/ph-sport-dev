@@ -42,3 +42,4 @@ export function formatDateTimeLocal(isoString: string): string {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
+

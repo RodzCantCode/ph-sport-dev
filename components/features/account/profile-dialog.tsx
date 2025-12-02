@@ -233,3 +233,4 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     </Dialog>
   );
 }
+

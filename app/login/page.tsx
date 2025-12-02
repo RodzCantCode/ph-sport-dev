@@ -4,44 +4,91 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mockUsers } from '@/lib/data/mock-data';
 import { Card } from '@/components/ui/card';
+import { shouldUseMockData } from '@/lib/demo-mode';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    // Buscar usuario en mockUsers por email
-    const user = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    
-    // Si no existe, crear uno temporal basado en el email
-    const userData = user || {
-      id: `temp-${Date.now()}`,
-      email,
-      name: email.split('@')[0],
-      role: email.includes('eva') || email.includes('manager') || email.includes('admin') 
-        ? 'manager' 
-        : 'designer',
-    };
+    try {
+      if (shouldUseMockData()) {
+        // MODO DEMO: Buscar usuario en mockUsers por email
+        const user = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+        
+        // Si no existe, crear uno temporal basado en el email
+        const userData = user || {
+          id: `temp-${Date.now()}`,
+          email,
+          name: email.split('@')[0],
+          role: email.includes('eva') || email.includes('manager') || email.includes('admin') 
+            ? 'manager' 
+            : 'designer',
+        };
 
-    sessionStorage.setItem('user', JSON.stringify({
-      id: userData.id,
-      email: userData.email,
-      name: userData.name,
-      role: userData.role,
-    }));
+        sessionStorage.setItem('user', JSON.stringify({
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.role,
+        }));
 
-    // Redirigir directamente según rol
-    if (userData.role === 'manager' || userData.role === 'admin') {
-      router.replace('/dashboard');
-    } else {
-      router.replace('/my-week');
+        // Redirigir directamente según rol
+        if (userData.role === 'manager' || userData.role === 'admin') {
+          router.replace('/dashboard');
+        } else {
+          router.replace('/my-week');
+        }
+      } else {
+        // MODO REAL: Autenticar con Supabase
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (authError) {
+          setError(authError.message === 'Invalid login credentials' 
+            ? 'Email o contraseña incorrectos' 
+            : authError.message);
+          setLoading(false);
+          return;
+        }
+
+        // Verificar que el usuario tiene perfil
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError || !profile) {
+          setError('Usuario sin perfil configurado. Contacta al administrador.');
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
+        }
+
+        // Redirigir según rol
+        if (profile.role === 'ADMIN') {
+          router.replace('/dashboard');
+        } else {
+          router.replace('/my-week');
+        }
+      }
+    } catch (_err) {
+      setError('Error al iniciar sesión. Intenta de nuevo.');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -100,8 +147,14 @@ export default function LoginPage() {
               </button>
             </div>
 
+            {error && (
+              <div className="p-3 glass-effect border border-red-500/50 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
             <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-              Demo: Usa cualquier email/contraseña
+              {shouldUseMockData() ? 'Demo: Usa cualquier email/contraseña' : 'Modo Producción'}
             </div>
           </form>
         </Card>

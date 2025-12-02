@@ -13,6 +13,7 @@ import {
   pointerWithin,
   closestCenter,
   rectIntersection,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
@@ -36,6 +37,27 @@ const COLUMNS: Array<{ status: DesignStatus; title: string }> = [
   { status: 'TO_REVIEW', title: 'Por Revisar' },
   { status: 'DELIVERED', title: 'Entregado' },
 ];
+
+/**
+ * Custom collision detection strategy that prioritizes pointer position
+ * over center-based calculations for more accurate drop zone detection.
+ */
+const customCollisionDetection: CollisionDetection = (args) => {
+  // First try pointerWithin - most accurate for user's cursor position
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+  
+  // Then rectIntersection as fallback for edge cases
+  const intersectionCollisions = rectIntersection(args);
+  if (intersectionCollisions.length > 0) {
+    return intersectionCollisions;
+  }
+  
+  // Finally closestCenter as last resort
+  return closestCenter(args);
+};
 
 export function KanbanBoard({
   designs,
@@ -71,9 +93,6 @@ export function KanbanBoard({
     // Proporcionar feedback visual durante el drag
     const { over } = event;
     if (!over) return;
-    
-    // Esto ayuda a que el usuario vea dónde puede soltar
-    console.debug('Dragging over:', over.id);
   };
 
   const handleDragCancel = () => {
@@ -141,7 +160,7 @@ export function KanbanBoard({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragCancel={handleDragCancel}

@@ -57,6 +57,7 @@ export interface Design {
   player: string;
   match_home: string;
   match_away: string;
+  player_status?: 'injured' | 'suspended' | 'doubt' | 'last_minute'; // Estado del jugador
   folder_url?: string;
   deadline_at: string; // ISO 8601 string
   status: DesignStatus;

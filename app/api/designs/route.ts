@@ -39,8 +39,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ items, count: items.length });
   }
 
-  // TODO: Query Supabase with filters (week interval, status, designerId)
-  return NextResponse.json({ items: [], count: 0 });
+  // MODO REAL: Query Supabase
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+  
+  let query = supabase
+    .from('designs')
+    .select('*')
+    .gte('deadline_at', filters.weekStart)
+    .lte('deadline_at', filters.weekEnd);
+  
+  if (filters.status) {
+    query = query.eq('status', filters.status);
+  }
+  if (filters.designerId) {
+    query = query.eq('designer_id', filters.designerId);
+  }
+  
+  const { data: items, error } = await query;
+  
+  if (error) {
+    logger.log('[API] Supabase error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  
+  return NextResponse.json({ items: items || [], count: items?.length || 0 });
 }
 
 export async function POST(request: Request) {
@@ -84,7 +107,42 @@ export async function POST(request: Request) {
     return NextResponse.json(newDesign, { status: 201 });
   }
 
-  // TODO: Insert into Supabase
-  return NextResponse.json({ id: crypto.randomUUID(), ...body, status: 'BACKLOG' }, { status: 201 });
+  // MODO REAL: Insert into Supabase
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+  
+  // Obtener usuario actual
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  // Si designer_id es null, undefined o 'auto', asignar automáticamente
+  let designerId = body.designer_id;
+  if (!designerId || designerId === 'auto' || designerId === null) {
+    designerId = assignDesignerAutomatically();
+  }
+  
+  const { data: newDesign, error } = await supabase
+    .from('designs')
+    .insert({
+      title: body.title,
+      player: body.player,
+      match_home: body.match_home,
+      match_away: body.match_away,
+      folder_url: body.folder_url,
+      deadline_at: body.deadline_at,
+      designer_id: designerId || null,
+      created_by: user.id,
+      status: 'BACKLOG',
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  
+  return NextResponse.json(newDesign, { status: 201 });
 }
 

@@ -24,7 +24,7 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
   const colors = STATUS_COLORS[status];
 
   return (
-    <div className="flex flex-col h-full min-h-[600px] max-h-[calc(100vh-200px)]">
+    <div className="flex flex-col h-full min-h-[400px] md:min-h-[600px] max-h-[calc(100vh-200px)]">
       <Card
         ref={setNodeRef}
         className={`
@@ -76,3 +76,4 @@ export function KanbanColumn({ status, title, designs, count }: KanbanColumnProp
     </div>
   );
 }
+

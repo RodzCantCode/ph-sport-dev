@@ -20,6 +20,7 @@ import { CreateDesignDialog } from '@/components/features/designs/dialogs/create
 import { logger } from '@/lib/utils/logger';
 import { useDashboardKPIs } from '@/lib/hooks/use-dashboard-kpis';
 import { STATUS_LABELS } from '@/lib/types/design';
+import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 
 export default function DashboardPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -196,6 +197,9 @@ export default function DashboardPage() {
                         <Badge status={design.status} className="shrink-0">
                           {STATUS_LABELS[design.status]}
                         </Badge>
+                        {design.player_status && (
+                          <PlayerStatusTag status={design.player_status} />
+                        )}
                         {design.isCritical && (
                           <Badge variant="destructive" className="animate-pulse shrink-0">
                             🔥 {Math.floor(design.hoursUntilDeadline)}h

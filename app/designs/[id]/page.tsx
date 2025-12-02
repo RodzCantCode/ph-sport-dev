@@ -16,6 +16,7 @@ import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignHistoryItem } from '@/lib/types/design';
 import Link from 'next/link';
 import { logger } from '@/lib/utils/logger';
+import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 
 // Historial simulado para demo
 function generateHistory(design: Design): DesignHistoryItem[] {
@@ -100,6 +101,7 @@ export default function DesignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<DesignHistoryItem[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -175,13 +177,28 @@ export default function DesignDetailPage() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400">{design.player} - {design.match_home} vs {design.match_away}</p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href={`/designs?edit=${design.id}`}>
-            <Edit2 className="mr-2 h-4 w-4" />
-            Editar
-          </Link>
+        <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
+          <Edit2 className="mr-2 h-4 w-4" />
+          Editar
         </Button>
       </div>
+
+      <CreateDesignDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onDesignCreated={() => {
+          // Recargar datos
+          setLoading(true);
+          fetch(`/api/designs/${id}`)
+            .then((r) => r.json())
+            .then((data) => {
+              setDesign(data);
+              setHistory(generateHistory(data));
+            })
+            .finally(() => setLoading(false));
+        }}
+        design={design}
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Información principal */}

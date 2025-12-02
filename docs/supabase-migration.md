@@ -52,3 +52,4 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 - `components/layout/user-menu.tsx` - Llamada en useEffect
 - `app/my-week/page.tsx` - Llamada en loadTasks
 - Cualquier otro componente que use `getCurrentUser()`
+
