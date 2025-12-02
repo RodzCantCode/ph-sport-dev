@@ -93,8 +93,10 @@ export function CreateDesignDialog({
         setLoading(false);
         return;
       }
-      if (!isEditMode && deadline < new Date()) {
-        toast.error('La fecha de deadline debe ser futura');
+      // Permitir fechas hasta 1 hora en el pasado
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      if (!isEditMode && deadline < oneHourAgo) {
+        toast.error('La fecha de deadline no puede ser tan antigua');
         setLoading(false);
         return;
       }

@@ -49,8 +49,10 @@ export async function POST(request: Request) {
   if (missing.length) {
     return NextResponse.json({ error: `Missing fields: ${missing.join(', ')}` }, { status: 400 });
   }
-  if (new Date(body.deadline_at).getTime() < Date.now()) {
-    return NextResponse.json({ error: 'deadline_at must be in the future' }, { status: 400 });
+  // Permitir fechas hasta 1 hora en el pasado para evitar problemas de sincronización o "just now"
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  if (new Date(body.deadline_at).getTime() < oneHourAgo) {
+    return NextResponse.json({ error: 'La fecha límite no puede ser anterior a hace 1 hora' }, { status: 400 });
   }
 
   const supabase = await createClient();
