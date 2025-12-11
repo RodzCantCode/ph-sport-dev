@@ -53,3 +53,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 - `app/my-week/page.tsx` - Llamada en loadTasks
 - Cualquier otro componente que use `getCurrentUser()`
 
+
+
+
+
+
+

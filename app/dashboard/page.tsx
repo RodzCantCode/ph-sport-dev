@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,13 +9,11 @@ import { Button } from '@/components/ui/button';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Users, Plus, Calendar, TrendingUp, ChevronRight } from 'lucide-react';
+import { Users, Plus, Calendar, TrendingUp, ChevronRight, Palette, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import type { Design } from '@/lib/types/design';
-import { getDefaultWeekRange } from '@/lib/utils';
 import { useDesigners } from '@/lib/hooks/use-designers';
-import RequireAuth from '@/components/auth/require-auth';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { logger } from '@/lib/utils/logger';
 import { useDashboardKPIs } from '@/lib/hooks/use-dashboard-kpis';
@@ -31,7 +29,8 @@ export default function DashboardPage() {
   const { designers } = useDesigners();
 
   const loadDashboard = () => {
-    const { weekStart, weekEnd } = getDefaultWeekRange();
+    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
 
     const qs = new URLSearchParams({
       weekStart: format(weekStart, 'yyyy-MM-dd'),
@@ -55,14 +54,18 @@ export default function DashboardPage() {
     loadDashboard();
   }, []);
 
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+  const dateRangeLabel = `${format(weekStart, 'd MMM', { locale: es })} - ${format(weekEnd, 'd MMM', { locale: es })}`;
+
   // Calcular KPIs usando hook personalizado - DEBE estar antes de cualquier return condicional
   const { designsThisWeek, progressPercentage, deliveredCount, totalWithProgress, upcomingDeadlines } = useDashboardKPIs(items);
 
-  // Últimos 10 diseños ordenados por deadline ASC (más próximos primero)
+  // Últimos 5 diseños ordenados por deadline ASC (más próximos primero)
   const recentDesigns = useMemo(() => {
     return [...items]
       .sort((a, b) => new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime())
-      .slice(0, 10);
+      .slice(0, 5);
   }, [items]);
 
   // Memoizar cálculos de tiempo restante para cada diseño
@@ -111,67 +114,107 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <RequireAuth>
-        <Loader className="p-6" />
-      </RequireAuth>
-    );
+    return <Loader className="p-6" />;
   }
 
   return (
-    <RequireAuth>
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
-      <div className="flex items-center justify-between animate-slide-up">
+      {/* Header simplificado */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-slide-up">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
-            Dashboard del Equipo
+          <h1 className="text-3xl font-bold text-foreground">
+            Inicio
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">Vista general del equipo de diseño</p>
+          <p className="text-muted-foreground">
+            Semana del {dateRangeLabel}
+          </p>
         </div>
-      </div>
 
-      {/* CTAs */}
-      <div className="flex gap-3 animate-slide-up">
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => setDialogOpen(true)} size="lg">
           <Plus className="mr-2 h-4 w-4" />
           Crear Diseño
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href="/my-week">
-            <Calendar className="mr-2 h-4 w-4" />
-            Ver Mi Semana
-          </Link>
         </Button>
       </div>
 
       {/* KPIs */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         <KpiCard
           title="Diseños esta semana"
           value={designsThisWeek}
-          description="Deadlines programados para esta semana"
+          description="Entregas programadas"
           variant="primary"
         />
         <KpiCard
           title="% Entregados"
           value={`${progressPercentage}%`}
-          description={`${deliveredCount} de ${totalWithProgress} en progreso/entregados`}
+          description={`${deliveredCount} de ${totalWithProgress}`}
           variant={progressPercentage >= 50 ? 'success' : 'warning'}
           icon={TrendingUp}
         />
         <KpiCard
           title="Próximos a vencer"
           value={upcomingDeadlines}
-          description="Diseños con deadline en próximas 48h"
+          description="En próximas 48h"
           variant={upcomingDeadlines > 0 ? 'danger' : 'success'}
         />
       </div>
 
-      {/* Lista compacta últimos 10 */}
-      <Card className="animate-slide-up">
-        <CardHeader>
-          <CardTitle className="text-orange-700 dark:text-orange-600">Últimos 10 Diseños</CardTitle>
-          <CardDescription>Ordenados por deadline más próximo</CardDescription>
+      {/* Acciones Rápidas */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Link href="/my-week" className="group">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-foreground group-hover:text-primary transition-colors">Mi Semana</p>
+                <p className="text-sm text-muted-foreground">Calendario personal</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/designs" className="group">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Palette className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-foreground group-hover:text-primary transition-colors">Ver Diseños</p>
+                <p className="text-sm text-muted-foreground">Lista completa</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/communications" className="group">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Activity className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-foreground group-hover:text-primary transition-colors">Actividad</p>
+                <p className="text-sm text-muted-foreground">Feed del equipo</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Próximas Entregas */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Próximas Entregas</CardTitle>
+            <CardDescription>Diseños con deadline más cercano</CardDescription>
+          </div>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/designs">Ver todos</Link>
+          </Button>
         </CardHeader>
         <CardContent>
           {recentDesigns.length === 0 ? (
@@ -183,7 +226,7 @@ export default function DashboardPage() {
               className="border-0"
             />
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-border">
               {recentDesignsWithCalculations.map((design) => {
                 const designer = designers.find(d => d.id === design.designer_id);
                 
@@ -191,11 +234,11 @@ export default function DashboardPage() {
                   <Link
                     key={design.id}
                     href={`/designs/${design.id}`}
-                    className="flex items-center justify-between rounded-lg border border-orange-200/30 dark:border-gray-700/30 bg-orange-50/40 dark:bg-gray-800/30 p-4 hover:bg-orange-100/60 dark:hover:bg-gray-800/50 transition-all cursor-pointer group"
+                    className="flex items-center justify-between rounded-lg p-4 hover:bg-accent/50 transition-all cursor-pointer group"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-800 dark:text-gray-200 truncate group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{design.title}</p>
+                        <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">{design.title}</p>
                         <Badge status={design.status} className="shrink-0">
                           {STATUS_LABELS[design.status]}
                         </Badge>
@@ -213,7 +256,7 @@ export default function DashboardPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         {designer && (
                           <span>Asignado a: {designer.name}</span>
                         )}
@@ -222,7 +265,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors ml-4 shrink-0" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors ml-4 shrink-0" />
                   </Link>
                 );
               })}
@@ -235,7 +278,7 @@ export default function DashboardPage() {
       {unassignedCount > 0 && (
         <Card className="animate-slide-up">
           <CardHeader>
-            <CardTitle className="text-orange-700 dark:text-orange-600">Asignaciones Pendientes</CardTitle>
+            <CardTitle className="text-primary">Asignaciones Pendientes</CardTitle>
             <CardDescription>{unassignedCount} diseño{unassignedCount !== 1 ? 's' : ''} sin asignar</CardDescription>
           </CardHeader>
           <CardContent>
@@ -253,8 +296,5 @@ export default function DashboardPage() {
         onDesignCreated={loadDashboard}
       />
     </div>
-    </RequireAuth>
   );
 }
-
-

@@ -143,36 +143,36 @@ export function CreateDesignDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-effect border-orange-200/20 dark:border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-800 dark:text-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-gray-800 dark:text-gray-200 flex items-center gap-3">
+          <DialogTitle className="text-2xl flex items-center gap-3">
             {isEditMode ? (
               <>
-                <Edit className="h-6 w-6 text-orange-400" />
+                <Edit className="h-6 w-6 text-primary" />
                 Editar Diseño
               </>
             ) : (
               <>
-                <Plus className="h-6 w-6 text-orange-400" />
+                <Plus className="h-6 w-6 text-primary" />
                 Crear Nuevo Diseño
               </>
             )}
           </DialogTitle>
-          <DialogDescription className="text-gray-600 dark:text-gray-400">
+          <DialogDescription>
             {isEditMode ? 'Modifica los datos del diseño.' : 'Añade un nuevo diseño/tarea para el equipo.'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-6 mt-4">
-            <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-gray-800 dark:text-gray-200">Información Básica</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400">Datos principales del diseño</CardDescription>
+                <CardTitle className="text-lg">Información Básica</CardTitle>
+                <CardDescription>Datos principales del diseño</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="title">
                     Título
                   </Label>
                   <Input
@@ -181,12 +181,11 @@ export function CreateDesignDialog({
                     required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="player" className="text-gray-700 dark:text-gray-300">
+                    <Label htmlFor="player">
                       Jugador/Equipo
                     </Label>
                     <Input
@@ -195,11 +194,10 @@ export function CreateDesignDialog({
                       required
                       value={formData.player}
                       onChange={(e) => setFormData({ ...formData, player: e.target.value })}
-                      className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="player_status" className="text-gray-700 dark:text-gray-300">
+                    <Label htmlFor="player_status">
                       Estado Jugador (Opcional)
                     </Label>
                     <Select
@@ -211,7 +209,7 @@ export function CreateDesignDialog({
                         })
                       }
                     >
-                      <SelectTrigger id="player_status" className="glass-effect text-gray-800 dark:text-gray-200">
+                      <SelectTrigger id="player_status">
                         <SelectValue placeholder="Sin estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -230,7 +228,7 @@ export function CreateDesignDialog({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="match_home" className="text-gray-700 dark:text-gray-300">
+                    <Label htmlFor="match_home">
                       Equipo Local
                     </Label>
                     <Input
@@ -239,11 +237,10 @@ export function CreateDesignDialog({
                       required
                       value={formData.match_home}
                       onChange={(e) => setFormData({ ...formData, match_home: e.target.value })}
-                      className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="match_away" className="text-gray-700 dark:text-gray-300">
+                    <Label htmlFor="match_away">
                       Equipo Visitante
                     </Label>
                     <Input
@@ -252,23 +249,22 @@ export function CreateDesignDialog({
                       required
                       value={formData.match_away}
                       onChange={(e) => setFormData({ ...formData, match_away: e.target.value })}
-                      className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                     />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-gray-800 dark:text-gray-200">Asignación</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-lg">Asignación</CardTitle>
+                <CardDescription>
                   Selecciona un diseñador o deja en automático para asignación balanceada
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-2">
-                  <Label htmlFor="designer_id" className="text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="designer_id">
                     Diseñador
                   </Label>
                   <Select
@@ -280,7 +276,7 @@ export function CreateDesignDialog({
                       })
                     }
                   >
-                    <SelectTrigger id="designer_id" className="glass-effect text-gray-800 dark:text-gray-200">
+                    <SelectTrigger id="designer_id">
                       <SelectValue placeholder="Selecciona un diseñador" />
                     </SelectTrigger>
                     <SelectContent>
@@ -296,7 +292,7 @@ export function CreateDesignDialog({
                       )}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-600 dark:text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {formData.designer_id
                       ? 'El diseño se asignará al diseñador seleccionado'
                       : 'El sistema asignará automáticamente al diseñador con menor carga de trabajo'}
@@ -305,15 +301,15 @@ export function CreateDesignDialog({
               </CardContent>
             </Card>
 
-            <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-gray-800 dark:text-gray-200">Fechas y Recursos</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400">Deadline y enlaces a recursos</CardDescription>
+                <CardTitle className="text-lg">Fechas y Recursos</CardTitle>
+                <CardDescription>Fecha de entrega y enlaces a recursos</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="deadline_at" className="text-gray-700 dark:text-gray-300">
-                    Deadline
+                  <Label htmlFor="deadline_at">
+                    Fecha de entrega
                   </Label>
                   <Input
                     id="deadline_at"
@@ -321,14 +317,13 @@ export function CreateDesignDialog({
                     required
                     value={formData.deadline_at}
                     onChange={(e) => setFormData({ ...formData, deadline_at: e.target.value })}
-                    className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                   />
-                  <p className="text-xs text-gray-600 dark:text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {isEditMode ? 'Puedes modificar la fecha del deadline' : 'La fecha debe ser futura'}
                   </p>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="folder_url" className="text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="folder_url">
                     URL Carpeta Drive (opcional)
                   </Label>
                   <Input
@@ -337,9 +332,8 @@ export function CreateDesignDialog({
                     placeholder="https://drive.google.com/drive/folders/..."
                     value={formData.folder_url}
                     onChange={(e) => setFormData({ ...formData, folder_url: e.target.value })}
-                    className="glass-effect text-gray-800 dark:text-gray-200 placeholder-gray-500"
                   />
-                  <p className="text-xs text-gray-600 dark:text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Enlace a la carpeta de Google Drive donde se almacenan los archivos del diseño
                   </p>
                 </div>
@@ -352,14 +346,12 @@ export function CreateDesignDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-orange-200/20 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-white/5 dark:hover:bg-white/5"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
             >
               {loading ? (
                 'Guardando...'

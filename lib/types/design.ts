@@ -38,7 +38,7 @@ export const STATUS_COLORS = {
 export const STATUS_LABELS: Record<DesignStatus, string> = {
   BACKLOG: 'Pendiente',
   IN_PROGRESS: 'En Progreso',
-  TO_REVIEW: 'Por Revisar',
+  TO_REVIEW: 'En Revisión',
   DELIVERED: 'Entregado',
 };
 

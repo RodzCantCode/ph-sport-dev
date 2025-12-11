@@ -4,6 +4,8 @@ import './globals.css';
 import { LayoutWrapper } from './layout-wrapper';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 
+import { AuthProvider } from '@/lib/auth/auth-context';
+
 const outfit = Outfit({ 
   weight: ['300', '400', '500', '600', '700'],
   subsets: ['latin'],
@@ -11,8 +13,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'PH Sport Dashboard',
-  description: 'Dashboard para equipo de diseño',
+  title: 'PH Sport',
+  description: 'Plataforma de gestión para equipo de diseño',
 };
 
 export default function RootLayout({
@@ -22,9 +24,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={outfit.className}>
+      <body className={`${outfit.className} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <LayoutWrapper>{children}</LayoutWrapper>
+          <AuthProvider>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

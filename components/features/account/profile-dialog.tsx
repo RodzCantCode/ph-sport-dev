@@ -12,7 +12,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Mail, Briefcase, CheckCircle2, Clock, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
-import { getCurrentUser, type CurrentUser } from '@/lib/auth/get-current-user';
+import { useAuth } from '@/lib/auth/auth-context';
 import { format } from 'date-fns';
 
 interface ProfileStats {
@@ -30,7 +30,7 @@ interface ProfileDialogProps {
 }
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
-  const [user, setUser] = useState<CurrentUser | null>(null);
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState<ProfileStats>({
     total: 0,
     completed: 0,
@@ -43,11 +43,12 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   useEffect(() => {
     if (open) {
-      const loadUser = async () => {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
+      const loadStats = async () => {
+        if (!user || !profile) {
+          setLoading(false);
+          return;
+        }
 
-        if (currentUser) {
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const weekStart = new Date(now);
@@ -58,7 +59,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         const qs = new URLSearchParams({
           weekStart: format(weekStart, 'yyyy-MM-dd'),
           weekEnd: format(weekEnd, 'yyyy-MM-dd'),
-          ...(currentUser.role === 'designer' ? { designerId: currentUser.id } : {}),
+          ...(profile.role === 'DESIGNER' ? { designerId: user.id } : {}),
         });
 
         fetch(`/api/designs?${qs.toString()}`)
@@ -91,13 +92,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             setLoading(false);
           })
           .catch(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
       };
-      loadUser();
+      loadStats();
     }
-  }, [open]);
+  }, [open, user, profile]);
 
   const getInitials = (name: string) => {
     return name
@@ -110,16 +108,15 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   const getRoleLabel = (role: string) => {
     const roleMap: Record<string, string> = {
-      designer: 'Diseñador',
-      manager: 'Manager',
-      admin: 'Administrador',
+      DESIGNER: 'Diseñador',
+      ADMIN: 'Manager', // Admin se ve como Manager
     };
     return roleMap[role] || role;
   };
 
   const getRoleColor = (role: string) => {
-    if (role === 'manager' || role === 'admin') return 'from-orange-500/20 to-orange-600/20 text-orange-400';
-    return 'from-blue-500/20 to-blue-600/20 text-blue-400';
+    if (role === 'ADMIN') return 'bg-primary/15 text-primary';
+    return 'bg-blue-500/15 text-blue-500';
   };
 
   if (!user) {
@@ -128,36 +125,36 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-effect border-orange-200/20 dark:border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-gray-800 dark:text-gray-200 flex items-center gap-3">
-            <User className="h-6 w-6 text-orange-400" />
+          <DialogTitle className="text-2xl flex items-center gap-3">
+            <User className="h-6 w-6 text-primary" />
             Mi Perfil
           </DialogTitle>
-          <DialogDescription className="text-gray-600 dark:text-gray-400">Información y estadísticas de tu cuenta</DialogDescription>
+          <DialogDescription>Información y estadísticas de tu cuenta</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-start gap-6">
-                <Avatar className="h-20 w-20 border-2 border-orange-500/30">
-                  <AvatarFallback className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 text-orange-400 text-2xl">
-                    {getInitials(user.name)}
+                <Avatar className="h-20 w-20 border-2 border-primary/30">
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl">
+                    {getInitials(profile?.full_name || user.email || '?')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-1">{user.name}</h3>
-                    <Badge className={`bg-gradient-to-r ${getRoleColor(user.role)} border-0`}>
+                    <h3 className="text-xl font-semibold text-foreground mb-1">{profile?.full_name || 'Usuario'}</h3>
+                    <Badge className={`${getRoleColor(profile?.role || '')} border-0`}>
                       <Briefcase className="h-3 w-3 mr-1" />
-                      {getRoleLabel(user.role)}
+                      {getRoleLabel(profile?.role || '')}
                     </Badge>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Mail className="h-4 w-4" />
-                      <span>{user.email}</span>
+                      <span>{user?.email}</span>
                     </div>
                   </div>
                 </div>
@@ -166,63 +163,63 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           </Card>
 
           <div>
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-orange-400" />
+            <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
               Estadísticas
             </h4>
             {loading ? (
-              <div className="text-center py-8 text-gray-600 dark:text-gray-400">Cargando estadísticas...</div>
+              <div className="text-center py-8 text-muted-foreground">Cargando estadísticas...</div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+                <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-1">{stats.total}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-foreground mb-1">{stats.total}</div>
+                    <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                       <AlertCircle className="h-4 w-4" />
                       Total
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+                <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-green-400 mb-1">{stats.completed}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-green-500 mb-1">{stats.completed}</div>
+                    <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                       <CheckCircle2 className="h-4 w-4" />
                       Completadas
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+                <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-orange-400 mb-1">{stats.inProgress}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-primary mb-1">{stats.inProgress}</div>
+                    <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                       <Clock className="h-4 w-4" />
                       En Progreso
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+                <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-yellow-400 mb-1">{stats.toReview}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-yellow-500 mb-1">{stats.toReview}</div>
+                    <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                       <AlertCircle className="h-4 w-4" />
                       Pendientes Revisión
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+                <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-gray-600 dark:text-gray-400 mb-1">{stats.backlog}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-muted-foreground mb-1">{stats.backlog}</div>
+                    <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                       <Calendar className="h-4 w-4" />
                       Pendientes
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass-effect border-orange-200/20 dark:border-white/10">
+                <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-blue-400 mb-1">{stats.deliveredThisMonth}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1">
+                    <div className="text-3xl font-bold text-blue-500 mb-1">{stats.deliveredThisMonth}</div>
+                    <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                       <TrendingUp className="h-4 w-4" />
                       Este Mes
                     </div>
@@ -236,4 +233,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     </Dialog>
   );
 }
+
+
+
+
+
+
 

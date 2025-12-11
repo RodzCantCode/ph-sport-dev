@@ -1,59 +1,59 @@
 # PH Sport Dashboard
 
-Dashboard simple para el equipo de diseño de PH Sport.
+Dashboard para el equipo de diseño de PH Sport.
 
 ## Características
 
-- Login demo (cualquier email/contraseña)
-- Dashboard básico con datos mock
-- Sin dependencias complejas
-- Diseño limpio y funcional
+- **Gestión de Diseños**: Kanban, lista y vistas de calendario.
+- **Backend Real**: Integración completa con Supabase (PostgreSQL).
+- **Autenticación**: Sistema de usuarios y roles (Manager/Designer) vía Supabase Auth.
+- **Asignación Inteligente**: Algoritmo de reparto de tareas basado en carga de trabajo.
+- **UI Moderna**: Tailwind CSS, Shadcn UI, Framer Motion.
 
-## Instalación
+## Requisitos Previos
 
-```bash
-npm install
-npm run dev
-```
+- Node.js 18+
+- Cuenta de Supabase
+
+## Configuración
+
+1.  Clonar el repositorio.
+2.  Instalar dependencias:
+    ```bash
+    npm install
+    ```
+3.  Configurar variables de entorno en `.env.local`:
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=your_project_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+    ```
+4.  Iniciar servidor de desarrollo:
+    ```bash
+    npm run dev
+    ```
 
 ## Scripts disponibles
 
 | Comando              | Descripción                                           |
-|----------------------|-------------------------------------------------------|
+| -------------------- | ----------------------------------------------------- |
 | `npm run dev`        | Inicia el servidor de desarrollo en `localhost:3000`. |
 | `npm run build`      | Crea el build de producción.                          |
 | `npm run start`      | Arranca el server con el build generado.              |
 | `npm run lint`       | Ejecuta ESLint sobre todo el proyecto.                |
-| `npm run lint:fix`   | Aplica fixes automáticos de ESLint cuando sea posible.|
-| `npm run type-check` | Ejecuta `tsc --noEmit` para validar tipos.            |
-| `npm run clean`      | Limpia la carpeta `.next` usando `rimraf`.            |
+| `npm run type-check` | Valida tipos TypeScript.                              |
 
 ## Organización del código
 
 ```
-app/                          # Rutas (App Router de Next.js)
-  api/                        # Endpoints mock (REST)
-  designs/, dashboard/, ...   # Páginas principales
+app/                          # Rutas (App Router) & API Routes
+  api/                        # Endpoints reales (conectan con DB)
+  dashboard/                  # Vista Manager
+  my-week/                    # Vista Designer
 components/
-  ui/                         # Componentes presentacionales reutilizables
-  layout/                     # Shell (sidebar, header, etc.)
-  features/
-    account/                  # Diálogos de perfil/configuración
-    designs/                  # Kanban, diálogos y calendario de diseños
+  ui/                         # Componentes base (Shadcn)
+  features/                   # Componentes de negocio (Tableros, Cards)
 lib/
-  auth/                       # Helpers de autenticación demo
-  data/                       # Mock data centralizada (`data/mock-data.ts`)
-  services/                   # Lógica de negocio (ej. asignación automática)
-  utils/                      # Helpers de formato/utilidades
+  supabase/                   # Cliente y utilidades de conexión
+  services/                   # Lógica de negocio server-side
+  hooks/                      # Hooks de react (data fetching)
 ```
-
-## Tailwind y PostCSS
-
-- Las directivas `@tailwind base/components/utilities` se procesan vía PostCSS (`postcss.config.js`).
-- Para evitar falsos positivos de VS Code con `@tailwind`, se incluye `.vscode/settings.json` con `css.lint.unknownAtRules: "ignore"`.
-- `tailwind.config.ts` ya indexa `app/`, `components/` y `content` para el purge.
-
-## Datos demo
-
-Los mocks viven en `lib/data/mock-data.ts` y alimentan tanto las páginas (`app/*`) como los servicios en `lib/services/designs/assignment.ts`.
-Puedes ampliarlos rápidamente para prototipos mientras se integra Supabase.

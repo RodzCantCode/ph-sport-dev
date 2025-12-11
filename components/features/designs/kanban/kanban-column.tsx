@@ -15,9 +15,10 @@ interface KanbanColumnProps {
   designs: Design[];
   count: number;
   designers?: { id: string; name: string }[];
+  onCardClick?: (designId: string) => void;
 }
 
-export function KanbanColumn({ status, title, designs, count, designers }: KanbanColumnProps) {
+export function KanbanColumn({ status, title, designs, count, designers, onCardClick }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
   });
@@ -51,8 +52,8 @@ export function KanbanColumn({ status, title, designs, count, designers }: Kanba
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto overflow-x-hidden pb-8 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-          <div className="space-y-3 min-h-[300px] pb-4">
+        <CardContent className="flex-1 overflow-y-auto overflow-x-hidden pt-1 pb-8 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+          <div className="space-y-3 min-h-[300px] pb-4 px-0.5">
             <SortableContext items={designs.map((d) => d.id)} strategy={verticalListSortingStrategy}>
               {designs.length === 0 ? (
                 <div className={`
@@ -73,6 +74,7 @@ export function KanbanColumn({ status, title, designs, count, designers }: Kanba
                     key={design.id} 
                     design={design} 
                     designer={designers?.find(d => d.id === design.designer_id)}
+                    onCardClick={onCardClick}
                   />
                 ))
               )}
@@ -83,4 +85,10 @@ export function KanbanColumn({ status, title, designs, count, designers }: Kanba
     </div>
   );
 }
+
+
+
+
+
+
 

@@ -49,6 +49,7 @@ export async function POST(request: Request) {
   if (missing.length) {
     return NextResponse.json({ error: `Missing fields: ${missing.join(', ')}` }, { status: 400 });
   }
+
   // Permitir fechas hasta 1 hora en el pasado para evitar problemas de sincronización o "just now"
   const oneHourAgo = Date.now() - 60 * 60 * 1000;
   if (new Date(body.deadline_at).getTime() < oneHourAgo) {
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
+  
   
   // Obtener usuario actual
   const { data: { user } } = await supabase.auth.getUser();
@@ -68,6 +70,7 @@ export async function POST(request: Request) {
   if (!designerId || designerId === 'auto' || designerId === null) {
     designerId = await assignDesignerAutomatically();
   }
+  
   
   const { data: newDesign, error } = await supabase
     .from('designs')

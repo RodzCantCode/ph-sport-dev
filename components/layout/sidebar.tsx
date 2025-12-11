@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Palette, Calendar, LogOut, ChevronLeft } from 'lucide-react';
+import { Palette, Calendar, ChevronLeft, Activity, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
+import { useAuth } from '@/lib/auth/auth-context';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -19,40 +18,14 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// Array único de items de navegación
-const allNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/designs', label: 'Diseños', icon: Palette },
-  { href: '/my-week', label: 'Mi Semana', icon: Calendar },
-];
-
-// Función para obtener items ordenados según rol
-const getNavItemsForRole = (user: CurrentUser | null): NavItem[] => {
-  if (isAdminOrManager(user)) {
-    // Managers: Dashboard, Diseños, Mi Semana
-    return allNavItems;
-  }
-  // Designers: Dashboard, Mi Semana, Diseños
-  return [
-    allNavItems[0], // Dashboard
-    allNavItems[2], // Mi Semana
-    allNavItems[1], // Diseños
-  ];
-};
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
 
 export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  
-  useEffect(() => {
-    setMounted(true);
-    const loadUser = async () => {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-    };
-    loadUser();
-  }, []);
+  const { user, profile, loading } = useAuth();
   
   const handleLinkClick = () => {
     // Cerrar sidebar en mobile cuando se hace clic en un link
@@ -61,108 +34,114 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
     }
   };
 
-  const handleLogout = async () => {
-    if (typeof window !== 'undefined') {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      window.location.href = '/login';
-    }
-  };
+  if (loading) return null;
+  if (!user) return null;
   
-  // No renderizar en servidor para evitar hydration mismatch
-  if (!mounted) {
-    return null;
-  }
+  // En producción estricto: Si no hay perfil, no mostramos nada
+  if (!profile) return null;
+
+  const getNavGroups = (): NavGroup[] => {
+    const groups: NavGroup[] = [
+      {
+        label: 'Navegación',
+        items: [
+          { href: '/dashboard', label: 'Inicio', icon: Home },
+          { href: '/my-week', label: 'Mi Semana', icon: Calendar },
+          { href: '/designs', label: 'Diseños', icon: Palette },
+          { href: '/communications', label: 'Actividad', icon: Activity },
+        ],
+      },
+    ];
+
+    return groups;
+  };
 
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen glass-effect-strong border-r border-orange-200/20 dark:border-white/10 transition-all duration-300 ease-in-out',
+        'fixed left-0 top-0 z-40 h-screen transition-all duration-300 ease-in-out',
+        'bg-sidebar text-sidebar-foreground',
         'flex flex-col',
         collapsed ? 'w-20' : 'w-64',
-        'hidden md:flex' // Solo oculto en mobile cuando no está en overlay mode
+        'hidden md:flex'
       )}
     >
-      {/* Logo/Header */}
-      <div className={cn('flex h-16 items-center border-b border-orange-200/20 dark:border-white/10 relative', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
+      {/* Logo Header */}
+      <div className={cn(
+        'flex items-center h-16',
+        collapsed ? 'justify-center px-0' : 'justify-between px-6'
+      )}>
         {!collapsed ? (
           <>
-            <Link href="/dashboard" className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+            <Link href="/dashboard" className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity tracking-tight">
               PH Sport
             </Link>
             <button
               onClick={onToggle}
-              className="p-2 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 transition-colors text-gray-600 dark:text-gray-400 hover:text-orange-400"
+              className="p-1.5 rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
               aria-label="Collapse sidebar"
             >
-              <ChevronLeft className="h-5 w-5 transition-transform duration-300" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
           </>
         ) : (
-          <>
-            <Link href="/dashboard" className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+          <div className="relative">
+            <Link href="/dashboard" className="text-xl font-bold text-primary">
               PH
             </Link>
             <button
               onClick={onToggle}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full glass-effect border border-orange-200/20 dark:border-white/10 hover:bg-white/10 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400 hover:text-orange-400 shadow-lg"
+              className="absolute -right-6 top-1/2 -translate-y-1/2 p-1 rounded-full bg-card border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-primary shadow-sm"
               aria-label="Expand sidebar"
             >
-              <ChevronLeft className="h-4 w-4 rotate-180" />
+              <ChevronLeft className="h-3 w-3 rotate-180" />
             </button>
-          </>
+          </div>
         )}
       </div>
+      {/* Inset divider */}
+      <div className="mx-4 border-b border-border" />
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-1 p-4">
-        {(() => {
-          const items = getNavItemsForRole(user);
-          return items.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
- 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={handleLinkClick}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg transition-all duration-200 group',
-                  collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3',
-                  isActive
-                    ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-600 dark:text-orange-400 border-l-2 border-orange-500 shadow-sm shadow-orange-500/10'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/5 dark:hover:bg-white/5'
-                )}
-              >
-                <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400 group-hover:text-orange-400 transition-colors')} />
-                {!collapsed && (
-                  <span className={cn('text-sm font-medium transition-opacity duration-300', collapsed ? 'opacity-0 w-0' : 'opacity-100')}>
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            );
-          });
-        })()}
+      <nav className="flex flex-col gap-6 p-4 flex-1 overflow-y-auto">
+        {getNavGroups().map((group) => (
+          <div key={group.label} className={cn("flex flex-col gap-2", collapsed && "gap-2")}>
+            {!collapsed && (
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-1">
+                {group.label}
+              </h3>
+            )}
+            
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
 
-        {/* Separator */}
-        <div className="my-4 h-px bg-orange-200/20 dark:bg-white/10" />
-
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          className={cn(
-            'flex items-center gap-3 rounded-lg transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10',
-            collapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'
-          )}
-        >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!collapsed && <span className={cn('text-sm font-medium transition-opacity duration-300', collapsed ? 'opacity-0 w-0' : 'opacity-100')}>Cerrar Sesión</span>}
-        </button>
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={handleLinkClick}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg transition-all duration-200 group relative',
+                    collapsed ? 'px-3 py-2.5 justify-center' : 'px-4 py-2.5',
+                    isActive
+                      ? 'bg-card text-foreground font-medium shadow-md border-l-[3px] border-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  )}
+                >
+                  <Icon className={cn('h-5 w-5 shrink-0 transition-colors', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
+                  {!collapsed && (
+                    <span className={cn('text-sm transition-opacity duration-300', collapsed ? 'opacity-0 w-0' : 'opacity-100')}>
+                      {item.label}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
     </aside>
   );
 }
-

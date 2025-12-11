@@ -9,13 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-xl hover-lift transition-all duration-300',
-        destructive: 'bg-red-500 text-white hover:bg-red-600 shadow-lg hover-lift transition-all duration-300',
+        default: 'bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-all duration-200',
+        destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 transition-all duration-200',
         outline:
-          'bg-stone-50 dark:bg-white/5 text-orange-600 dark:text-orange-400 shadow-lg hover:bg-stone-100 dark:hover:bg-white/10 hover:text-orange-700 dark:hover:text-orange-300 hover:shadow-xl hover-lift transition-all duration-300 border border-orange-300 dark:border-orange-500/30',
-        secondary: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-500/30 shadow-md hover-lift transition-all duration-300',
-        ghost: 'hover:bg-orange-50 dark:hover:bg-white/5 hover:text-orange-700 dark:hover:text-orange-300 text-gray-700 dark:text-gray-300 transition-all duration-300',
-        link: 'text-orange-600 dark:text-orange-400 underline-offset-4 hover:text-orange-700 dark:hover:text-orange-300 hover:underline transition-all duration-300',
+          'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-all duration-200',
+        secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 transition-all duration-200',
+        ghost: 'hover:bg-accent hover:text-accent-foreground transition-all duration-200',
+        link: 'text-primary underline-offset-4 hover:underline transition-all duration-200',
       },
       size: {
         default: 'h-10 px-4 py-2',

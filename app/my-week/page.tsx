@@ -20,11 +20,10 @@ import {
 } from '@/components/ui/select';
 import { Calendar, ExternalLink, List, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { getCurrentUser, isAdminOrManager, type CurrentUser } from '@/lib/auth/get-current-user';
+import { useAuth } from '@/lib/auth/auth-context';
 import type { DesignStatus } from '@/lib/types/filters';
 import { STATUS_FLOW, STATUS_LABELS } from '@/lib/types/design';
-import RequireAuth from '@/components/auth/require-auth';
-import { cn, getDefaultWeekRange } from '@/lib/utils';
+import { getDefaultWeekRange } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 import type { Design } from '@/lib/types/design';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
@@ -36,7 +35,7 @@ const DesignCalendar = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-64 text-gray-600 dark:text-gray-400 glass-effect rounded-xl">
+      <div className="flex items-center justify-center h-64 text-muted-foreground bg-muted rounded-xl">
         Cargando calendario...
       </div>
     ),
@@ -44,10 +43,10 @@ const DesignCalendar = dynamic(
 );
 
 export default function MyWeekPage() {
+  const { user, profile, loading: authLoading } = useAuth();
+  const [updating, setUpdating] = useState<string | null>(null);
   const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [updating, setUpdating] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [selectedTask, setSelectedTask] = useState<Design | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,47 +55,45 @@ export default function MyWeekPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadTasks = async () => {
-    // Obtener usuario usando el helper
-    // Nota: getCurrentUser() solo funciona en el cliente
-    const currentUser = await getCurrentUser();
-    setUser(currentUser);
+  useEffect(() => {
+    const loadTasks = async () => {
+      // Si está cargando auth, esperar
+      if (authLoading) return;
 
-    if (!currentUser) {
-      setLoading(false);
-      return;
-    }
+      // Si no hay user, no cargar nada (middleware redirigirá si es necesario, pero aquí solo paramos)
+      if (!user || !profile) {
+        setLoading(false);
+        return;
+      }
 
-    const { weekStart, weekEnd } = getDefaultWeekRange();
+      setLoading(true);
+      const { weekStart, weekEnd } = getDefaultWeekRange();
 
-    // Si es admin/manager, NO enviar designerId (ver todas las tareas)
-    // Si es designer, enviar designerId (ver solo sus tareas)
-    const qs = new URLSearchParams({
-      weekStart: format(weekStart, 'yyyy-MM-dd'),
-      weekEnd: format(weekEnd, 'yyyy-MM-dd'),
-      // Solo añadir designerId si es designer (no admin/manager)
-      ...(currentUser && !isAdminOrManager(currentUser) && currentUser.id
-        ? { designerId: currentUser.id }
-        : {}),
-    });
-    
-    fetch(`/api/designs?${qs.toString()}`)
-      .then((r) => {
+      // Si es admin/manager, NO enviar designerId (ver todas las tareas)
+      // Si es designer, enviar designerId (ver solo sus tareas)
+      const qs = new URLSearchParams({
+        weekStart: format(weekStart, 'yyyy-MM-dd'),
+        weekEnd: format(weekEnd, 'yyyy-MM-dd'),
+        // Solo añadir designerId si es designer (no admin/manager)
+        ...(profile.role === 'DESIGNER' ? { designerId: user.id } : {}),
+      });
+      
+      try {
+        const r = await fetch(`/api/designs?${qs.toString()}`);
         if (!r.ok) throw new Error('Error al cargar las tareas');
-        return r.json();
-      })
-      .then((data) => setItems(data.items || []))
-      .catch((err) => {
+        const data = await r.json();
+        setItems(data.items || []);
+      } catch (err) {
         logger.error('My week fetch error:', err);
         toast.error('Error al cargar las tareas. Por favor, intenta de nuevo.');
         setItems([]);
-      })
-      .finally(() => setLoading(false));
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
     loadTasks();
-  }, []);
+  }, [user, profile, authLoading]);
 
   const handleStatusChange = async (id: string, newStatus: DesignStatus) => {
     setUpdating(id);
@@ -112,7 +109,10 @@ export default function MyWeekPage() {
       }
 
       toast.success('Estado actualizado');
-      loadTasks();
+      // Actualizar estado localmente
+      setItems(prev => prev.map(item => 
+        item.id === id ? { ...item, status: newStatus } : item
+      ));
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Error al actualizar estado');
     } finally {
@@ -122,16 +122,12 @@ export default function MyWeekPage() {
 
 
   if (loading) {
-    return (
-      <RequireAuth>
-        <Loader className="p-6" />
-      </RequireAuth>
-    );
+    return <Loader className="p-6" />;
   }
 
   // Filtrar items según rol del usuario
   // Admins/Managers ven todas las tareas, Designers solo las suyas
-  const filteredItems = isAdminOrManager(user)
+  const filteredItems = (profile?.role === 'ADMIN')
     ? items  // Admins/Managers ven todas las tareas del equipo
     : items.filter((it) => it.designer_id === user?.id);  // Designers solo sus tareas asignadas
 
@@ -143,62 +139,33 @@ export default function MyWeekPage() {
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
   return (
-    <RequireAuth>
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
-      <div className="flex items-center justify-between animate-slide-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className={cn(
-            'text-4xl font-bold bg-clip-text text-transparent mb-2',
-            isAdminOrManager(user)
-              ? 'bg-gradient-to-r from-orange-700 to-orange-600'
-              : 'bg-gradient-to-r from-blue-700 to-blue-600'
-          )}>
+          <h1 className="text-3xl font-bold text-foreground">
             Mi Semana
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">Gestiona tus tareas y entregas</p>
+          <p className="text-muted-foreground">Gestiona tus tareas y entregas</p>
         </div>
-        <div className="relative inline-flex items-center gap-2 rounded-lg glass-effect p-1">
-          {/* Slider deslizante - usando translateX para mejor animación */}
-          <div
-            className={cn(
-              'absolute inset-y-1 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 ease-in-out',
-              viewMode === 'list' 
-                ? 'left-1 right-[calc(50%+4px)]' 
-                : 'right-1 left-[calc(50%+4px)]'
-            )}
-          />
-          
-          {/* Botones - mismo ancho, sin hover effect */}
+        <div className="flex items-center rounded-lg border border-border bg-muted p-1">
           <Button
             type="button"
-            variant="ghost"
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('list')}
-            className={cn(
-              'relative z-10 min-w-[120px] transition-colors duration-300',
-              'hover:bg-transparent hover:text-current',
-              viewMode === 'list' 
-                ? 'text-white' 
-                : 'text-gray-600 dark:text-gray-400'
-            )}
+            className="min-w-[100px]"
           >
-            <List className="h-5 w-5 mr-2" />
+            <List className="h-4 w-4 mr-2" />
             Lista
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant={viewMode === 'calendar' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('calendar')}
-            className={cn(
-              'relative z-10 min-w-[120px] transition-colors duration-300',
-              'hover:bg-transparent hover:text-current',
-              viewMode === 'calendar' 
-                ? 'text-white' 
-                : 'text-gray-600 dark:text-gray-400'
-            )}
+            className="min-w-[100px]"
           >
-            <CalendarDays className="h-5 w-5 mr-2" />
+            <CalendarDays className="h-4 w-4 mr-2" />
             Calendario
           </Button>
         </div>
@@ -236,15 +203,15 @@ export default function MyWeekPage() {
 
           <div className="grid gap-4">
           {filteredItems.length === 0 ? (
-            <Card className={cn('border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}>
+            <Card>
               <CardContent className="flex h-64 items-center justify-center">
                 <div className="text-center space-y-3">
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {isAdminOrManager(user) 
+                  <p className="text-muted-foreground">
+                    {(profile?.role === 'ADMIN')
                       ? 'No hay tareas asignadas en el equipo' 
                       : 'No tienes tareas asignadas'}
                   </p>
-                  {!isAdminOrManager(user) && (
+                  {(profile?.role !== 'ADMIN') && (
                     <Button asChild>
                       <Link href="/designs">Ver backlog</Link>
                     </Button>
@@ -253,13 +220,11 @@ export default function MyWeekPage() {
               </CardContent>
             </Card>
           ) : (
-            paginatedItems.map((task, index) => {
+            paginatedItems.map((task) => {
             const nextStatuses = STATUS_FLOW[task.status];
             return (
               <Card 
-                key={task.id} 
-                className={cn('animate-slide-up border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}
-                style={{ animationDelay: `${index * 0.1}s` }}
+                key={task.id}
               >
                 <CardHeader>
                   <CardTitle>{task.title}</CardTitle>
@@ -268,9 +233,9 @@ export default function MyWeekPage() {
                     {task.player_status && <PlayerStatusTag status={task.player_status} />}
                     <span>- {task.match_home} vs {task.match_away}</span>
                   </CardDescription>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    Deadline: {format(new Date(task.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
+                    Fecha de entrega: {format(new Date(task.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -327,7 +292,7 @@ export default function MyWeekPage() {
           {/* Controles de paginación abajo */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
               </p>
               <div className="flex items-center gap-2">
@@ -340,7 +305,7 @@ export default function MyWeekPage() {
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
                 </Button>
-                <span className="flex items-center px-3 text-sm text-gray-600 dark:text-gray-400">
+                <span className="flex items-center px-3 text-sm text-muted-foreground">
                   Página {currentPage} de {totalPages}
                 </span>
                 <Button
@@ -359,15 +324,15 @@ export default function MyWeekPage() {
       ) : (
         <div className="animate-slide-up">
           {filteredItems.length === 0 ? (
-            <Card className={cn('border', isAdminOrManager(user) ? 'border-orange-500/15' : 'border-blue-500/15')}>
+            <Card>
               <CardContent className="flex h-64 items-center justify-center">
                 <div className="text-center space-y-3">
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {isAdminOrManager(user) 
+                  <p className="text-muted-foreground">
+                    {(profile?.role === 'ADMIN')
                       ? 'No hay tareas asignadas en el equipo' 
                       : 'No tienes tareas asignadas'}
                   </p>
-                  {!isAdminOrManager(user) && (
+                  {(profile?.role !== 'ADMIN') && (
                     <Button asChild>
                       <Link href="/designs">Ver backlog</Link>
                     </Button>
@@ -387,7 +352,7 @@ export default function MyWeekPage() {
             ) : (
               <Card>
                 <CardContent className="flex h-64 items-center justify-center">
-                  <p className="text-gray-600 dark:text-gray-400">Cargando calendario...</p>
+                  <p className="text-muted-foreground">Cargando calendario...</p>
                 </CardContent>
               </Card>
             )
@@ -397,10 +362,10 @@ export default function MyWeekPage() {
 
       {/* Dialog para detalles del evento */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="glass-effect border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-200 max-w-md">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-gray-800 dark:text-gray-200">{selectedTask?.title}</DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
+            <DialogTitle className="text-2xl">{selectedTask?.title}</DialogTitle>
+            <DialogDescription>
               {selectedTask && (
                 <>
                   {selectedTask.player} - {selectedTask.match_home} vs {selectedTask.match_away}
@@ -411,9 +376,9 @@ export default function MyWeekPage() {
           
           {selectedTask && (
             <div className="space-y-4 mt-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                Deadline: {format(new Date(selectedTask.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
+                Fecha de entrega: {format(new Date(selectedTask.deadline_at), "dd 'de' MMMM, yyyy HH:mm", { locale: es })}
               </div>
               
               <div className="flex items-center gap-2">
@@ -468,7 +433,6 @@ export default function MyWeekPage() {
         </DialogContent>
       </Dialog>
     </div>
-    </RequireAuth>
   );
 }
 

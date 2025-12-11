@@ -33,11 +33,11 @@ import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
 import { toast } from 'sonner';
-import Link from 'next/link';
-import { cn, getDefaultWeekRange } from '@/lib/utils';
+import { getDefaultWeekRange } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
+import { DesignDetailSheet } from '@/components/features/designs/design-detail-sheet';
 
 export default function DesignsPage() {
   const [items, setItems] = useState<Design[]>([]);
@@ -47,6 +47,10 @@ export default function DesignsPage() {
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  
+  // Estado para el panel de detalles
+  const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
   // Hook de diseñadores
   const { designers } = useDesigners();
@@ -257,60 +261,37 @@ export default function DesignsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
-      <div className="flex items-center justify-between animate-slide-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-700 to-orange-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold text-foreground">
             Diseños
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">Gestión de todas las piezas gráficas</p>
+          <p className="text-muted-foreground">Gestión de todas las piezas gráficas</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative inline-flex items-center gap-2 rounded-lg glass-effect p-1">
-            {/* Slider deslizante - usando translateX para mejor animación */}
-            <div
-              className={cn(
-                'absolute inset-y-1 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 ease-in-out',
-                viewMode === 'table' 
-                  ? 'left-1 right-[calc(50%+4px)]' 
-                  : 'right-1 left-[calc(50%+4px)]'
-              )}
-            />
-            
-            {/* Botones - mismo ancho, sin hover effect */}
+          <div className="flex items-center rounded-lg border border-border bg-muted p-1">
             <Button
               type="button"
-              variant="ghost"
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('table')}
-              className={cn(
-                'relative z-10 min-w-[100px] transition-colors duration-300',
-                'hover:bg-transparent hover:text-current',
-                viewMode === 'table' 
-                  ? 'text-white' 
-                  : 'text-gray-600 dark:text-gray-400'
-              )}
+              className="min-w-[90px]"
             >
-              <Table2 className="h-5 w-5 mr-2" />
+              <Table2 className="h-4 w-4 mr-2" />
               Tabla
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('kanban')}
-              className={cn(
-                'relative z-10 min-w-[100px] transition-colors duration-300',
-                'hover:bg-transparent hover:text-current',
-                viewMode === 'kanban' 
-                  ? 'text-white' 
-                  : 'text-gray-600 dark:text-gray-400'
-              )}
+              className="min-w-[90px]"
             >
-              <LayoutGrid className="h-5 w-5 mr-2" />
+              <LayoutGrid className="h-4 w-4 mr-2" />
               Kanban
             </Button>
           </div>
-          <Button onClick={() => { setEditingDesign(null); setDialogOpen(true); }} className="animate-slide-up">
+          <Button onClick={() => { setEditingDesign(null); setDialogOpen(true); }}>
             <Plus className="mr-2 h-4 w-4" />
             Crear Diseño
           </Button>
@@ -318,23 +299,23 @@ export default function DesignsPage() {
       </div>
 
       {/* Buscador */}
-      <Card className="animate-slide-up">
+      <Card>
         <CardContent className="pt-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Buscar por título, jugador o partido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/5 dark:bg-white/5 border-orange-200/20 dark:border-white/10 text-gray-800 dark:text-gray-200 placeholder:text-gray-500 focus:bg-white/10 focus:border-orange-500/50"
+              className="pl-10"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Filtros */}
-      <Card className="animate-slide-up">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -353,7 +334,7 @@ export default function DesignsPage() {
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="BACKLOG">Pendiente</SelectItem>
                   <SelectItem value="IN_PROGRESS">En Progreso</SelectItem>
-                  <SelectItem value="TO_REVIEW">Por Revisar</SelectItem>
+                  <SelectItem value="TO_REVIEW">En Revisión</SelectItem>
                   <SelectItem value="DELIVERED">Entregado</SelectItem>
                 </SelectContent>
               </Select>
@@ -417,17 +398,21 @@ export default function DesignsPage() {
           }}
         />
       ) : viewMode === 'kanban' ? (
-        <div className="animate-slide-up w-full">
+        <div className="w-full">
           <KanbanBoard
             designs={sortedItems}
             loading={false}
             onStatusChange={handleStatusChange}
             onCreateDesign={() => { setEditingDesign(null); setDialogOpen(true); }}
             designers={designers}
+            onCardClick={(designId) => {
+              setSelectedDesignId(designId);
+              setDetailSheetOpen(true);
+            }}
           />
         </div>
       ) : (
-        <Card className="animate-slide-up">
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -438,7 +423,7 @@ export default function DesignsPage() {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-sm text-gray-600 dark:text-gray-400">Mostrar</Label>
+                <Label className="text-sm text-muted-foreground">Mostrar</Label>
                 <Select 
                   value={itemsPerPage.toString()} 
                   onValueChange={(v) => {
@@ -508,7 +493,7 @@ export default function DesignsPage() {
                     onClick={() => handleSort('deadline')}
                   >
                     <div className="flex items-center gap-1">
-                      Deadline
+                      Fecha de entrega
                       {sortColumn === 'deadline' && (
                         sortDirection === 'asc' 
                           ? <ArrowUp className="h-4 w-4" />
@@ -533,9 +518,15 @@ export default function DesignsPage() {
                   return (
                     <TableRow key={design.id}>
                       <TableCell className="font-medium">
-                        <Link href={`/designs/${design.id}`} className="hover:text-orange-400 transition-colors">
+                        <button
+                          onClick={() => {
+                            setSelectedDesignId(design.id);
+                            setDetailSheetOpen(true);
+                          }}
+                          className="hover:text-primary transition-colors text-left"
+                        >
                           {design.title}
-                        </Link>
+                        </button>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
@@ -543,7 +534,7 @@ export default function DesignsPage() {
                             <span className="font-medium">{design.player}</span>
                             {design.player_status && <PlayerStatusTag status={design.player_status} variant="compact" />}
                           </div>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             {design.match_home} vs {design.match_away}
                           </span>
                         </div>
@@ -551,13 +542,13 @@ export default function DesignsPage() {
                       <TableCell>
                         {designer ? (
                           <div className="flex items-center gap-2" title={designer.name}>
-                            <div className="h-6 w-6 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-xs font-medium text-orange-700 dark:text-orange-300">
+                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
                               {designer.name.charAt(0)}
                             </div>
                             <span className="text-sm truncate max-w-[100px]">{designer.name.split(' ')[0]}</span>
                           </div>
                         ) : (
-                          <span className="text-gray-400 text-sm">-</span>
+                          <span className="text-muted-foreground text-sm">-</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -580,7 +571,7 @@ export default function DesignsPage() {
                       <TableCell>
                         <div className="flex flex-col text-sm">
                           <span>{format(new Date(design.deadline_at), "dd MMM", { locale: es })}</span>
-                          <span className="text-xs text-gray-500">{format(new Date(design.deadline_at), "HH:mm")}</span>
+                          <span className="text-xs text-muted-foreground">{format(new Date(design.deadline_at), "HH:mm")}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -614,7 +605,7 @@ export default function DesignsPage() {
                             disabled={deletingId === design.id}
                             title="Eliminar diseño"
                             aria-label="Eliminar diseño"
-                            className="text-red-400 hover:text-red-300"
+                            className="text-destructive hover:text-destructive/80"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -628,8 +619,8 @@ export default function DesignsPage() {
             
             {/* Controles de paginación */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                <p className="text-sm text-muted-foreground">
                   Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
                 </p>
                 <div className="flex items-center gap-2">
@@ -642,7 +633,7 @@ export default function DesignsPage() {
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     Anterior
                   </Button>
-                  <span className="flex items-center px-3 text-sm text-gray-600 dark:text-gray-400">
+                  <span className="flex items-center px-3 text-sm text-muted-foreground">
                     Página {currentPage} de {totalPages}
                   </span>
                   <Button
@@ -666,6 +657,13 @@ export default function DesignsPage() {
         onOpenChange={handleDialogClose}
         onDesignCreated={loadDesigns}
         design={editingDesign}
+      />
+
+      <DesignDetailSheet
+        designId={selectedDesignId}
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+        onDesignUpdated={loadDesigns}
       />
     </div>
   );

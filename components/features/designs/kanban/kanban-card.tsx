@@ -5,7 +5,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar, ExternalLink, User } from 'lucide-react';
-import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import type { Design } from '@/lib/types/design';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
@@ -21,9 +20,10 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) => {
 interface KanbanCardProps {
   design: Design;
   designer?: { name: string } | null;
+  onCardClick?: (designId: string) => void;
 }
 
-export function KanbanCard({ design, designer }: KanbanCardProps) {
+export function KanbanCard({ design, designer, onCardClick }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -61,13 +61,15 @@ export function KanbanCard({ design, designer }: KanbanCardProps) {
     >
       <div className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <Link
-            href={`/designs/${design.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="font-semibold text-gray-800 dark:text-gray-200 hover:text-orange-400 transition-colors flex-1 hover:underline leading-tight"
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCardClick?.(design.id);
+            }}
+            className="font-semibold text-gray-800 dark:text-gray-200 hover:text-orange-400 transition-colors flex-1 hover:underline leading-tight text-left"
           >
             {design.title}
-          </Link>
+          </button>
           
           {design.player_status && (
             <PlayerStatusTag status={design.player_status} />

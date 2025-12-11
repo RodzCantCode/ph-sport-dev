@@ -2,64 +2,55 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // Autenticar con Supabase
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      // Sign up user with metadata
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
       });
 
-      if (authError) {
-        setError(authError.message === 'Invalid login credentials' 
-          ? 'Email o contraseña incorrectos' 
-          : authError.message);
+      if (signUpError) {
+        setError(signUpError.message);
         setLoading(false);
         return;
       }
 
-      // Verificar que el usuario tiene perfil
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, full_name, role')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profileError || !profile) {
-        setError('Usuario sin perfil configurado. Contacta al administrador.');
-        await supabase.auth.signOut();
+      if (!data.user) {
+        setError('Error al crear usuario. Intenta de nuevo.');
         setLoading(false);
         return;
       }
 
-      // Redirigir con recarga completa para garantizar estado limpio
-      // Esto es estándar en producción para flujos de autenticación
-      if (profile.role === 'ADMIN') {
-        window.location.href = '/dashboard';
-      } else {
-        window.location.href = '/my-week';
-      }
-      } catch {
-        setError('Error al iniciar sesión. Intenta de nuevo.');
+      // Redirect to dashboard
+      router.replace('/dashboard');
+    } catch (error) {
+      setError('Error al registrarse. Intenta de nuevo.');
       setLoading(false);
     }
   };
@@ -73,11 +64,25 @@ export default function LoginPage() {
               PH Sport
             </h2>
             <p className="text-muted-foreground">
-              Inicia sesión en tu cuenta
+              Crea tu cuenta
             </p>
           </div>
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-6" onSubmit={handleRegister}>
             <div className="space-y-4">
+              <div>
+                <label htmlFor="fullName" className="sr-only">
+                  Nombre completo
+                </label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  required
+                  placeholder="Nombre completo"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
               <div>
                 <label htmlFor="email" className="sr-only">
                   Email
@@ -101,42 +106,40 @@ export default function LoginPage() {
                   name="password"
                   type="password"
                   required
-                  placeholder="Contraseña"
+                  minLength={6}
+                  placeholder="Contraseña (mínimo 6 caracteres)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
 
-            <div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full"
-                size="lg"
-              >
-                {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
-              </Button>
-            </div>
-
-            <div className="text-center">
-              <Link
-                href="/register"
-                className="text-sm text-primary hover:text-primary/80 transition-colors"
-              >
-                ¿No tienes cuenta? Regístrate
-              </Link>
-            </div>
-
             {error && (
-              <div className="p-3 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive text-sm">
+              <div className="text-destructive text-sm text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                 {error}
               </div>
             )}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full"
+              size="lg"
+            >
+              {loading ? 'Creando cuenta...' : 'Registrarse'}
+            </Button>
+
+            <div className="text-center">
+              <Link
+                href="/login"
+                className="text-sm text-primary hover:text-primary/80 transition-colors"
+              >
+                ¿Ya tienes cuenta? Inicia sesión
+              </Link>
+            </div>
           </form>
         </Card>
       </div>
     </div>
   );
 }
-

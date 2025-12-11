@@ -1,16 +1,18 @@
 'use client';
-
-import { usePathname } from 'next/navigation';
+ 
 import { AppLayout } from '@/components/layout/app-layout';
+import { usePathname } from 'next/navigation';
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === '/login';
+  const isAuthPage = pathname === '/login' || pathname === '/register';
 
-  if (isLoginPage) {
+  if (isAuthPage) {
     return <>{children}</>;
   }
 
-  return <AppLayout>{children}</AppLayout>;
+  return (
+    <AppLayout>{children}</AppLayout>
+  );
 }
 

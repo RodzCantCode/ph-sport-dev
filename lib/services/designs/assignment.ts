@@ -15,11 +15,10 @@ export async function assignDesignerAutomatically(excludeDesignId?: string): Pro
     const supabase = await createClient();
 
     // 1. Obtener todos los diseñadores
-    // Nota: 'designer' debe coincidir con el valor en la columna role de profiles
     const { data: designers, error: designersError } = await supabase
       .from('profiles')
       .select('id')
-      .eq('role', 'designer');
+      .eq('role', 'DESIGNER');
 
     if (designersError) {
       logger.error('Error fetching designers for assignment:', designersError);
@@ -68,7 +67,6 @@ export async function assignDesignerAutomatically(excludeDesignId?: string): Pro
       }
     }
 
-    logger.log(`Auto-assigned designer ${selectedDesignerId} with ${minCount} tasks`);
     return selectedDesignerId;
 
   } catch (error) {

@@ -30,12 +30,13 @@ interface KanbanBoardProps {
   onStatusChange: (designId: string, newStatus: DesignStatus) => Promise<void>;
   onCreateDesign?: () => void;
   designers?: { id: string; name: string }[];
+  onCardClick?: (designId: string) => void;
 }
 
 const COLUMNS: Array<{ status: DesignStatus; title: string }> = [
   { status: 'BACKLOG', title: 'Pendiente' },
   { status: 'IN_PROGRESS', title: 'En Progreso' },
-  { status: 'TO_REVIEW', title: 'Por Revisar' },
+  { status: 'TO_REVIEW', title: 'En Revisión' },
   { status: 'DELIVERED', title: 'Entregado' },
 ];
 
@@ -66,6 +67,7 @@ export function KanbanBoard({
   onStatusChange,
   onCreateDesign,
   designers,
+  onCardClick,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -177,6 +179,7 @@ export function KanbanBoard({
             designs={designsByStatus[column.status] || []}
             count={designsByStatus[column.status]?.length || 0}
             designers={designers}
+            onCardClick={onCardClick}
           />
         ))}
       </div>

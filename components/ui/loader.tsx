@@ -1,15 +1,14 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface LoaderProps {
   message?: string;
   className?: string;
-  variant?: 'default' | 'skeleton' | 'spinner';
+  variant?: 'default' | 'skeleton';
 }
 
 export function Loader({
-  message = 'Cargando...',
+  message,
   className,
   variant = 'default',
 }: LoaderProps) {
@@ -23,28 +22,15 @@ export function Loader({
     );
   }
 
-  if (variant === 'spinner') {
-    return (
-      <div className={cn('flex items-center justify-center p-6', className)}>
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
-          <p className="text-sm text-gray-400">{message}</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Default: Centered spinner filling available space
   return (
-    <Card className={cn('border border-gray-700/30', className)}>
-      <CardContent className="flex h-64 items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
-          <p className="text-gray-400">{message}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className={cn('flex flex-1 items-center justify-center h-[calc(100vh-8rem)]', className)}>
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        {message && (
+          <p className="text-sm text-muted-foreground">{message}</p>
+        )}
+      </div>
+    </div>
   );
 }
-
-
-

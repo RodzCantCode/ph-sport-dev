@@ -32,9 +32,28 @@ export async function PUT(
   
   const supabase = await createClient();
   
+  // Obtener usuario actual
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  // Procesar designer_id si es 'auto' o null
+  let designerId = body.designer_id;
+  if (designerId === 'auto' || designerId === null || designerId === undefined) {
+    const { assignDesignerAutomatically } = await import('@/lib/services/designs/assignment');
+    designerId = await assignDesignerAutomatically(id); // Excluir el diseño actual del conteo
+  }
+  
+  // Actualizar con el designer_id procesado
+  const updateData = {
+    ...body,
+    designer_id: designerId,
+  };
+  
   const { data: updated, error } = await supabase
     .from('designs')
-    .update(body)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
