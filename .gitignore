@@ -1,6 +1,32 @@
+# Dependencies
 node_modules
+
+# Next.js
 .next
+out/
+dist/
+
+# Environment
 .env.local
 .env
+.env*.local
+
+# Build & Cache
+*.tsbuildinfo
+.turbo
+.cache/
+.vercel
+
+# Logs
 *.log
+npm-debug.log*
+
+# IDE/Editor
+.vscode/*
+!.vscode/settings.json
+*.swp
+*.swo
+
+# OS
 .DS_Store
+Thumbs.db
