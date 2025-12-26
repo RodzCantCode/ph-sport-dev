@@ -49,7 +49,7 @@ export default function RegisterPage() {
 
       // Redirect to dashboard
       router.replace('/dashboard');
-    } catch (error) {
+    } catch {
       setError('Error al registrarse. Intenta de nuevo.');
       setLoading(false);
     }

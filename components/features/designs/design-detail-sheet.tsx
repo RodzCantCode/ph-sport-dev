@@ -38,7 +38,7 @@ export function DesignDetailSheet({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
+
   const { designers } = useDesigners();
 
   useEffect(() => {
@@ -64,9 +64,7 @@ export function DesignDetailSheet({
       .finally(() => setLoading(false));
   }, [designId, open]);
 
-  const designer = design?.designer_id
-    ? designers.find((u) => u.id === design.designer_id)
-    : null;
+  const designer = design?.designer_id ? designers.find((u) => u.id === design.designer_id) : null;
 
   const handleEditComplete = () => {
     // Refresh design data
@@ -84,7 +82,7 @@ export function DesignDetailSheet({
         <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto" hideCloseButton>
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <Loader variant="spinner" message="Cargando..." />
+              <Loader variant="default" message="Cargando..." />
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center h-full gap-4">
@@ -127,14 +125,18 @@ export function DesignDetailSheet({
               <div className="py-6 space-y-6">
                 {/* Status */}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado</span>
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Estado
+                  </span>
                   <Badge status={design.status}>{STATUS_LABELS[design.status]}</Badge>
                 </div>
 
                 {/* Player Status */}
                 {design.player_status && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado del Jugador</span>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Estado del Jugador
+                    </span>
                     <PlayerStatusTag status={design.player_status} />
                   </div>
                 )}
@@ -146,7 +148,7 @@ export function DesignDetailSheet({
                     Fecha de entrega
                   </span>
                   <span className="text-sm text-gray-900 dark:text-gray-100">
-                    {format(new Date(design.deadline_at), "dd MMM yyyy, HH:mm", { locale: es })}
+                    {format(new Date(design.deadline_at), 'dd MMM yyyy, HH:mm', { locale: es })}
                   </span>
                 </div>
 
@@ -158,7 +160,9 @@ export function DesignDetailSheet({
                       Diseñador
                     </span>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{designer.name}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {designer.name}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -167,11 +171,7 @@ export function DesignDetailSheet({
                 {design.folder_url && (
                   <div className="pt-4 border-t border-gray-100 dark:border-white/10">
                     <Button variant="outline" size="sm" asChild className="w-full">
-                      <a
-                        href={design.folder_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={design.folder_url} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Abrir carpeta en Drive
                       </a>
