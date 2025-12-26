@@ -9,12 +9,12 @@ import { Button } from '@/components/ui/button';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Users, Plus, Calendar, TrendingUp, ChevronRight, Palette, Activity } from 'lucide-react';
+import { Users, Calendar, TrendingUp, ChevronRight, Palette, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import type { Design } from '@/lib/types/design';
 import { useDesigners } from '@/lib/hooks/use-designers';
-import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
+import { CreateDesignButton } from '@/components/features/designs/dialogs/create-design-button';
 import { logger } from '@/lib/utils/logger';
 import { useDashboardKPIs } from '@/lib/hooks/use-dashboard-kpis';
 import { STATUS_LABELS } from '@/lib/types/design';
@@ -24,7 +24,6 @@ export default function DashboardPage() {
   const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   
   const { designers } = useDesigners();
 
@@ -130,10 +129,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <Button onClick={() => setDialogOpen(true)} size="lg">
-          <Plus className="mr-2 h-4 w-4" />
-          Crear Diseño
-        </Button>
+        <CreateDesignButton onDesignCreated={loadDashboard} size="lg" />
       </div>
 
       {/* KPIs */}
@@ -221,8 +217,6 @@ export default function DashboardPage() {
             <EmptyState
               title="No hay diseños"
               description="Crea tu primer diseño para comenzar"
-              actionLabel="Crear Diseño"
-              onAction={() => setDialogOpen(true)}
               className="border-0"
             />
           ) : (
@@ -236,24 +230,12 @@ export default function DashboardPage() {
                     href={`/designs/${design.id}`}
                     className="flex items-center justify-between rounded-lg p-4 hover:bg-accent/50 transition-all cursor-pointer group"
                   >
+                    {/* Izquierda: Nombre + Estado del jugador (contexto del diseño) */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">{design.title}</p>
-                        <Badge status={design.status} className="shrink-0">
-                          {STATUS_LABELS[design.status]}
-                        </Badge>
                         {design.player_status && (
                           <PlayerStatusTag status={design.player_status} />
-                        )}
-                        {design.isCritical && (
-                          <Badge variant="destructive" className="animate-pulse shrink-0">
-                            🔥 {Math.floor(design.hoursUntilDeadline)}h
-                          </Badge>
-                        )}
-                        {design.isUrgent && !design.isCritical && (
-                          <Badge className="bg-yellow-500/30 text-yellow-400 border-yellow-500/50 shrink-0">
-                            ⚠️ Urgente
-                          </Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
@@ -265,7 +247,24 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors ml-4 shrink-0" />
+
+                    {/* Derecha: Urgencia + Estado del diseño (seguimiento operativo) */}
+                    <div className="flex items-center gap-2 ml-4 shrink-0">
+                      {design.isCritical && (
+                        <Badge variant="destructive" className="animate-pulse shrink-0">
+                          🔥 {Math.floor(design.hoursUntilDeadline)}h
+                        </Badge>
+                      )}
+                      {design.isUrgent && !design.isCritical && (
+                        <Badge className="bg-yellow-500/30 text-yellow-400 border-yellow-500/50 shrink-0">
+                          ⚠️ Urgente
+                        </Badge>
+                      )}
+                      <Badge status={design.status} className="shrink-0">
+                        {STATUS_LABELS[design.status]}
+                      </Badge>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
                   </Link>
                 );
               })}
@@ -289,12 +288,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
-
-      <CreateDesignDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onDesignCreated={loadDashboard}
-      />
     </div>
   );
 }

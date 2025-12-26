@@ -23,8 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
+import { CreateDesignButton } from '@/components/features/designs/dialogs/create-design-button';
 import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
 import { KanbanBoard } from '@/components/features/designs/kanban/kanban-board';
@@ -43,7 +44,7 @@ export default function DesignsPage() {
   const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
@@ -118,7 +119,7 @@ export default function DesignsPage() {
 
   const handleEdit = (design: Design) => {
     setEditingDesign(design);
-    setDialogOpen(true);
+    setEditDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -146,8 +147,8 @@ export default function DesignsPage() {
     }
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false);
     setEditingDesign(null);
   };
 
@@ -291,10 +292,7 @@ export default function DesignsPage() {
               Kanban
             </Button>
           </div>
-          <Button onClick={() => { setEditingDesign(null); setDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Crear Diseño
-          </Button>
+          <CreateDesignButton onDesignCreated={loadDesigns} />
         </div>
       </div>
 
@@ -393,7 +391,7 @@ export default function DesignsPage() {
               setSearchQuery('');
             } else {
               setEditingDesign(null); 
-              setDialogOpen(true);
+              setEditDialogOpen(true);
             }
           }}
         />
@@ -403,7 +401,7 @@ export default function DesignsPage() {
             designs={sortedItems}
             loading={false}
             onStatusChange={handleStatusChange}
-            onCreateDesign={() => { setEditingDesign(null); setDialogOpen(true); }}
+            onCreateDesign={() => { setEditingDesign(null); setEditDialogOpen(true); }}
             designers={designers}
             onCardClick={(designId) => {
               setSelectedDesignId(designId);
@@ -653,8 +651,8 @@ export default function DesignsPage() {
       )}
 
       <CreateDesignDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
+        open={editDialogOpen}
+        onOpenChange={handleEditDialogClose}
         onDesignCreated={loadDesigns}
         design={editingDesign}
       />
