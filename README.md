@@ -4,11 +4,36 @@ Dashboard para el equipo de diseño de PH Sport.
 
 ## Características
 
-- **Gestión de Diseños**: Kanban, lista y vistas de calendario.
-- **Backend Real**: Integración completa con Supabase (PostgreSQL).
-- **Autenticación**: Sistema de usuarios y roles (Manager/Designer) vía Supabase Auth.
-- **Asignación Inteligente**: Algoritmo de reparto de tareas basado en carga de trabajo.
-- **UI Moderna**: Tailwind CSS, Shadcn UI, Framer Motion.
+### Gestión de Diseños
+
+- **Vistas múltiples**: Kanban, lista y calendario
+- **Estados de flujo**: Pendiente → En Progreso → En Revisión → Aprobado
+- **Asignación inteligente**: Algoritmo de reparto basado en carga de trabajo
+
+### Comunicaciones
+
+- **Chat en tiempo real**: Mensajería instantánea por diseño
+- **Edición de mensajes**: Edita tus mensajes (límite 15 minutos)
+- **Sincronización**: Actualizaciones en tiempo real entre usuarios
+- **Indicadores**: Muestra "(editado)" en mensajes modificados
+
+### Usuarios y Configuración
+
+- **Roles**: Manager y Designer con permisos diferenciados
+- **Perfil unificado**: Gestión de nombre, avatar y contraseña
+- **Autenticación**: Sistema seguro vía Supabase Auth
+
+### Actividad
+
+- **Vista de actividad**: Seguimiento de conversaciones activas
+- **Mensajes no leídos**: Indicadores visuales de nuevos mensajes
+
+## Stack Tecnológico
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Estilos**: Tailwind CSS, Shadcn UI
+- **Animaciones**: Framer Motion
+- **Backend**: Supabase (PostgreSQL, Auth, Realtime, Storage)
 
 ## Requisitos Previos
 
@@ -17,43 +42,49 @@ Dashboard para el equipo de diseño de PH Sport.
 
 ## Configuración
 
-1.  Clonar el repositorio.
-2.  Instalar dependencias:
-    ```bash
-    npm install
-    ```
-3.  Configurar variables de entorno en `.env.local`:
-    ```env
-    NEXT_PUBLIC_SUPABASE_URL=your_project_url
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-    ```
-4.  Iniciar servidor de desarrollo:
-    ```bash
-    npm run dev
-    ```
+1. Clonar el repositorio
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
+3. Configurar variables de entorno en `.env.local`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   ```
+4. Iniciar servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
 
 ## Scripts disponibles
 
-| Comando              | Descripción                                           |
-| -------------------- | ----------------------------------------------------- |
-| `npm run dev`        | Inicia el servidor de desarrollo en `localhost:3000`. |
-| `npm run build`      | Crea el build de producción.                          |
-| `npm run start`      | Arranca el server con el build generado.              |
-| `npm run lint`       | Ejecuta ESLint sobre todo el proyecto.                |
-| `npm run type-check` | Valida tipos TypeScript.                              |
+| Comando              | Descripción                                |
+| -------------------- | ------------------------------------------ |
+| `npm run dev`        | Servidor de desarrollo en `localhost:3000` |
+| `npm run build`      | Build de producción                        |
+| `npm run start`      | Arranca el build generado                  |
+| `npm run lint`       | Ejecuta ESLint                             |
+| `npm run type-check` | Valida tipos TypeScript                    |
 
-## Organización del código
+## Estructura del Proyecto
 
 ```
-app/                          # Rutas (App Router) & API Routes
-  api/                        # Endpoints reales (conectan con DB)
-  dashboard/                  # Vista Manager
-  my-week/                    # Vista Designer
+app/
+  api/                    # API Routes (endpoints)
+  dashboard/              # Vista Manager
+  my-week/                # Vista Designer
+  communications/         # Sistema de chat
+  designs/                # Gestión de diseños
 components/
-  ui/                         # Componentes base (Shadcn)
-  features/                   # Componentes de negocio (Tableros, Cards)
+  ui/                     # Componentes base (Shadcn)
+  features/               # Componentes de negocio
+    comments/             # Chat y comentarios
+    account/              # Configuración de usuario
 lib/
-  supabase/                   # Cliente y utilidades de conexión
-  services/                   # Lógica de negocio server-side
-  hooks/                      # Hooks de react (data fetching)
+  supabase/               # Cliente y utilidades
+  services/               # Lógica de negocio
+  hooks/                  # Hooks de React
+supabase/
+  migrations/             # Migraciones SQL
 ```
