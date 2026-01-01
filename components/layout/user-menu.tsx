@@ -12,8 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
-import { ProfileDialog } from '@/components/features/account/profile-dialog';
+import { LogOut, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
 import { SettingsDialog } from '@/components/features/account/settings-dialog';
 import { useAuth } from '@/lib/auth/auth-context';
 import { createClient } from '@/lib/supabase/client';
@@ -22,7 +21,6 @@ export function UserMenu() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -103,13 +101,7 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-border" />
-        <DropdownMenuItem
-          onClick={() => setProfileOpen(true)}
-          className="text-foreground hover:bg-accent cursor-pointer"
-        >
-          <User className="mr-2 h-4 w-4" />
-          <span>Perfil</span>
-        </DropdownMenuItem>
+
         <DropdownMenuItem
           onClick={() => setSettingsOpen(true)}
           className="text-foreground hover:bg-accent cursor-pointer"
@@ -147,7 +139,6 @@ export function UserMenu() {
       </DropdownMenuContent>
       
       {/* Diálogos */}
-      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </DropdownMenu>
   );

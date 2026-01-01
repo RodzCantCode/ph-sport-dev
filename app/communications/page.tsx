@@ -20,8 +20,8 @@ export default function CommunicationsPage() {
   const [filterUnread, setFilterUnread] = useState(false);
 
   const filtered = conversations.filter(c => {
-    const matchesSearch = c.designTitle.toLowerCase().includes(search.toLowerCase()) || 
-                          c.player.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = c.designTitle.toLowerCase().includes(search.toLowerCase()) ||
+      c.player.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filterUnread ? c.unreadCount > 0 : true;
     return matchesSearch && matchesFilter;
   });
@@ -43,18 +43,18 @@ export default function CommunicationsPage() {
             Conversaciones y actualizaciones del equipo
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Buscar diseño, jugador..." 
+            <Input
+              placeholder="Buscar diseño, jugador..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
             />
           </div>
-          <Button 
+          <Button
             variant={filterUnread ? "default" : "outline"}
             onClick={() => setFilterUnread(!filterUnread)}
             className="gap-2"
@@ -128,9 +128,9 @@ export default function CommunicationsPage() {
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {filtered.map((conv) => (
-                <Link 
-                  key={conv.designId} 
-                  href={`/designs/${conv.designId}`}
+                <Link
+                  key={conv.designId}
+                  href={`/communications/${conv.designId}`}
                   className={cn(
                     "group flex items-start justify-between gap-4 p-4 hover:bg-accent transition-colors",
                     conv.unreadCount > 0 && "bg-primary/5"
@@ -150,7 +150,7 @@ export default function CommunicationsPage() {
                         </Badge>
                       )}
                     </div>
-                    
+
                     <div className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
                       <span className="font-medium bg-muted px-2 py-0.5 rounded">
                         {conv.player}

@@ -1,12 +1,15 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { config } from '@/lib/config';
 
+// Singleton pattern - reuse the same client instance
+let supabaseClient: ReturnType<typeof createBrowserClient> | null = null;
+
 export function createClient() {
-  return createBrowserClient(
-    config.supabase.url,
-    config.supabase.anonKey
-  );
+  if (!supabaseClient) {
+    supabaseClient = createBrowserClient(
+      config.supabase.url,
+      config.supabase.anonKey
+    );
+  }
+  return supabaseClient;
 }
-
-
-

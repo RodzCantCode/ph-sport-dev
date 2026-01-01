@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useComments } from '@/lib/hooks/use-comments';
+import { useComments, Comment } from '@/lib/hooks/use-comments';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader } from '@/components/ui/loader';
-import { Send, Trash2 } from 'lucide-react';
+import { Send, Trash2, Pencil, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -17,10 +17,13 @@ interface CommentsSectionProps {
 }
 
 export function CommentsSection({ designId }: CommentsSectionProps) {
-  const { comments, loading, addComment, deleteComment, markViewed } = useComments(designId);
+  const { comments, loading, addComment, deleteComment, editComment, canEdit, markViewed } = useComments(designId);
   const { user, profile } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [sending, setSending] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -41,7 +44,7 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
 
     setSending(true);
     try {
-      await addComment(newComment, user.id);
+      await addComment(newComment, user.id, profile ? { full_name: profile.full_name, avatar_url: profile.avatar_url } : undefined);
       setNewComment('');
     } finally {
       setSending(false);
@@ -51,6 +54,31 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
   const handleDelete = async (commentId: string) => {
     if (confirm('¿Estás seguro de eliminar este comentario?')) {
       await deleteComment(commentId);
+    }
+  };
+
+  const handleStartEdit = (comment: Comment) => {
+    setEditingId(comment.id);
+    setEditContent(comment.content);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditContent('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editContent.trim()) return;
+    
+    setSaving(true);
+    try {
+      const success = await editComment(editingId, editContent.trim());
+      if (success) {
+        setEditingId(null);
+        setEditContent('');
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -74,6 +102,9 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
             const isOwn = comment.user_id === user?.id;
             const isAdmin = profile?.role === 'ADMIN';
             const canDelete = isOwn || isAdmin;
+            const canEditThis = user ? canEdit(comment, user.id) : false;
+            const isEditing = editingId === comment.id;
+            const wasEdited = comment.updated_at && comment.updated_at !== comment.created_at;
 
             return (
               <div key={comment.id} className={cn("flex gap-3", isOwn ? "flex-row-reverse" : "")}>
@@ -94,24 +125,68 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
                     <span className={cn("font-semibold text-xs mb-1 block opacity-90", isOwn ? "text-orange-100" : "text-gray-500 dark:text-gray-400")}>
                       {comment.user?.full_name}
                     </span>
-                    {canDelete && (
-                      <button 
-                        onClick={() => handleDelete(comment.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:text-red-500"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
+                    {!isEditing && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {canEditThis && (
+                          <button 
+                            onClick={() => handleStartEdit(comment)}
+                            className="text-xs hover:text-blue-500"
+                            title="Editar"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button 
+                            onClick={() => handleDelete(comment.id)}
+                            className="text-xs hover:text-red-500"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                   
-                  <p className="whitespace-pre-wrap break-words">{comment.content}</p>
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="min-h-[60px] text-gray-900 dark:text-white bg-white dark:bg-zinc-700 resize-none text-sm"
+                        autoFocus
+                      />
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCancelEdit}
+                          disabled={saving}
+                          className="h-7 px-2"
+                        >
+                          <X className="h-3 w-3 mr-1" /> Cancelar
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveEdit}
+                          disabled={saving || !editContent.trim()}
+                          className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {saving ? <Loader className="h-3 w-3" /> : <Check className="h-3 w-3 mr-1" />} Guardar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap break-words">{comment.content}</p>
+                  )}
                   
                   <span className={cn(
                     "text-[10px] mt-1 block text-right opacity-70",
                     isOwn ? "text-orange-100" : "text-gray-400"
                   )}>
                     {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
+                    {wasEdited && <span className="ml-1">(editado)</span>}
                   </span>
                 </div>
               </div>

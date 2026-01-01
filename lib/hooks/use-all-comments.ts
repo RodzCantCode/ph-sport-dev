@@ -28,12 +28,10 @@ export function useAllComments() {
     try {
       setLoading(true);
 
-      // 1. Get designs assigned to user OR created by user (optional, depending on requirements)
-      // For now, let's focus on designs assigned to the user
+      // 1. Get all designs - "mini Slack" approach where everyone sees all team activity
       const { data: designs, error: designsError } = await supabase
         .from('designs')
-        .select('id, title, player, match_home, match_away')
-        .or(`designer_id.eq.${user.id},created_by.eq.${user.id}`);
+        .select('id, title, player, match_home, match_away');
 
       if (designsError) throw designsError;
       if (!designs || designs.length === 0) {
@@ -74,9 +72,9 @@ export function useAllComments() {
       const grouped = designs.map(design => {
         const designComments = comments?.filter(c => c.design_id === design.id) || [];
         const lastComment = designComments[0];
-        
+
         // Count unread: comments NOT by me AND NOT in readStatus
-        const unreadCount = designComments.filter(c => 
+        const unreadCount = designComments.filter(c =>
           c.user_id !== user.id && !readCommentIds.has(c.id)
         ).length;
 
@@ -101,7 +99,7 @@ export function useAllComments() {
       // User requested "visualizar el trabajo semanal... junto a metricas".
       // But for "Comunicaciones", probably only active threads.
       // Let's sort by last message date.
-      
+
       const activeConversations = grouped
         .filter(g => g.totalComments > 0)
         .sort((a, b) => {
@@ -121,7 +119,7 @@ export function useAllComments() {
 
   useEffect(() => {
     fetchConversations();
-    
+
     // Subscribe to new comments
     const channel = supabase
       .channel('all-comments-changes')
