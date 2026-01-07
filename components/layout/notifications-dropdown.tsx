@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Check, MessageSquare, Calendar, AlertCircle, Info } from 'lucide-react';
+import { Bell, Check, MessageSquare, Calendar, AlertCircle, Info, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { Loader } from '@/components/ui/loader';
 
 export function NotificationsDropdown() {
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, deleteAllNotifications } = useNotifications();
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -31,6 +31,11 @@ export function NotificationsDropdown() {
       setOpen(false);
       router.push(notification.link);
     }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, notificationId: string) => {
+    e.stopPropagation(); // Prevent navigation
+    await deleteNotification(notificationId);
   };
 
   const getIcon = (type: string) => {
@@ -59,14 +64,24 @@ export function NotificationsDropdown() {
       <DropdownMenuContent align="end" className="w-80 sm:w-96 p-0 z-50">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <h4 className="font-semibold text-sm">Notificaciones</h4>
-          {unreadCount > 0 && (
-            <button 
-              onClick={() => markAllAsRead()}
-              className="text-xs text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1"
-            >
-              <Check className="h-3 w-3" /> Marcar todo leído
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button 
+                onClick={() => markAllAsRead()}
+                className="text-xs text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1"
+              >
+                <Check className="h-3 w-3" /> Leído
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button 
+                onClick={() => deleteAllNotifications()}
+                className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
+              >
+                <Trash2 className="h-3 w-3" /> Borrar
+              </button>
+            )}
+          </div>
         </div>
 
         <ScrollArea className="h-[350px]">
@@ -77,7 +92,7 @@ export function NotificationsDropdown() {
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-gray-500">
               <Bell className="h-8 w-8 mb-3 opacity-20" />
-              <p className="text-sm">No tienes notificaciones nuevas</p>
+              <p className="text-sm">No tienes notificaciones</p>
             </div>
           ) : (
             <div className="py-2">
@@ -86,15 +101,15 @@ export function NotificationsDropdown() {
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={cn(
-                    "flex items-start gap-3 px-4 py-3 cursor-pointer",
+                    "flex items-start gap-3 px-4 py-3 cursor-pointer group",
                     !notification.read ? "bg-orange-50/50 dark:bg-orange-500/5" : ""
                   )}
                 >
                   <div className="mt-1 shrink-0 bg-white dark:bg-zinc-800 p-1.5 rounded-full shadow-sm border border-gray-100 dark:border-white/10">
                     {getIcon(notification.type)}
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <p className={cn("text-xs font-medium leading-none", !notification.read ? "text-gray-900 dark:text-white" : "text-gray-600 dark:text-gray-300")}>
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <p className={cn("text-xs font-medium leading-none truncate", !notification.read ? "text-gray-900 dark:text-white" : "text-gray-600 dark:text-gray-300")}>
                       {notification.title}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
@@ -104,9 +119,13 @@ export function NotificationsDropdown() {
                       {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: es })}
                     </p>
                   </div>
-                  {!notification.read && (
-                    <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-orange-500" />
-                  )}
+                  <button
+                    onClick={(e) => handleDelete(e, notification.id)}
+                    className="mt-1 p-1 rounded hover:bg-red-100 dark:hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Eliminar"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                  </button>
                 </DropdownMenuItem>
               ))}
             </div>
@@ -116,3 +135,4 @@ export function NotificationsDropdown() {
     </DropdownMenu>
   );
 }
+

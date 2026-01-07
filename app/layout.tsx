@@ -14,7 +14,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: 'PH Sport',
-  description: 'Plataforma de gestión para equipo de diseño',
+  description: 'Plataforma de gestión para el equipo de diseño de PH Sport',
 };
 
 export default function RootLayout({

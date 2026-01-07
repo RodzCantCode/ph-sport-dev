@@ -26,7 +26,7 @@
     --popover-foreground: 0 0% 9%;
 
     /* Primary - Orange (ONLY accent color) */
-    --primary: 25 95% 53%; /* #F97316 */
+    --primary: 19 100% 49%; /* #FC4F00 */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Neutral gray */
@@ -48,7 +48,7 @@
     /* Border - Light gray */
     --border: 0 0% 90%; /* #E5E5E5 */
     --input: 0 0% 90%;
-    --ring: 25 95% 53%;
+    --ring: 19 100% 49%;
 
     /* Radius */
     --radius: 0.5rem;
@@ -84,7 +84,7 @@
     --popover-foreground: 220 10% 98%;
 
     /* Primary - Vibrant Orange (complementary to blue) */
-    --primary: 25 95% 53%; /* #F97316 */
+    --primary: 19 100% 49%; /* #FC4F00 */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
@@ -106,7 +106,7 @@
     /* Border - Subtle blue-gray */
     --border: 230 10% 20%; /* #2E3038 */
     --input: 230 10% 20%;
-    --ring: 25 95% 53%;
+    --ring: 19 100% 49%;
   }
 }
 

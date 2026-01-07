@@ -121,12 +121,47 @@ export function useNotifications() {
     }
   };
 
+  const deleteNotification = async (notificationId: string) => {
+    // Optimistic update
+    const wasUnread = notifications.find(n => n.id === notificationId)?.read === false;
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    if (wasUnread) {
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }
+
+    try {
+      await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  const deleteAllNotifications = async () => {
+    // Optimistic update
+    setNotifications([]);
+    setUnreadCount(0);
+
+    try {
+      await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', user!.id);
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+    }
+  };
+
   return {
     notifications,
     unreadCount,
     loading,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
     refresh: fetchNotifications
   };
 }
