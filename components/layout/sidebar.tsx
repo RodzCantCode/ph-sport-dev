@@ -31,7 +31,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   const { user, profile, loading } = useAuth();
   const { resolvedTheme } = useTheme();
   const [isClicking, setIsClicking] = useState(false);
-  
+
   const handleLinkClick = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768 && onClose) {
       onClose();
@@ -56,10 +56,10 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   const isDark = resolvedTheme === 'dark';
 
   // Logos: naranja por defecto, negro/blanco para efecto click
-  const logoFullOrange = '/images/logo-full-dark.webp';
-  const logoFullAlt = '/images/logo-full-light.webp';
-  const logoIconOrange = '/images/logo-icon-dark.webp';
-  const logoIconAlt = '/images/logo-icon-light.webp';
+  const logoFullOrange = '/images/logo-full-orange.png';
+  const logoFullAlt = '/images/logo-full-black.png';
+  const logoIconOrange = '/images/logo-icon-orange.webp';
+  const logoIconAlt = '/images/logo-icon-black.webp';
 
   const getNavGroups = (): NavGroup[] => {
     const groups: NavGroup[] = [
@@ -89,7 +89,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
     >
       {/* Logo Header - click para toggle con efecto de color */}
       <div className="flex items-center h-16 px-4 transition-all duration-300 ease-in-out">
-        <button 
+        <button
           onMouseDown={handleLogoMouseDown}
           onMouseUp={handleLogoMouseUp}
           onMouseLeave={() => setIsClicking(false)}
@@ -118,11 +118,15 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
               'h-10 w-auto object-contain absolute left-0',
               'transition-all duration-200 ease-in-out',
               isDark && 'invert',
-              collapsed ? 'opacity-0 scale-90' : isClicking ? 'opacity-100 scale-95' : 'opacity-0 scale-100'
+              collapsed
+                ? 'opacity-0 scale-90'
+                : isClicking
+                ? 'opacity-100 scale-95'
+                : 'opacity-0 scale-100'
             )}
             priority
           />
-          
+
           {/* Logo icono - visible cuando colapsado */}
           <Image
             src={logoIconOrange}
@@ -132,7 +136,11 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
             className={cn(
               'h-9 w-9 object-contain absolute left-1/2 -translate-x-1/2',
               'transition-all duration-200 ease-in-out',
-              collapsed ? (isClicking ? 'opacity-0' : 'opacity-100 scale-100') : 'opacity-0 scale-90'
+              collapsed
+                ? isClicking
+                  ? 'opacity-0'
+                  : 'opacity-100 scale-100'
+                : 'opacity-0 scale-90'
             )}
             priority
           />
@@ -151,7 +159,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
           />
         </button>
       </div>
-      
+
       {/* Inset divider */}
       <div className="mx-4 border-b border-border" />
 
@@ -159,18 +167,22 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
       <nav className="flex flex-col gap-6 p-4 flex-1 overflow-y-auto">
         {getNavGroups().map((group) => (
           <div key={group.label} className="flex flex-col gap-2">
-            <div className={cn(
-              'overflow-hidden transition-all duration-300 ease-in-out',
-              collapsed ? 'max-h-0 opacity-0' : 'max-h-8 opacity-100'
-            )}>
+            <div
+              className={cn(
+                'overflow-hidden transition-all duration-300 ease-in-out',
+                collapsed ? 'max-h-0 opacity-0' : 'max-h-8 opacity-100'
+              )}
+            >
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 mb-1 whitespace-nowrap">
                 {group.label}
               </h3>
             </div>
-            
+
             {group.items.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
+              const isActive =
+                pathname === item.href ||
+                (item.href !== '/dashboard' && pathname?.startsWith(item.href));
 
               return (
                 <Link
@@ -186,12 +198,16 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
-                  <Icon className={cn(
-                    'h-5 w-5 shrink-0 transition-all duration-300',
-                    collapsed && 'translate-x-[0.0625rem]',
-                    isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
-                  )} />
-                  <span 
+                  <Icon
+                    className={cn(
+                      'h-5 w-5 shrink-0 transition-all duration-300',
+                      collapsed && 'translate-x-[0.0625rem]',
+                      isActive
+                        ? 'text-primary'
+                        : 'text-muted-foreground group-hover:text-foreground'
+                    )}
+                  />
+                  <span
                     className={cn(
                       'text-sm whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out',
                       collapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[150px] opacity-100 ml-3'
