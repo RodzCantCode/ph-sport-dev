@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/auth-context';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Notification {
   id: string;
@@ -18,7 +19,7 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
-  const subscriptionRef = useRef<any>(null);
+  const subscriptionRef = useRef<RealtimeChannel | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;

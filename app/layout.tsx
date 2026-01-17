@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { Outfit } from 'next/font/google';
 import './globals.css';
-import { LayoutWrapper } from './layout-wrapper';
 import { ThemeProvider } from '@/components/providers/theme-provider';
-
 import { AuthProvider } from '@/lib/auth/auth-context';
 
 const outfit = Outfit({ 
@@ -25,9 +23,9 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${outfit.className} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
-            <LayoutWrapper>{children}</LayoutWrapper>
+            {children}
           </AuthProvider>
         </ThemeProvider>
       </body>

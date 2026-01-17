@@ -11,7 +11,8 @@ import { Search, Filter, Activity, ChevronRight, Clock, MessageCircle, User } fr
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Loader } from '@/components/ui/loader';
+import { CommunicationsSkeleton } from '@/components/skeletons/communications-skeleton';
+import { PageTransition } from '@/components/ui/page-transition';
 import { EmptyState } from '@/components/ui/empty-state';
 
 export default function CommunicationsPage() {
@@ -29,12 +30,9 @@ export default function CommunicationsPage() {
   // Contar no leídos totales
   const totalUnread = conversations.filter(c => c.unreadCount > 0).length;
 
-  if (loading) {
-    return <Loader className="p-6" />;
-  }
-
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
+    <PageTransition loading={loading} skeleton={<CommunicationsSkeleton />}>
+      <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -187,5 +185,6 @@ export default function CommunicationsPage() {
         </Card>
       )}
     </div>
+    </PageTransition>
   );
 }

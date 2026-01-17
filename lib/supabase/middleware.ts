@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   // Rutas públicas que no requieren auth
-  const isPublicRoute = path === '/login' || path === '/register' || path.startsWith('/auth')
+  const isPublicRoute = path === '/login' || path.startsWith('/invite') || path.startsWith('/auth')
 
   // Redirecciones
   if (!user && !isPublicRoute) {

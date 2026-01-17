@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Loader } from '@/components/ui/loader';
+import { MyWeekSkeleton } from '@/components/skeletons/my-week-skeleton';
+import { PageTransition } from '@/components/ui/page-transition';
 import {
   Select,
   SelectContent,
@@ -121,10 +122,6 @@ export default function MyWeekPage() {
   };
 
 
-  if (loading) {
-    return <Loader className="p-6" />;
-  }
-
   // Filtrar items según rol del usuario
   // Admins/Managers ven todas las tareas, Designers solo las suyas
   const filteredItems = (profile?.role === 'ADMIN')
@@ -139,7 +136,8 @@ export default function MyWeekPage() {
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
+    <PageTransition loading={loading} skeleton={<MyWeekSkeleton />}>
+      <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -433,6 +431,7 @@ export default function MyWeekPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </PageTransition>
   );
 }
 

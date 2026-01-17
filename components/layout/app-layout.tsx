@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
+import { SidebarSkeleton } from '@/components/skeletons/sidebar-skeleton';
+import { useAuth } from '@/lib/auth/auth-context';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -12,6 +14,10 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { loading, user, profile } = useAuth();
+
+  // Check if auth is ready
+  const authReady = !loading && !!user && !!profile;
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -40,11 +46,15 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Desktop Sidebar - siempre visible en desktop */}
-      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      {/* Desktop Sidebar - show skeleton while auth loading */}
+      {authReady ? (
+        <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      ) : (
+        <SidebarSkeleton collapsed={sidebarCollapsed} />
+      )}
 
       {/* Mobile Sidebar Overlay */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen && authReady && (
         <>
           <div
             className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden animate-in fade-in"
@@ -60,7 +70,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div
         className={cn(
           'flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out',
-          !sidebarCollapsed ? 'md:ml-64' : 'md:ml-20' // Desktop: margin-left según estado sidebar
+          !sidebarCollapsed ? 'md:ml-64' : 'md:ml-20'
         )}
       >
         <Header onMenuClick={toggleMobileMenu} />
@@ -69,4 +79,3 @@ export function AppLayout({ children }: AppLayoutProps) {
     </div>
   );
 }
-

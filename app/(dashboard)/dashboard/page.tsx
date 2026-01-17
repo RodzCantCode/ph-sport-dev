@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { KpiCard } from '@/components/ui/kpi-card';
-import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PageTransition } from '@/components/ui/page-transition';
+import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton';
 import { Users, Calendar, TrendingUp, ChevronRight, Palette, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -112,12 +113,9 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
-    return <Loader className="p-6" />;
-  }
-
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
+    <PageTransition loading={loading} skeleton={<DashboardSkeleton />}>
+      <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       {/* Header simplificado */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-slide-up">
         <div>
@@ -227,7 +225,7 @@ export default function DashboardPage() {
                 return (
                   <Link
                     key={design.id}
-                    href={`/designs/${design.id}`}
+                    href={`/designs?open=${design.id}`}
                     className="flex items-center justify-between rounded-lg p-4 hover:bg-accent/50 transition-all cursor-pointer group"
                   >
                     {/* Izquierda: Nombre + Estado del jugador (contexto del diseño) */}
@@ -289,5 +287,6 @@ export default function DashboardPage() {
         </Card>
       )}
     </div>
+    </PageTransition>
   );
 }

@@ -146,9 +146,8 @@ export function useComments(designId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // supabase is a singleton (createClient returns same instance), so it's safe to exclude from deps
-  }, [designId]);
+  // supabase is a singleton from createClient(), won't cause extra re-renders
+  }, [designId, supabase]);
 
   const addComment = async (content: string, userId: string, userProfile?: { full_name: string; avatar_url?: string }) => {
     // Generate temporary ID for optimistic update

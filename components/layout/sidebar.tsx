@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Palette, Calendar, Activity, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth/auth-context';
 import { SidebarLogo } from './sidebar-logo';
 
 interface SidebarProps {
@@ -40,7 +39,6 @@ const NAV_GROUPS: NavGroup[] = [
 
 export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { user, profile, loading } = useAuth();
 
   const handleLinkClick = () => {
     // Close mobile menu on link click (mobile only)
@@ -48,11 +46,6 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
       onClose();
     }
   };
-
-  // Auth guards - prevent render during loading or when not authenticated
-  if (loading) return null;
-  if (!user) return null;
-  if (!profile) return null;
 
   return (
     <aside

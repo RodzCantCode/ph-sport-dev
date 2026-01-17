@@ -85,7 +85,7 @@ export function useAllComments() {
           match: `${design.match_home} vs ${design.match_away}`,
           lastMessage: lastComment ? {
             content: lastComment.content,
-            author: (lastComment.profiles as any)?.full_name || 'Desconocido',
+            author: (lastComment.profiles as { full_name: string } | null)?.full_name || 'Desconocido',
             createdAt: lastComment.created_at
           } : null,
           unreadCount,

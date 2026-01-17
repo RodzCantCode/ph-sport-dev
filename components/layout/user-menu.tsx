@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, Moon, Sun, ChevronDown, Users } from 'lucide-react';
 import { SettingsDialog } from '@/components/features/account/settings-dialog';
 import { useAuth } from '@/lib/auth/auth-context';
 import { createClient } from '@/lib/supabase/client';
@@ -109,6 +109,15 @@ export function UserMenu() {
           <Settings className="mr-2 h-4 w-4" />
           <span>Configuración</span>
         </DropdownMenuItem>
+        {profile?.role === 'ADMIN' && (
+          <DropdownMenuItem
+            onClick={() => router.push('/settings/users')}
+            className="text-foreground hover:bg-accent cursor-pointer"
+          >
+            <Users className="mr-2 h-4 w-4" />
+            <span>Usuarios</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault();

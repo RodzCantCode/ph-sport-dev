@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,8 +27,9 @@ import {
 import { Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { CreateDesignButton } from '@/components/features/designs/dialogs/create-design-button';
-import { Loader } from '@/components/ui/loader';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PageTransition } from '@/components/ui/page-transition';
+import { DesignsSkeleton } from '@/components/skeletons/designs-skeleton';
 import { KanbanBoard } from '@/components/features/designs/kanban/kanban-board';
 import { useDesigners } from '@/lib/hooks/use-designers';
 import type { Design } from '@/lib/types/design';
@@ -39,8 +41,18 @@ import { logger } from '@/lib/utils/logger';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 import { DesignDetailSheet } from '@/components/features/designs/design-detail-sheet';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
+// Wrapper component para Suspense boundary requerido por useSearchParams
 export default function DesignsPage() {
+  return (
+    <Suspense fallback={<DesignsSkeleton />}>
+      <DesignsPageContent />
+    </Suspense>
+  );
+}
+
+function DesignsPageContent() {
   const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,9 +64,23 @@ export default function DesignsPage() {
   // Estado para el panel de detalles
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  
+  // Estado para el diálogo de confirmación de eliminación
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [designToDelete, setDesignToDelete] = useState<Design | null>(null);
 
   // Hook de diseñadores
   const { designers } = useDesigners();
+
+  // Leer query param ?open para abrir diseño automáticamente
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (openId) {
+      setSelectedDesignId(openId);
+      setDetailSheetOpen(true);
+    }
+  }, [searchParams]);
 
   // Filtros
   const [statusFilter, setStatusFilter] = useState<DesignStatus | 'all'>('all');
@@ -122,14 +148,17 @@ export default function DesignsPage() {
     setEditDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este diseño?')) {
-      return;
-    }
+  const handleDelete = (design: Design) => {
+    setDesignToDelete(design);
+    setDeleteConfirmOpen(true);
+  };
 
-    setDeletingId(id);
+  const confirmDelete = async () => {
+    if (!designToDelete) return;
+
+    setDeletingId(designToDelete.id);
     try {
-      const response = await fetch(`/api/designs/${id}`, {
+      const response = await fetch(`/api/designs/${designToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -139,6 +168,8 @@ export default function DesignsPage() {
       }
 
       toast.success('Diseño eliminado exitosamente');
+      setDeleteConfirmOpen(false);
+      setDesignToDelete(null);
       loadDesigns();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Error al eliminar diseño');
@@ -245,8 +276,7 @@ export default function DesignsPage() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
-  if (loading && items.length === 0) return <Loader className="p-6" />;
-
+  // Error state se maneja dentro del PageTransition
   if (error && items.length === 0) {
     return (
       <div className="p-6">
@@ -261,7 +291,8 @@ export default function DesignsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 animate-fade-in max-w-7xl mx-auto">
+    <PageTransition loading={loading && items.length === 0} skeleton={<DesignsSkeleton />}>
+      <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -599,7 +630,7 @@ export default function DesignsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(design.id)}
+                            onClick={() => handleDelete(design)}
                             disabled={deletingId === design.id}
                             title="Eliminar diseño"
                             aria-label="Eliminar diseño"
@@ -663,6 +694,22 @@ export default function DesignsPage() {
         onOpenChange={setDetailSheetOpen}
         onDesignUpdated={loadDesigns}
       />
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          setDeleteConfirmOpen(open);
+          if (!open) setDesignToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar diseño"
+        description={designToDelete ? `¿Estás seguro de que quieres eliminar "${designToDelete.title}"? Esta acción no se puede deshacer.` : ''}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={deletingId !== null}
+      />
     </div>
+    </PageTransition>
   );
 }

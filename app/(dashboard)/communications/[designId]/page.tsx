@@ -184,7 +184,7 @@ export default function ConversationDetailPage() {
         </div>
 
         <Button variant="outline" size="sm" asChild className="shrink-0">
-          <Link href={`/designs/${designId}`}>
+          <Link href={`/designs?open=${designId}`}>
             <Palette className="mr-2 h-4 w-4" />
             Ver diseño
             <ExternalLink className="ml-2 h-3 w-3" />
