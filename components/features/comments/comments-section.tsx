@@ -202,7 +202,7 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Escribe un comentario..."
-            className="flex-1 resize-none h-10 py-2.5 min-h-[40px] max-h-[120px]"
+            className="flex-1 resize-none overflow-y-hidden h-10 py-2.5 min-h-[40px] max-h-[120px]"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
