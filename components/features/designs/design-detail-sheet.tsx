@@ -179,9 +179,20 @@ export function DesignDetailSheet({
                         {design.player} · {design.match_home} vs {design.match_away}
                       </SheetDescription>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setIsEditDialogOpen(true)}
+                    <div className="flex gap-1 shrink-0 ml-4">
+                    {design.folder_url && (
+                      <a
+                        href={design.folder_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-colors group"
+                        title="Abrir carpeta en Drive"
+                      >
+                        <ExternalLink className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-orange-400" />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => setIsEditDialogOpen(true)}
                         className="p-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-colors group"
                         title="Editar"
                       >
@@ -243,17 +254,7 @@ export function DesignDetailSheet({
                     </div>
                   )}
 
-                  {/* Folder URL */}
-                  {design.folder_url && (
-                    <div className="pt-4 border-t border-gray-100 dark:border-white/10">
-                      <Button variant="outline" size="sm" asChild className="w-full">
-                        <a href={design.folder_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Abrir carpeta en Drive
-                        </a>
-                      </Button>
-                    </div>
-                  )}
+
                 </div>
 
                 </div>
