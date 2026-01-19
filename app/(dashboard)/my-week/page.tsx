@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -281,6 +282,27 @@ export default function MyWeekPage() {
           variant={options.variant || 'warning'}
         />
       )}
+
+      {/* Design detail sheet */}
+      <DesignDetailSheet
+        designId={selectedDesignId}
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+        onDesignUpdated={() => {
+          if (!user) return;
+          const { weekStart, weekEnd } = getDefaultWeekRange();
+          const qs = new URLSearchParams({
+            weekStart: format(weekStart, 'yyyy-MM-dd'),
+            weekEnd: format(weekEnd, 'yyyy-MM-dd'),
+            designerId: user.id,
+          });
+          
+          fetch(`/api/designs?${qs.toString()}`)
+            .then(r => r.json())
+            .then(data => setItems(data.items || []))
+            .catch(err => logger.error('Reload error:', err));
+        }}
+      />
     </PageTransition>
   );
 }
