@@ -195,14 +195,14 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
         )}
       </div>
 
-      {/* Input Area - Sticky to bottom */}
-      <div className="sticky bottom-0 bg-background border-t border-gray-100 dark:border-white/10 pt-4">
+      {/* Input Area */}
+      <div className="border-t border-gray-100 dark:border-white/10 p-4">
         <form onSubmit={handleSubmit} className="flex gap-2 items-end">
           <Textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Escribe un comentario..."
-            className="flex-1 resize-none py-3 h-10 min-h-[40px] max-h-[120px]"
+            className="flex-1 resize-none h-10 py-2.5 min-h-[40px] max-h-[120px]"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
