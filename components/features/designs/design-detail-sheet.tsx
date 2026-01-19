@@ -80,7 +80,7 @@ export function DesignDetailSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto" hideCloseButton>
+        <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0" hideCloseButton>
           <AnimatePresence mode="wait">
             {loading ? (
               <motion.div
@@ -165,7 +165,10 @@ export function DesignDetailSheet({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
+                className="flex flex-col h-full"
               >
+                {/* Scrollable design info section */}
+                <div className="overflow-y-auto p-6 pb-0">
                 <SheetHeader className="pb-4 border-b border-gray-100 dark:border-white/10">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -253,8 +256,12 @@ export function DesignDetailSheet({
                   )}
                 </div>
 
-                {/* Comments Section */}
-                <CommentsSection designId={design.id} />
+                </div>
+
+                {/* Comments Section - Fixed input at bottom */}
+                <div className="flex-1 flex flex-col min-h-0">
+                  <CommentsSection designId={design.id} />
+                </div>
               </motion.div>
             ) : null}
           </AnimatePresence>
