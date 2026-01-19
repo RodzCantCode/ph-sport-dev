@@ -34,7 +34,7 @@ export function CreateInvitationDialog({
   onOpenChange,
   onCreated 
 }: CreateInvitationDialogProps) {
-  const [role, setRole] = useState<'ADMIN' | 'DESIGNER' | 'USER'>('DESIGNER');
+  const [role, setRole] = useState<'ADMIN' | 'DESIGNER'>('DESIGNER');
   const [creating, setCreating] = useState(false);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -168,7 +168,6 @@ export function CreateInvitationDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="DESIGNER">Diseñador</SelectItem>
-                  <SelectItem value="USER">Usuario</SelectItem>
                   <SelectItem value="ADMIN">Administrador</SelectItem>
                 </SelectContent>
               </Select>

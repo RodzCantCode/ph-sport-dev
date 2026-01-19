@@ -1,13 +1,15 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { LogoutOverlay } from '@/components/ui/logout-overlay';
 
 interface Profile {
   id: string;
   full_name: string;
-  role: 'ADMIN' | 'DESIGNER' | 'USER';
+  role: 'ADMIN' | 'DESIGNER';
   avatar_url?: string;
 }
 
@@ -15,18 +17,53 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  loggingOut: boolean;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  loggingOut: false,
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  // Auto-reset loggingOut cuando llegamos a /login (el "sensor del hotel")
+  useEffect(() => {
+    if (pathname === '/login' && loggingOut) {
+      setLoggingOut(false);
+    }
+  }, [pathname, loggingOut]);
+
+  // Función de logout que limpia estado inmediatamente
+  const logout = async () => {
+    setLoggingOut(true);
+    // Limpiar estado inmediatamente para UI suave
+    setUser(null);
+    setProfile(null);
+    
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error('Logout error:', e);
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+      // NO ponemos loggingOut = false aquí
+      // El overlay se mantiene hasta que la página cambie con router.push
+    }
+  };
 
   useEffect(() => {
     const supabase = createClient();
@@ -112,7 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading }}>
+    <AuthContext.Provider value={{ user, profile, loading, loggingOut, logout }}>
+      <LogoutOverlay isVisible={loggingOut} />
       {children}
     </AuthContext.Provider>
   );

@@ -28,14 +28,14 @@ import { CreateInvitationDialog } from '@/components/invitations/create-invitati
 interface Profile {
   id: string;
   full_name: string;
-  role: 'ADMIN' | 'DESIGNER' | 'USER';
+  role: 'ADMIN' | 'DESIGNER';
   created_at: string;
 }
 
 interface Invitation {
   id: string;
   token: string;
-  role: 'ADMIN' | 'DESIGNER' | 'USER';
+  role: 'ADMIN' | 'DESIGNER';
   uses: number;
   max_uses: number;
   expires_at: string | null;
@@ -44,13 +44,11 @@ interface Invitation {
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Admin',
   DESIGNER: 'Diseñador',
-  USER: 'Usuario',
 };
 
 const ROLE_COLORS: Record<string, string> = {
   ADMIN: 'bg-primary/20 text-primary border-primary/30',
   DESIGNER: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  USER: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
 };
 
 export default function UsersPage() {

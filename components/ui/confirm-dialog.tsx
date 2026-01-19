@@ -25,6 +25,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: ConfirmDialogVariant;
   loading?: boolean;
+  /** URL de imagen personalizada para usar en lugar del icono del variant */
+  customIcon?: string;
 }
 
 const variantConfig = {
@@ -58,6 +60,7 @@ export function ConfirmDialog({
   cancelLabel = 'Cancelar',
   variant = 'danger',
   loading = false,
+  customIcon,
 }: ConfirmDialogProps) {
   const config = variantConfig[variant];
   const Icon = config.icon;
@@ -70,14 +73,18 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader className="flex flex-col items-center text-center gap-4 pb-2">
-          <div
-            className={cn(
-              'flex h-14 w-14 items-center justify-center rounded-full',
-              config.bgClassName
-            )}
-          >
-            <Icon className={cn('h-7 w-7', config.iconClassName)} />
-          </div>
+          {customIcon ? (
+            <img src={customIcon} alt="" className="h-14 w-14 object-contain" />
+          ) : (
+            <div
+              className={cn(
+                'flex h-14 w-14 items-center justify-center rounded-full',
+                config.bgClassName
+              )}
+            >
+              <Icon className={cn('h-7 w-7', config.iconClassName)} />
+            </div>
+          )}
           <div className="space-y-2">
             <DialogTitle className="text-xl">{title}</DialogTitle>
             {description && (

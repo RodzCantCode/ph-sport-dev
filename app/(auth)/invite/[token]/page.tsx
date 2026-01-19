@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 interface Invitation {
   id: string;
   token: string;
-  role: 'ADMIN' | 'DESIGNER' | 'USER';
+  role: 'ADMIN' | 'DESIGNER';
   max_uses: number;
   uses: number;
   expires_at: string | null;
@@ -22,7 +22,6 @@ interface Invitation {
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
   DESIGNER: 'Diseñador',
-  USER: 'Usuario',
 };
 
 export default function InvitePage() {
@@ -185,7 +184,7 @@ export default function InvitePage() {
       </p>
       <div className="mb-8">
         <Badge variant="outline" className="text-sm">
-          Rol: {ROLE_LABELS[invitation?.role || 'USER']}
+          Rol: {ROLE_LABELS[invitation?.role || 'DESIGNER']}
         </Badge>
       </div>
 

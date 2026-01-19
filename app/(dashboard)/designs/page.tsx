@@ -42,6 +42,7 @@ import { useDebounce } from '@/lib/hooks/use-debounce';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 import { DesignDetailSheet } from '@/components/features/designs/design-detail-sheet';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { DatePicker } from '@/components/ui/date-picker';
 
 // Wrapper component para Suspense boundary requerido por useSearchParams
 export default function DesignsPage() {
@@ -85,8 +86,8 @@ function DesignsPageContent() {
   // Filtros
   const [statusFilter, setStatusFilter] = useState<DesignStatus | 'all'>('all');
   const [designerFilter, setDesignerFilter] = useState<string | 'all'>('all');
-  const [weekStartFilter, setWeekStartFilter] = useState<string>('');
-  const [weekEndFilter, setWeekEndFilter] = useState<string>('');
+  const [weekStartFilter, setWeekStartFilter] = useState<Date | undefined>(undefined);
+  const [weekEndFilter, setWeekEndFilter] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Debounce para searchQuery (solo afecta filtrado local, no fetch)
@@ -102,8 +103,8 @@ function DesignsPageContent() {
     setLoading(true);
     setError(null);
     const { weekStart: defaultStart, weekEnd: defaultEnd } = getDefaultWeekRange();
-    const weekStart = weekStartFilter || format(defaultStart, 'yyyy-MM-dd');
-    const weekEnd = weekEndFilter || format(defaultEnd, 'yyyy-MM-dd');
+    const weekStart = weekStartFilter ? format(weekStartFilter, 'yyyy-MM-dd') : format(defaultStart, 'yyyy-MM-dd');
+    const weekEnd = weekEndFilter ? format(weekEndFilter, 'yyyy-MM-dd') : format(defaultEnd, 'yyyy-MM-dd');
 
     const qs = new URLSearchParams({
       weekStart,
@@ -131,8 +132,8 @@ function DesignsPageContent() {
     const now = new Date();
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
-    setWeekStartFilter(format(weekStart, 'yyyy-MM-dd'));
-    setWeekEndFilter(format(weekEnd, 'yyyy-MM-dd'));
+    setWeekStartFilter(weekStart);
+    setWeekEndFilter(weekEnd);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -385,22 +386,25 @@ function DesignsPageContent() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="week-start">Semana inicio</Label>
-              <Input
-                id="week-start"
-                type="date"
+              <Label>Semana inicio</Label>
+              <DatePicker
                 value={weekStartFilter}
-                onChange={(e) => setWeekStartFilter(e.target.value)}
+                onChange={(date) => {
+                  setWeekStartFilter(date);
+                }}
+                placeholder="Fecha inicio"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="week-end">Semana fin</Label>
+              <Label>Semana fin</Label>
               <div className="flex gap-2">
-                <Input
-                  id="week-end"
-                  type="date"
+                <DatePicker
                   value={weekEndFilter}
-                  onChange={(e) => setWeekEndFilter(e.target.value)}
+                  onChange={(date) => {
+                    setWeekEndFilter(date);
+                  }}
+                  placeholder="Fecha fin"
+                  minDate={weekStartFilter}
                 />
                 <Button onClick={handleWeekFilterApply} size="sm">
                   Aplicar
@@ -586,7 +590,7 @@ function DesignsPageContent() {
                             {STATUS_LABELS[design.status]}
                           </Badge>
                           {isCritical && (
-                            <Badge variant="destructive" className="animate-pulse h-6 px-1.5">
+                            <Badge variant="destructive" className="animate-pulse-slow h-6 px-1.5">
                               🔥 {Math.floor(hoursUntilDeadline)}h
                             </Badge>
                           )}

@@ -14,29 +14,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, Moon, Sun, ChevronDown, Users } from 'lucide-react';
 import { SettingsDialog } from '@/components/features/account/settings-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useAuth } from '@/lib/auth/auth-context';
-import { createClient } from '@/lib/supabase/client';
 
 export function UserMenu() {
   const router = useRouter();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const handleLogout = async () => {
-    if (typeof window !== 'undefined') {
-      try {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-      } catch (e) {
-        console.error('Logout error:', e);
-      } finally {
-        localStorage.clear();
-        sessionStorage.clear();
-        router.push('/login');
-        router.refresh();
-      }
-    }
+    setLogoutDialogOpen(false);
+    await logout();
+    // Pequeño delay para que el overlay sea visible
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    router.push('/login');
+    router.refresh();
   };
 
   const getInitials = (name: string) => {
@@ -67,7 +61,7 @@ export function UserMenu() {
   }
 
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'User';
-  const displayRole = profile?.role === 'ADMIN' ? 'Manager' : (profile?.role === 'DESIGNER' ? 'Diseñador' : 'Usuario');
+  const displayRole = profile?.role === 'ADMIN' ? 'Manager' : 'Diseñador';
   // Subtle role color: Manager = primary (orange), Designer = muted blue
   const roleColor = profile?.role === 'ADMIN' 
     ? 'text-primary' 
@@ -139,7 +133,7 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuItem
-          onClick={handleLogout}
+          onClick={() => setLogoutDialogOpen(true)}
           className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer focus:text-red-300 focus:bg-red-500/10"
         >
           <LogOut className="mr-2 h-4 w-4" />
@@ -149,6 +143,17 @@ export function UserMenu() {
       
       {/* Diálogos */}
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <ConfirmDialog
+        open={logoutDialogOpen}
+        onOpenChange={setLogoutDialogOpen}
+        title="¿Cerrar sesión?"
+        description="Tendrás que volver a iniciar sesión para acceder a la aplicación."
+        confirmLabel="Cerrar Sesión"
+        cancelLabel="Cancelar"
+        variant="warning"
+        onConfirm={handleLogout}
+        customIcon="/images/logo-icon-orange.webp"
+      />
     </DropdownMenu>
   );
 }

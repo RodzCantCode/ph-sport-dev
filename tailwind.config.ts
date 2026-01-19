@@ -92,6 +92,15 @@ const config: Config = {
           from: { opacity: '0', transform: 'translateY(4px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
+        'blink': {
+          '0%': { transform: 'scaleY(1)' },
+          '50%': { transform: 'scaleY(0.1)' },
+          '100%': { transform: 'scaleY(1)' },
+        },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -100,6 +109,8 @@ const config: Config = {
         'fade-in': 'fade-in 0.3s ease-out',
         'fade-out': 'fade-out 0.2s ease-out forwards',
         'slide-up': 'slide-up 0.4s ease-out',
+        'blink': 'blink 0.3s ease-in-out',
+        'pulse-slow': 'pulse-slow 3s ease-in-out infinite',
       },
     },
   },

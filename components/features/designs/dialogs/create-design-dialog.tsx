@@ -20,9 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Plus, Edit, Save, FileText, Layers, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDateTimeLocal } from '@/lib/utils';
 import { useDesigners } from '@/lib/hooks/use-designers';
 import { PLAYER_STATUS_CONFIG } from '@/components/features/designs/tags/player-status-tag';
 
@@ -67,7 +67,7 @@ export function CreateDesignDialog({
     player: '',
     match_home: '',
     match_away: '',
-    deadline_at: '',
+    deadline_at: undefined as Date | undefined,
     folder_url: '',
     designer_id: null as string | null,
     player_status: null as 'injured' | 'suspended' | 'doubt' | 'last_minute' | null,
@@ -85,7 +85,7 @@ export function CreateDesignDialog({
         player: design.player || '',
         match_home: design.match_home || '',
         match_away: design.match_away || '',
-        deadline_at: formatDateTimeLocal(design.deadline_at),
+        deadline_at: design.deadline_at ? new Date(design.deadline_at) : undefined,
         folder_url: design.folder_url || '',
         designer_id: design.designer_id || null,
         player_status: design.player_status || null,
@@ -97,7 +97,7 @@ export function CreateDesignDialog({
         player: '',
         match_home: '',
         match_away: '',
-        deadline_at: '',
+        deadline_at: undefined,
         folder_url: '',
         designer_id: null,
         player_status: null,
@@ -133,12 +133,13 @@ export function CreateDesignDialog({
     setLoading(true);
 
     try {
-      const deadline = new Date(formData.deadline_at);
-      if (isNaN(deadline.getTime())) {
-        toast.error('Fecha inválida');
+      if (!formData.deadline_at) {
+        toast.error('Selecciona una fecha de entrega');
         setLoading(false);
         return;
       }
+
+      const deadline = formData.deadline_at;
 
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       if (!isEditMode && deadline < oneHourAgo) {
@@ -226,7 +227,7 @@ export function CreateDesignDialog({
         player: '',
         match_home: '',
         match_away: '',
-        deadline_at: '',
+        deadline_at: undefined,
         folder_url: '',
         designer_id: null,
         player_status: null,
@@ -333,13 +334,11 @@ export function CreateDesignDialog({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="deadline_at">Fecha de entrega</Label>
-                    <Input
-                      id="deadline_at"
-                      type="datetime-local"
-                      required
+                    <Label>Fecha de entrega</Label>
+                    <DateTimePicker
                       value={formData.deadline_at}
-                      onChange={(e) => setFormData({ ...formData, deadline_at: e.target.value })}
+                      onChange={(date) => setFormData({ ...formData, deadline_at: date })}
+                      placeholder="Selecciona fecha y hora"
                     />
                   </div>
                   <div className="grid gap-2">

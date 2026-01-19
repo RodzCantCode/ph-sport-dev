@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Layers, Plus, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDesigners } from '@/lib/hooks/use-designers';
@@ -54,7 +55,7 @@ export function BatchCreateDialog({
   const [sharedData, setSharedData] = useState({
     match_home: '',
     match_away: '',
-    deadline_at: '',
+    deadline_at: undefined as Date | undefined,
     folder_url: '',
     designer_id: null as string | null,
   });
@@ -89,7 +90,7 @@ export function BatchCreateDialog({
     setSharedData({
       match_home: '',
       match_away: '',
-      deadline_at: '',
+      deadline_at: undefined,
       folder_url: '',
       designer_id: null,
     });
@@ -105,12 +106,7 @@ export function BatchCreateDialog({
       return;
     }
 
-    // Validar fecha
-    const deadline = new Date(sharedData.deadline_at);
-    if (isNaN(deadline.getTime())) {
-      toast.error('Fecha inválida');
-      return;
-    }
+    const deadline = sharedData.deadline_at;
 
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     if (deadline < oneHourAgo) {
@@ -219,15 +215,13 @@ export function BatchCreateDialog({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="batch-deadline_at">Fecha de entrega</Label>
-                    <Input
-                      id="batch-deadline_at"
-                      type="datetime-local"
-                      required
+                    <Label>Fecha de entrega</Label>
+                    <DateTimePicker
                       value={sharedData.deadline_at}
-                      onChange={(e) =>
-                        setSharedData({ ...sharedData, deadline_at: e.target.value })
+                      onChange={(date) =>
+                        setSharedData({ ...sharedData, deadline_at: date })
                       }
+                      placeholder="Selecciona fecha y hora"
                     />
                   </div>
                   <div className="grid gap-2">

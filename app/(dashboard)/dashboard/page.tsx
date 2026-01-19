@@ -249,7 +249,7 @@ export default function DashboardPage() {
                     {/* Derecha: Urgencia + Estado del diseño (seguimiento operativo) */}
                     <div className="flex items-center gap-2 ml-4 shrink-0">
                       {design.isCritical && (
-                        <Badge variant="destructive" className="animate-pulse shrink-0">
+                        <Badge variant="destructive" className="animate-pulse-slow shrink-0">
                           🔥 {Math.floor(design.hoursUntilDeadline)}h
                         </Badge>
                       )}
