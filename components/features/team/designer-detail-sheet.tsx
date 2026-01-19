@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -46,15 +46,19 @@ export function DesignerDetailSheet({
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
+  // Agrupar por estado - Memoized para rendimiento
+  const { designs, backlog, inProgress, toReview, delivered } = useMemo(() => {
+    const list = designer?.designs || [];
+    return {
+      designs: list,
+      backlog: list.filter(d => d.status === 'BACKLOG'),
+      inProgress: list.filter(d => d.status === 'IN_PROGRESS'),
+      toReview: list.filter(d => d.status === 'TO_REVIEW'),
+      delivered: list.filter(d => d.status === 'DELIVERED')
+    };
+  }, [designer]);
+
   if (!designer) return null;
-
-  const designs = designer.designs;
-
-  // Agrupar por estado
-  const backlog = designs.filter(d => d.status === 'BACKLOG');
-  const inProgress = designs.filter(d => d.status === 'IN_PROGRESS');
-  const toReview = designs.filter(d => d.status === 'TO_REVIEW');
-  const delivered = designs.filter(d => d.status === 'DELIVERED');
 
   const handleEditDesign = (design: Design) => {
     setEditingDesign(design);
@@ -194,7 +198,13 @@ export function DesignerDetailSheet({
       <DesignDetailSheet
         designId={selectedDesignId}
         open={isDetailSheetOpen}
-        onOpenChange={setIsDetailSheetOpen}
+        onOpenChange={(open) => {
+          setIsDetailSheetOpen(open);
+          // Limpiar estado al cerrar para evitar flashes del diseño anterior
+          if (!open) {
+            setTimeout(() => setSelectedDesignId(null), 300); // Pequeño delay para permitir animación de salida
+          }
+        }}
         onDesignUpdated={() => {
           // Opcional: recargar datos del diseñador si es necesario
         }}

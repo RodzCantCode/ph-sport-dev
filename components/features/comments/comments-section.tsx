@@ -86,12 +86,12 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
 
   return (
     <div className="flex flex-col h-full border-t border-gray-100 dark:border-white/10 mt-6 pt-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 px-1">Comentarios</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 px-6">Comentarios</h3>
       
       {/* Messages List */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 min-h-[200px]"
+        className="flex-1 overflow-y-auto space-y-6 px-6 mb-4 min-h-[200px]"
       >
         {comments.length === 0 ? (
           <div className="text-center text-gray-500 dark:text-gray-400 py-8 text-sm">
