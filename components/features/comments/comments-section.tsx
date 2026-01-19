@@ -195,29 +195,31 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
         )}
       </div>
 
-      {/* Input Area */}
-      <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-        <Textarea
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Escribe un comentario..."
-          className="min-h-[40px] max-h-[120px] resize-none py-2"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(e);
-            }
-          }}
-        />
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={!newComment.trim() || sending}
-          className="bg-orange-500 hover:bg-orange-600 text-white shrink-0 h-10 w-10"
-        >
-          {sending ? <Loader className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-        </Button>
-      </form>
+      {/* Input Area - Sticky to bottom */}
+      <div className="sticky bottom-0 bg-background border-t border-gray-100 dark:border-white/10 pt-4">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Escribe un comentario..."
+            className="flex-1 resize-none py-3 h-10 min-h-[40px] max-h-[120px]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+          />
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={!newComment.trim() || sending}
+            className="bg-orange-500 hover:bg-orange-600 text-white shrink-0 h-10 w-10"
+          >
+            {sending ? <Loader className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

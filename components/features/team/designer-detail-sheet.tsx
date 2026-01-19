@@ -18,6 +18,7 @@ import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
+import { DesignDetailSheet } from '@/components/features/designs/design-detail-sheet';
 
 interface DesignerWithDesigns {
   id: string;
@@ -40,6 +41,10 @@ export function DesignerDetailSheet({
 }: DesignerDetailSheetProps) {
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Estado para panel de detalles superpuesto
+  const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
   if (!designer) return null;
 
@@ -63,7 +68,10 @@ export function DesignerDetailSheet({
   };
 
   const renderDesignItem = (design: Design) => (
-    <Card key={design.id} className="group">
+    <Card key={design.id} className="group cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
+      setSelectedDesignId(design.id);
+      setIsDetailSheetOpen(true);
+    }}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -78,7 +86,7 @@ export function DesignerDetailSheet({
               {design.match_home} vs {design.match_away}
             </p>
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
             <Button
               variant="ghost"
               size="icon"
@@ -181,6 +189,16 @@ export function DesignerDetailSheet({
           design={editingDesign}
         />
       )}
+
+      {/* Design detail sheet - superpuesto */}
+      <DesignDetailSheet
+        designId={selectedDesignId}
+        open={isDetailSheetOpen}
+        onOpenChange={setIsDetailSheetOpen}
+        onDesignUpdated={() => {
+          // Opcional: recargar datos del diseñador si es necesario
+        }}
+      />
     </>
   );
 }
