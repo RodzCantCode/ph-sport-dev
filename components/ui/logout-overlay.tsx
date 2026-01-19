@@ -12,7 +12,7 @@ export function LogoutOverlay({ isVisible }: LogoutOverlayProps) {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm">
       <img 
-        src="/images/logo-icon-orange.webp" 
+        src="/images/favicon-v2.png" 
         alt="PH Sport" 
         className="h-16 w-16 mb-4 animate-pulse"
       />

@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Palette, Calendar, Activity, Home } from 'lucide-react';
+import { Palette, Calendar, Activity, Home, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SidebarLogo } from './sidebar-logo';
+import { useAuth } from '@/lib/auth/auth-context';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -23,22 +24,31 @@ interface NavGroup {
   items: NavItem[];
 }
 
-// Navigation configuration - defined outside component to avoid recreation
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'Navegación',
-    items: [
-      { href: '/dashboard', label: 'Inicio', icon: Home },
-      { href: '/my-week', label: 'Mi Semana', icon: Calendar },
-      { href: '/designs', label: 'Diseños', icon: Palette },
-      { href: '/communications', label: 'Actividad', icon: Activity },
-    ],
-  },
-];
+// Navigation configuration based on role
+function getNavGroups(role: 'ADMIN' | 'DESIGNER' | undefined): NavGroup[] {
+  return [
+    {
+      label: 'Navegación',
+      items: [
+        { href: '/dashboard', label: 'Inicio', icon: Home },
+        // ADMIN sees "Equipo", DESIGNER sees "Mi Semana"
+        role === 'ADMIN'
+          ? { href: '/team', label: 'Equipo', icon: Users }
+          : { href: '/my-week', label: 'Mi Semana', icon: Calendar },
+        { href: '/designs', label: 'Diseños', icon: Palette },
+        { href: '/communications', label: 'Actividad', icon: Activity },
+      ],
+    },
+  ];
+}
 
 
 export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { profile } = useAuth();
+  
+  // Get navigation based on user role
+  const navGroups = getNavGroups(profile?.role);
 
   const handleLinkClick = () => {
     // Close mobile menu on link click (mobile only)
@@ -65,7 +75,7 @@ export function Sidebar({ collapsed, onToggle, onClose }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-6 p-4 flex-1 overflow-y-auto">
-        {NAV_GROUPS.map((group) => (
+        {navGroups.map((group) => (
           <div key={group.label} className="flex flex-col gap-2">
             {/* Group label - animated hide/show */}
             <div

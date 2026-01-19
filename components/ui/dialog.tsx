@@ -70,7 +70,7 @@ const DialogContent = React.forwardRef<
         <motion.div
           ref={ref as unknown as React.Ref<HTMLDivElement>}
           className={cn(
-            'relative w-full max-w-lg border border-border bg-card text-card-foreground p-6 shadow-lg sm:rounded-lg',
+            'relative w-full max-w-lg border border-border bg-card text-card-foreground p-6 shadow-lg sm:rounded-lg transition-all duration-300 ease-out',
             className
           )}
           variants={contentVariants}

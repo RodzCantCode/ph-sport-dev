@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Flame, AlertTriangle, Palette } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { CreateDesignButton } from '@/components/features/designs/dialogs/create-design-button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -296,7 +296,8 @@ function DesignsPageContent() {
       <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Palette className="h-8 w-8 text-primary" />
             Diseños
           </h1>
           <p className="text-muted-foreground">Gestión de todas las piezas gráficas</p>
@@ -590,13 +591,15 @@ function DesignsPageContent() {
                             {STATUS_LABELS[design.status]}
                           </Badge>
                           {isCritical && (
-                            <Badge variant="destructive" className="animate-pulse-slow h-6 px-1.5">
-                              🔥 {Math.floor(hoursUntilDeadline)}h
+                            <Badge variant="destructive" className="h-6 gap-1 shrink-0">
+                              <Flame className="h-3 w-3" />
+                              {Math.floor(hoursUntilDeadline)}h
                             </Badge>
                           )}
                           {isUrgent && !isCritical && (
-                            <Badge className="bg-yellow-500/30 text-yellow-400 border-yellow-500/50 h-6 px-1.5">
-                              ⚠️
+                            <Badge className="bg-yellow-500/30 text-yellow-600 dark:text-yellow-400 border-yellow-500/50 h-6 gap-1 shrink-0">
+                              <AlertTriangle className="h-3 w-3" />
+                              {Math.floor(hoursUntilDeadline)}h
                             </Badge>
                           )}
                         </div>

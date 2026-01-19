@@ -11,8 +11,12 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'PH Sport',
+  title: 'PH Sport Dashboard',
   description: 'Plataforma de gestión para el equipo de diseño de PH Sport',
+  icons: {
+    icon: '/images/favicon-v2.png',
+    apple: '/images/favicon-v2.png',
+  },
 };
 
 export default function RootLayout({
