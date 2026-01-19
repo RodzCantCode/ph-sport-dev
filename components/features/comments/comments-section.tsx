@@ -85,7 +85,7 @@ export function CommentsSection({ designId }: CommentsSectionProps) {
   if (loading) return <div className="p-4 flex justify-center"><Loader /></div>;
 
   return (
-    <div className="flex flex-col h-full max-h-[500px] border-t border-gray-100 dark:border-white/10 mt-6 pt-4">
+    <div className="flex flex-col h-full border-t border-gray-100 dark:border-white/10 mt-6 pt-4">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 px-1">Comentarios</h3>
       
       {/* Messages List */}
