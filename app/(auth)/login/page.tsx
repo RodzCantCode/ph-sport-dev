@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,6 +14,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mode, setMode] = useState<'login' | 'reset'>('login');
+  const [resetSent, setResetSent] = useState(false);
+
+  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,9 +25,6 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
-
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -60,6 +62,119 @@ export default function LoginPage() {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      });
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      setResetSent(true);
+    } catch {
+      setError('Error al enviar el email. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchToReset = () => {
+    setMode('reset');
+    setError('');
+    setResetSent(false);
+  };
+
+  const switchToLogin = () => {
+    setMode('login');
+    setError('');
+    setResetSent(false);
+  };
+
+  // Reset password mode
+  if (mode === 'reset') {
+    return (
+      <div className="animate-fade-in">
+        <button
+          onClick={switchToLogin}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver al inicio de sesión
+        </button>
+
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          Recuperar contraseña
+        </h1>
+        <p className="text-muted-foreground mb-8">
+          Te enviaremos un enlace para restablecer tu contraseña
+        </p>
+
+        {resetSent ? (
+          <div className="p-4 border border-green-500/50 rounded-lg bg-green-500/10 text-green-700 dark:text-green-400">
+            <div className="flex items-center gap-2 mb-2">
+              <Mail className="h-5 w-5" />
+              <span className="font-medium">Email enviado</span>
+            </div>
+            <p className="text-sm">
+              Revisa tu bandeja de entrada en <strong>{email}</strong> y sigue las instrucciones para restablecer tu contraseña.
+            </p>
+            <p className="text-sm mt-2 text-green-600 dark:text-green-500">
+              Si no lo encuentras, revisa tu carpeta de spam.
+            </p>
+          </div>
+        ) : (
+          <form className="space-y-5" onSubmit={handleResetPassword}>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="tu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="h-11"
+              />
+            </div>
+
+            {error && (
+              <div className="p-3 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive text-sm">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading || !email}
+              className="w-full h-11"
+              size="lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                'Enviar enlace de recuperación'
+              )}
+            </Button>
+          </form>
+        )}
+      </div>
+    );
+  }
+
+  // Login mode
   return (
     <div className="animate-fade-in">
       <h1 className="text-2xl font-bold text-foreground mb-2">
@@ -90,6 +205,7 @@ export default function LoginPage() {
             <Label htmlFor="password">Contraseña</Label>
             <button 
               type="button" 
+              onClick={switchToReset}
               className="text-sm text-primary hover:text-primary/80 transition-colors"
             >
               ¿Olvidaste tu contraseña?
