@@ -92,6 +92,23 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  // Notificar al diseñador si se ha asignado uno
+  if (newDesign.designer_id) {
+    try {
+      await supabase.from('notifications').insert({
+        user_id: newDesign.designer_id,
+        type: 'assignment',
+        title: 'Nueva asignación',
+        message: `Te han asignado el diseño "${newDesign.title || 'Sin título'}"`,
+        link: `/designs/${newDesign.id}`,
+        read: false,
+      });
+    } catch (notifError) {
+      // No bloqueamos la respuesta si falla la notificación, solo logueamos
+      console.error('Error creating notification:', notifError);
+    }
+  }
   
   return NextResponse.json(newDesign, { status: 201 });
 }
