@@ -80,7 +80,7 @@ export async function PUT(
         type: 'assignment',
         title: 'Nueva asignación',
         message: `Te han asignado el diseño "${updated.title || 'Sin título'}"`,
-        link: `/designs/${updated.id}`,
+        link: '/my-week',
         read: false,
       });
     } catch (notifError) {

@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         type: 'assignment',
         title: 'Nueva asignación',
         message: `Te han asignado el diseño "${newDesign.title || 'Sin título'}"`,
-        link: `/designs/${newDesign.id}`,
+        link: '/my-week',
         read: false,
       });
     } catch (notifError) {

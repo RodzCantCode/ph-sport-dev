@@ -59,7 +59,7 @@ export async function POST(_request: Request) {
       type: 'assignment',
       title: 'Nuevas asignaciones',
       message: `Se te han asignado ${count} nuevos diseños`,
-      link: '/designs',
+      link: '/my-week',
       read: false,
     });
   }

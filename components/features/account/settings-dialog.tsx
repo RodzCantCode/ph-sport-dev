@@ -242,8 +242,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
                   <Avatar className="h-24 w-24 border-2 border-border group-hover:border-primary transition-colors">
                     <AvatarImage src={profile?.avatar_url || ''} />
-                    <AvatarFallback className="text-2xl font-bold bg-muted text-foreground">
-                      {name ? name.substring(0, 2).toUpperCase() : user?.email?.substring(0, 2).toUpperCase()}
+                    <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+                      {name 
+                        ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                        : user?.email?.split('@')[0].substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
