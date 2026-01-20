@@ -1,4 +1,4 @@
-import { resend, FROM_EMAIL } from '@/lib/resend/client';
+import { getResendClient, FROM_EMAIL } from '@/lib/resend/client';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const resend = getResendClient();
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: Array.isArray(to) ? to : [to],
