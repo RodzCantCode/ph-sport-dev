@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { assignDesignerAutomatically } from '@/lib/services/designs/assignment';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Round-robin balanced assignment algorithm
@@ -24,6 +25,8 @@ export async function POST(_request: Request) {
     return NextResponse.json({ message: 'No hay diseños sin asignar', assigned: 0 });
   }
 
+  // Track assignments per designer for grouped notifications
+  const assignmentsByDesigner = new Map<string, number>();
   let assignedCount = 0;
   
   // Asignar cada diseño
@@ -37,12 +40,36 @@ export async function POST(_request: Request) {
         
       if (!updateError) {
         assignedCount++;
+        // Track how many were assigned to this designer
+        const currentCount = assignmentsByDesigner.get(designerId) || 0;
+        assignmentsByDesigner.set(designerId, currentCount + 1);
       }
     }
   }
 
   if (assignedCount === 0) {
     return NextResponse.json({ error: 'No se pudo asignar ningún diseño (posible falta de diseñadores)' }, { status: 400 });
+  }
+
+  // Fix #3: Send grouped notifications to each designer
+  const notifications = [];
+  for (const [designerId, count] of assignmentsByDesigner.entries()) {
+    notifications.push({
+      user_id: designerId,
+      type: 'assignment',
+      title: 'Nuevas asignaciones',
+      message: `Se te han asignado ${count} nuevos diseños`,
+      link: '/designs',
+      read: false,
+    });
+  }
+
+  if (notifications.length > 0) {
+    try {
+      await supabase.from('notifications').insert(notifications);
+    } catch (notifError) {
+      logger.error('[API Assign] Error sending notifications:', notifError);
+    }
   }
 
   return NextResponse.json({

@@ -37,6 +37,13 @@ export async function PUT(
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Obtener el diseño actual ANTES de actualizarlo (para comparar designer_id)
+  const { data: originalDesign } = await supabase
+    .from('designs')
+    .select('designer_id, title')
+    .eq('id', id)
+    .single();
   
   // Procesar designer_id si es 'auto' o null
   let designerId = body.designer_id;
@@ -61,6 +68,26 @@ export async function PUT(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  // Fix #2: Notificar al NUEVO diseñador si hubo reasignación
+  const oldDesignerId = originalDesign?.designer_id;
+  const newDesignerId = updated.designer_id;
+  
+  if (newDesignerId && newDesignerId !== oldDesignerId) {
+    try {
+      await supabase.from('notifications').insert({
+        user_id: newDesignerId,
+        type: 'assignment',
+        title: 'Nueva asignación',
+        message: `Te han asignado el diseño "${updated.title || 'Sin título'}"`,
+        link: `/designs/${updated.id}`,
+        read: false,
+      });
+    } catch (notifError) {
+      console.error('Error creating reassignment notification:', notifError);
+    }
+  }
+
   return NextResponse.json(updated);
 }
 
