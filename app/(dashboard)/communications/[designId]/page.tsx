@@ -161,7 +161,7 @@ export default function ConversationDetailPage() {
     : null;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] p-4 md:p-6 animate-fade-in max-w-5xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-4rem)] p-4 md:p-6 max-w-5xl mx-auto">
       {/* Compact Header */}
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4 pb-4 border-b border-border">
         <Button variant="ghost" size="sm" asChild className="w-fit">

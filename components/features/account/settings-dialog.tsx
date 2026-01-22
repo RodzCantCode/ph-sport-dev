@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TRANSITIONS, animations } from '@/components/ui/animations';
 import {
   Select,
   SelectContent,
@@ -217,7 +218,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       <DialogContent className="sm:max-w-[600px] bg-background border-border shadow-xl p-0 overflow-hidden">
         <motion.div 
           layout 
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          transition={TRANSITIONS.layoutSpring}
           className="flex flex-col h-full"
         >
           {/* Header */}
@@ -253,10 +254,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <TabsContent value="account" className="mt-0 focus-visible:outline-none">
                     <motion.div
                       key="account"
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
+                      initial={animations.slideHorizontal.initial}
+                      animate={animations.slideHorizontal.animate}
+                      exit={animations.slideHorizontal.exit}
+                      transition={TRANSITIONS.fade}
                       className="space-y-6 py-2"
                     >
                       <div className="flex flex-col items-center gap-4 py-4">
@@ -327,10 +328,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <TabsContent value="notifications" className="mt-0 focus-visible:outline-none">
                     <motion.div
                       key="notifications"
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
+                      initial={animations.slideHorizontal.initial}
+                      animate={animations.slideHorizontal.animate}
+                      exit={animations.slideHorizontal.exit}
+                      transition={TRANSITIONS.fade}
                       className="space-y-6 py-2"
                     >
                       <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
@@ -441,10 +442,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <TabsContent value="appearance" className="mt-0 focus-visible:outline-none">
                     <motion.div
                       key="appearance"
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
+                      initial={animations.slideHorizontal.initial}
+                      animate={animations.slideHorizontal.animate}
+                      exit={animations.slideHorizontal.exit}
+                      transition={TRANSITIONS.fade}
                       className="space-y-4 py-2"
                     >
                       <div className="space-y-4">

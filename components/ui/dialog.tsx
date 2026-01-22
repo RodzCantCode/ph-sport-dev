@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { motion, type MotionProps } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
+import { animations, TRANSITIONS } from './animations';
 
 const Dialog = DialogPrimitive.Root;
 
@@ -13,17 +14,9 @@ const DialogPortal = DialogPrimitive.Portal;
 
 const DialogClose = DialogPrimitive.Close;
 
-const overlayVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-  exit: { opacity: 0 },
-};
-
-const contentVariants = {
-  hidden: { opacity: 0, scale: 0.96 },
-  visible: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.96 },
-};
+// Use centralized animations from animations.ts
+const overlayAnimation = animations.fade;
+const contentAnimation = animations.scale;
 
 type DialogOverlayProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> & MotionProps;
 
@@ -35,11 +28,10 @@ const DialogOverlay = React.forwardRef<
     <motion.div
       ref={ref as unknown as React.Ref<HTMLDivElement>}
       className={cn('fixed inset-0 z-50 bg-black/50 dark:bg-black/80', className)}
-      variants={overlayVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      initial={overlayAnimation.initial}
+      animate={overlayAnimation.animate}
+      exit={overlayAnimation.exit}
+      transition={TRANSITIONS.modal}
       {...props}
     />
   </DialogPrimitive.Overlay>
@@ -73,11 +65,10 @@ const DialogContent = React.forwardRef<
             'relative w-full max-w-lg border border-border bg-card text-card-foreground p-6 shadow-lg sm:rounded-lg transition-all duration-300 ease-out',
             className
           )}
-          variants={contentVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+          initial={contentAnimation.initial}
+          animate={contentAnimation.animate}
+          exit={contentAnimation.exit}
+          transition={TRANSITIONS.modal}
           onClick={(e) => e.stopPropagation()} // Prevenir que clics en contenido cierren el dialog
           {...props}
         >

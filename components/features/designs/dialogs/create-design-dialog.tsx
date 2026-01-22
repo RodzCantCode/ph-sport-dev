@@ -27,6 +27,7 @@ import { useDesigners } from '@/lib/hooks/use-designers';
 import { PLAYER_STATUS_CONFIG } from '@/components/features/designs/tags/player-status-tag';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { TRANSITIONS, animations } from '@/components/ui/animations';
 
 import type { Design } from '@/lib/types/design';
 
@@ -331,7 +332,7 @@ export function CreateDesignDialog({
           <form onSubmit={handleSubmit}>
             <motion.div 
               layout
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              transition={TRANSITIONS.layout}
               className="space-y-6 mt-4"
             >
               {/* Mode selector - solo en modo creación */}
@@ -370,12 +371,12 @@ export function CreateDesignDialog({
               <motion.div 
                 key={creationMode}
                 layout
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={animations.slideHorizontal.initial}
+                animate={animations.slideHorizontal.animate}
+                exit={animations.slideHorizontal.exit}
                 transition={{ 
-                  opacity: { duration: 0.2 },
-                  layout: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+                  opacity: TRANSITIONS.fade,
+                  layout: TRANSITIONS.layout
                 }}
                 className="space-y-6"
               >

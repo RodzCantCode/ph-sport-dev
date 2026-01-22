@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { TRANSITIONS } from '@/components/ui/animations';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -101,7 +102,7 @@ export default function LoginPage() {
   // Reset password mode
   if (mode === 'reset') {
     return (
-      <div className="animate-fade-in">
+      <div>
         <button
           onClick={switchToLogin}
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -176,7 +177,7 @@ export default function LoginPage() {
 
   // Login mode
   return (
-    <div className="animate-fade-in">
+    <div>
       <h1 className="text-2xl font-bold text-foreground mb-2">
         Iniciar Sesión
       </h1>
@@ -236,7 +237,7 @@ export default function LoginPage() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.15 }}
+                  transition={TRANSITIONS.fade}
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />

@@ -72,7 +72,7 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="animate-fade-in text-center">
+      <div className="text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
           <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
         </div>
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div>
       <h1 className="text-2xl font-bold text-foreground mb-2">
         Nueva contraseña
       </h1>

@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
  */
 export function DesignDetailSkeleton() {
   return (
-    <div className="flex flex-col h-full animate-fade-in">
+    <div className="flex flex-col h-full">
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto p-6 pb-0">
         {/* Header */}

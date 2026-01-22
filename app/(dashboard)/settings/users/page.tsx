@@ -158,7 +158,7 @@ export default function UsersPage() {
       {(!currentProfile || currentProfile.role !== 'ADMIN') ? null : (
         <div className="flex flex-col gap-6 p-6 md:p-8 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-slide-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Usuarios</h1>
           <p className="text-muted-foreground">Gestiona el equipo de PH Sport</p>

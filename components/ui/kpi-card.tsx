@@ -34,7 +34,7 @@ export function KpiCard({
   };
 
   return (
-    <Card className={cn('animate-slide-up', className)}>
+    <Card className={cn(className)}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className={cn('text-sm font-medium', variantStyles[variant])}>

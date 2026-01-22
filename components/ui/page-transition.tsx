@@ -1,39 +1,14 @@
 'use client';
 
-import { AnimatePresence, motion, Transition, Variants } from 'framer-motion';
+import { AnimatePresence, motion, Transition } from 'framer-motion';
 import { ReactNode } from 'react';
-
-// ============================================
-// Animation Variants - Reusable across the app
-// ============================================
-
-const fadeVariants: Variants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-};
-
-const fadeSlideVariants: Variants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -4 },
-};
-
-// ============================================
-// Transition Presets
-// ============================================
-
-const transitions = {
-  fast: { duration: 0.15, ease: 'easeOut' },
-  normal: { duration: 0.25, ease: 'easeOut' },
-  slow: { duration: 0.4, ease: 'easeInOut' },
-} as const;
-
-type TransitionSpeed = keyof typeof transitions;
+import { animations, TRANSITIONS } from './animations';
 
 // ============================================
 // PageTransition Component
 // ============================================
+
+type TransitionSpeed = 'fast' | 'normal' | 'slow';
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -74,18 +49,25 @@ export function PageTransition({
   speed = 'normal',
   transition,
 }: PageTransitionProps) {
-  const variants = variant === 'fadeSlide' ? fadeSlideVariants : fadeVariants;
-  const resolvedTransition = transition ?? transitions[speed];
+  const selectedAnimation = animations[variant];
+  
+  // Map speed to centralized transitions
+  const speedToTransition: Record<TransitionSpeed, Transition> = {
+    fast: TRANSITIONS.fade,
+    normal: TRANSITIONS.modal,
+    slow: TRANSITIONS.layout,
+  };
+  
+  const resolvedTransition = transition ?? speedToTransition[speed];
 
   return (
     <AnimatePresence mode="wait">
       {loading ? (
         <motion.div
           key="skeleton"
-          variants={variants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
+          initial={selectedAnimation.initial}
+          animate={selectedAnimation.animate}
+          exit={selectedAnimation.exit}
           transition={resolvedTransition}
         >
           {skeleton}
@@ -93,10 +75,9 @@ export function PageTransition({
       ) : (
         <motion.div
           key="content"
-          variants={variants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
+          initial={selectedAnimation.initial}
+          animate={selectedAnimation.animate}
+          exit={selectedAnimation.exit}
           transition={resolvedTransition}
         >
           {children}
@@ -106,5 +87,5 @@ export function PageTransition({
   );
 }
 
-// Export variants for reuse in other components
-export { fadeVariants, fadeSlideVariants, transitions };
+// Re-export from animations.ts for convenience
+export { animations, TRANSITIONS };

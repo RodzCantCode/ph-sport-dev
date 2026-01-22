@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function MyWeekSkeleton() {
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
+import { TRANSITIONS, animations } from '@/components/ui/animations';
 import {
   Sheet,
   SheetContent,
@@ -85,20 +86,20 @@ export function DesignDetailSheet({
             {loading ? (
               <motion.div
                 key="skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={animations.fadeSlide.initial}
+                animate={animations.fadeSlide.animate}
+                exit={animations.fadeSlide.exit}
+                transition={TRANSITIONS.fade}
               >
                 <DesignDetailSkeleton />
               </motion.div>
             ) : error ? (
               <motion.div
                 key="error"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={animations.fadeSlide.initial}
+                animate={animations.fadeSlide.animate}
+                exit={animations.fadeSlide.exit}
+                transition={TRANSITIONS.fade}
                 className="flex flex-col items-center justify-center h-full gap-6 px-6"
               >
                 {/* Icono según tipo de error */}
@@ -161,10 +162,10 @@ export function DesignDetailSheet({
             ) : design ? (
               <motion.div
                 key="content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
+                initial={animations.fadeSlide.initial}
+                animate={animations.fadeSlide.animate}
+                exit={animations.fadeSlide.exit}
+                transition={TRANSITIONS.modal}
                 className="flex flex-col h-full"
               >
                 {/* Scrollable design info section */}

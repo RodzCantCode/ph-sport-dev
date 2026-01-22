@@ -145,7 +145,7 @@ export default function InvitePage() {
 
   if (error) {
     return (
-      <div className="animate-fade-in text-center py-10">
+      <div className="text-center py-10">
         <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
           <AlertCircle className="h-8 w-8 text-destructive" />
         </div>
@@ -162,7 +162,7 @@ export default function InvitePage() {
 
   if (success) {
     return (
-      <div className="animate-fade-in text-center py-10">
+      <div className="text-center py-10">
         <div className="mx-auto w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
           <CheckCircle className="h-8 w-8 text-green-500" />
         </div>
@@ -175,7 +175,7 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div>
       <h1 className="text-2xl font-bold text-foreground mb-2">
         Has sido invitado
       </h1>
