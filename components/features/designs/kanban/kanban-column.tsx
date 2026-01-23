@@ -15,10 +15,11 @@ interface KanbanColumnProps {
   designs: Design[];
   count: number;
   designers?: { id: string; name: string }[];
+  syncingDesignId?: string | null;
   onCardClick?: (designId: string) => void;
 }
 
-export function KanbanColumn({ status, title, designs, count, designers, onCardClick }: KanbanColumnProps) {
+export function KanbanColumn({ status, title, designs, count, designers, syncingDesignId, onCardClick }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
   });
@@ -74,6 +75,7 @@ export function KanbanColumn({ status, title, designs, count, designers, onCardC
                     key={design.id} 
                     design={design} 
                     designer={designers?.find(d => d.id === design.designer_id)}
+                    isSyncing={syncingDesignId === design.id}
                     onCardClick={onCardClick}
                   />
                 ))

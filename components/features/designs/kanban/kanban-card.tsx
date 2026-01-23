@@ -20,10 +20,11 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) => {
 interface KanbanCardProps {
   design: Design;
   designer?: { name: string } | null;
+  isSyncing?: boolean;
   onCardClick?: (designId: string) => void;
 }
 
-export function KanbanCard({ design, designer, onCardClick }: KanbanCardProps) {
+export function KanbanCard({ design, designer, isSyncing = false, onCardClick }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -57,6 +58,7 @@ export function KanbanCard({ design, designer, onCardClick }: KanbanCardProps) {
         border border-gray-300/30 dark:border-gray-700/30 bg-gray-100/50 dark:bg-gray-800/50
         relative overflow-hidden
         ${isDragging ? 'ring-2 ring-orange-500/50 shadow-2xl' : ''}
+        ${isSyncing ? 'opacity-60 pointer-events-none' : ''}
       `}
     >
       <div className="p-3 space-y-2">

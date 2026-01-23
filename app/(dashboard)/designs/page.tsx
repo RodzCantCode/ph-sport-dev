@@ -66,6 +66,9 @@ function DesignsPageContent() {
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   
+  // Estado para indicar qué diseño está sincronizando (optimistic UI)
+  const [syncingDesignId, setSyncingDesignId] = useState<string | null>(null);
+  
   // Estado para el diálogo de confirmación de eliminación
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [designToDelete, setDesignToDelete] = useState<Design | null>(null);
@@ -203,6 +206,20 @@ function DesignsPageContent() {
   };
 
   const handleStatusChange = async (designId: string, newStatus: DesignStatus) => {
+    // 1. Guardar estado anterior para poder revertir si falla
+    const previousItems = [...items];
+    
+    // 2. Marcar como sincronizando (para feedback visual)
+    setSyncingDesignId(designId);
+    
+    // 3. ACTUALIZACIÓN OPTIMISTA: Actualizar UI inmediatamente
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === designId ? { ...item, status: newStatus } : item
+      )
+    );
+    
+    // 4. Sincronizar con el servidor en segundo plano
     try {
       const response = await fetch(`/api/designs/${designId}`, {
         method: 'PUT',
@@ -214,18 +231,16 @@ function DesignsPageContent() {
         const error = await response.json();
         throw new Error(error.error || 'Error al actualizar estado');
       }
-
-      // Actualizar estado local optimísticamente
-      setItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === designId ? { ...item, status: newStatus } : item
-        )
-      );
+      
+      // Éxito: el estado local ya está actualizado
     } catch (error: unknown) {
+      // 5. Error: Revertir el cambio optimista
+      setItems(previousItems);
       toast.error(error instanceof Error ? error.message : 'Error al actualizar estado');
-      // Recargar para revertir cambios
-      loadDesigns();
       throw error;
+    } finally {
+      // 6. Limpiar estado de sincronización
+      setSyncingDesignId(null);
     }
   };
 
@@ -439,6 +454,7 @@ function DesignsPageContent() {
             onStatusChange={handleStatusChange}
             onCreateDesign={() => { setEditingDesign(null); setEditDialogOpen(true); }}
             designers={designers}
+            syncingDesignId={syncingDesignId}
             onCardClick={(designId) => {
               setSelectedDesignId(designId);
               setDetailSheetOpen(true);

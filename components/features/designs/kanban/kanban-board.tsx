@@ -30,6 +30,7 @@ interface KanbanBoardProps {
   onStatusChange: (designId: string, newStatus: DesignStatus) => Promise<void>;
   onCreateDesign?: () => void;
   designers?: { id: string; name: string }[];
+  syncingDesignId?: string | null;
   onCardClick?: (designId: string) => void;
 }
 
@@ -67,6 +68,7 @@ export function KanbanBoard({
   onStatusChange,
   onCreateDesign,
   designers,
+  syncingDesignId,
   onCardClick,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -179,6 +181,7 @@ export function KanbanBoard({
             designs={designsByStatus[column.status] || []}
             count={designsByStatus[column.status]?.length || 0}
             designers={designers}
+            syncingDesignId={syncingDesignId}
             onCardClick={onCardClick}
           />
         ))}
