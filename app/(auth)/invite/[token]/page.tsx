@@ -83,6 +83,17 @@ export default function InvitePage() {
     try {
       const supabase = createClient();
 
+      // FIRST: Validate the invitation is still valid before creating auth user
+      const { data: isValid, error: validateError } = await supabase.rpc('validate_invitation', {
+        p_invitation_id: invitation.id
+      });
+
+      if (validateError || !isValid) {
+        toast.error('Esta invitación ya no es válida. Puede que haya expirado o ya fue usada.');
+        setSubmitting(false);
+        return;
+      }
+
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -110,16 +121,23 @@ export default function InvitePage() {
         return;
       }
 
-      const { error: updateError } = await supabase
-        .from('invitations')
-        .update({ 
-          uses: invitation.uses + 1,
-          used_by: authData.user.id 
-        })
-        .eq('id', invitation.id);
+      // Use atomic database function to validate and register the invitation use
+      // This MUST succeed for the registration to be considered complete
+      const { error: useError } = await supabase.rpc('use_invitation', {
+        p_invitation_id: invitation.id,
+        p_user_id: authData.user.id,
+        p_email: email,
+        p_full_name: fullName
+      });
 
-      if (updateError) {
-        console.error('Error updating invitation:', updateError);
+      if (useError) {
+        console.error('Error using invitation:', useError);
+        // The invitation was not valid - show error and abort
+        // Note: The auth user was created but without a valid invitation use,
+        // they won't be able to access the app (profile won't be created properly)
+        toast.error(useError.message || 'Esta invitación ya no es válida');
+        setSubmitting(false);
+        return; // CRITICAL: Don't proceed to success
       }
 
       setSuccess(true);

@@ -32,13 +32,20 @@ interface Profile {
   created_at: string;
 }
 
+interface InvitationUse {
+  id: string;
+  email: string;
+  full_name: string;
+  used_at: string;
+}
+
 interface Invitation {
   id: string;
   token: string;
   role: 'ADMIN' | 'DESIGNER';
-  uses: number;
   max_uses: number;
   expires_at: string | null;
+  invitation_uses: InvitationUse[];
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -72,10 +79,13 @@ export default function UsersPage() {
 
     setUsers(usersData || []);
 
-    // Load all invitations (we'll show status badges)
+    // Load all invitations with usage history
     const { data: invData } = await supabase
       .from('invitations')
-      .select('id, token, role, uses, max_uses, expires_at')
+      .select(`
+        id, token, role, max_uses, expires_at,
+        invitation_uses (id, email, full_name, used_at)
+      `)
       .order('created_at', { ascending: false });
 
     setInvitations(invData || []);
@@ -144,7 +154,8 @@ export default function UsersPage() {
   };
 
   const getInvitationStatus = (invitation: Invitation) => {
-    if (invitation.uses >= invitation.max_uses) {
+    const usesCount = invitation.invitation_uses?.length || 0;
+    if (usesCount >= invitation.max_uses) {
       return { label: 'Usada', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
     }
     if (invitation.expires_at && new Date(invitation.expires_at) < new Date()) {
@@ -242,7 +253,7 @@ export default function UsersPage() {
                       key={invitation.id}
                       className="flex items-center justify-between py-3 gap-4"
                     >
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 flex-wrap flex-1">
                         <Badge className={ROLE_COLORS[invitation.role]}>
                           {ROLE_LABELS[invitation.role]}
                         </Badge>
@@ -252,6 +263,12 @@ export default function UsersPage() {
                         {isActive && (
                           <span className="text-sm text-muted-foreground">
                             Expira {getTimeRemaining(invitation.expires_at)}
+                          </span>
+                        )}
+                        {/* Show who used this invitation */}
+                        {invitation.invitation_uses?.length > 0 && (
+                          <span className="text-sm text-muted-foreground">
+                            → {invitation.invitation_uses[0].full_name} ({invitation.invitation_uses[0].email})
                           </span>
                         )}
                       </div>
