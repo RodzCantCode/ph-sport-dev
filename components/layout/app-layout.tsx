@@ -15,23 +15,23 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { loading, user, profile } = useAuth();
+  
+  // Consumimos el nuevo estado robusto
+  const { status, user, profile } = useAuth();
+  const router = useRouter();
 
-  // Check if auth is ready
-  const authReady = !loading && !!user && !!profile;
+  // Derived state: Are we fully ready?
+  // Only show UI when strictly AUTHENTICATED
+  const authReady = status === 'AUTHENTICATED';
 
+  // Guard Effect: Enforce Login if we are definitely NOT authenticated
   useEffect(() => {
-     console.log('[AppLayout] State Update:', { 
-        loading, 
-        hasUser: !!user, 
-        hasProfile: !!profile, 
-        authReady 
-     });
-     
-     if (!loading && !user) {
-        console.warn('[AppLayout] ALARM: Loading finished but NO USER found on protected route.');
-     }
-  }, [loading, user, profile, authReady]);
+    // Si la inicialización terminó y el resultado fue "UNAUTHENTICATED",
+    // nos vamos al login. Sin dudas.
+    if (status === 'UNAUTHENTICATED') {
+      router.push('/login');
+    }
+  }, [status, router]);
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -58,19 +58,9 @@ export function AppLayout({ children }: AppLayoutProps) {
     setMobileMenuOpen((prev) => !prev);
   };
 
-  const router = useRouter();
-
-  // Enforce auth: If we are not loading and have no user, we shouldn't be here.
-  // This fixes the "zombie" state where middleware let us in but client has no session.
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [loading, user, router]);
-
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Desktop Sidebar - show skeleton while auth loading */}
+      {/* Desktop Sidebar - show skeleton while Initializing */}
       {authReady ? (
         <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       ) : (
@@ -98,6 +88,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         )}
       >
         <Header onMenuClick={toggleMobileMenu} />
+        {/* Renderizamos el contenido, pero podríamos bloquearlo también si authReady es false */}
+        {/* Por ahora lo dejamos visible para mejorar la percepción de carga (Skeleton UI) */}
         <main className="flex-1 overflow-y-auto animate-page-enter">{children}</main>
       </div>
     </div>
