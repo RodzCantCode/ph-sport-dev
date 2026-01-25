@@ -59,7 +59,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function UsersPage() {
-  const { profile: currentProfile, loading: authLoading } = useAuth();
+  const { profile: currentProfile, status } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<Profile[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -92,7 +92,7 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (status === 'INITIALIZING') return;
     
     if (!currentProfile || currentProfile.role !== 'ADMIN') {
       router.push('/dashboard');
@@ -106,7 +106,7 @@ export default function UsersPage() {
     };
 
     load();
-  }, [authLoading, currentProfile, router, loadData]);
+  }, [status, currentProfile, router, loadData]);
 
   const getInitials = (name: string) => {
     return name
@@ -165,7 +165,7 @@ export default function UsersPage() {
   };
 
   return (
-    <PageTransition loading={loading || authLoading} skeleton={<UsersSkeleton />}>
+    <PageTransition loading={loading || status === 'INITIALIZING'} skeleton={<UsersSkeleton />}>
       {(!currentProfile || currentProfile.role !== 'ADMIN') ? null : (
         <div className="flex flex-col gap-6 p-6 md:p-8 max-w-4xl mx-auto">
       {/* Header */}
