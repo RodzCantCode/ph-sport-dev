@@ -17,7 +17,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Consumimos el nuevo estado robusto
-  const { status, user, profile } = useAuth();
+  const { status } = useAuth();
   const router = useRouter();
 
   // Derived state: Are we fully ready?

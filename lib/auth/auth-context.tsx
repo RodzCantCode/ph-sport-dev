@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fail-safe: Default to unauthenticated to prevent zombie UI
       setState(prev => ({ ...prev, status: 'UNAUTHENTICATED', user: null, profile: null }));
     }
-  }, []);
+  }, [supabase]);
 
   // --------------------------------------------------------------------------
   // Lifecycle & Effects
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth(true);
 
     // Supabase Auth Listener (Handles other tabs, token refreshes, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       console.log(`[Auth] Event: ${event}`);
 
       if (event === 'SIGNED_OUT') {
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [initializeAuth]);
+  }, [initializeAuth, supabase.auth]);
 
   // "Hotel Sensor": Reset loggingOut flag when we actually land on login page
   useEffect(() => {
@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Actions
   // --------------------------------------------------------------------------
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, loggingOut: true }));
       // Optimistic UI clear
@@ -178,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setState(prev => ({ ...prev, status: 'UNAUTHENTICATED', user: null, profile: null }));
       router.push('/login');
     }
-  };
+  }, [router, supabase.auth]);
 
   // --------------------------------------------------------------------------
   // Render
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ...state,
     logout,
     refreshSession: () => initializeAuth(),
-  }), [state, initializeAuth]);
+  }), [state, initializeAuth, logout]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -39,7 +39,7 @@ const STATUS_ORDER: Record<DesignStatus, number> = {
 
 export default function MyWeekPage() {
   const router = useRouter();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, status } = useAuth();
   const [updating, setUpdating] = useState<string | null>(null);
   const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,14 +51,14 @@ export default function MyWeekPage() {
 
   // Redireccionar admins a /team
   useEffect(() => {
-    if (!authLoading && profile && profile.role === 'ADMIN') {
+    if (status === 'AUTHENTICATED' && profile && profile.role === 'ADMIN') {
       router.replace('/team');
     }
-  }, [authLoading, profile, router]);
+  }, [status, profile, router]);
 
   useEffect(() => {
     const loadTasks = async () => {
-      if (authLoading) return;
+      if (status === 'INITIALIZING') return;
       if (!user || !profile) {
         setLoading(false);
         return;
@@ -88,7 +88,7 @@ export default function MyWeekPage() {
     };
 
     loadTasks();
-  }, [user, profile, authLoading]);
+  }, [user, profile, status]);
 
   const handleStatusChange = async (design: Design, newStatus: DesignStatus) => {
     // Confirmar si es un cambio regresivo
@@ -167,7 +167,7 @@ export default function MyWeekPage() {
   };
 
   return (
-    <PageTransition loading={loading || authLoading} skeleton={<MyWeekSkeleton />}>
+    <PageTransition loading={loading || status === 'INITIALIZING'} skeleton={<MyWeekSkeleton />}>
       <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
