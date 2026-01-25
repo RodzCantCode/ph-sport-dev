@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
@@ -18,6 +19,19 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   // Check if auth is ready
   const authReady = !loading && !!user && !!profile;
+
+  useEffect(() => {
+     console.log('[AppLayout] State Update:', { 
+        loading, 
+        hasUser: !!user, 
+        hasProfile: !!profile, 
+        authReady 
+     });
+     
+     if (!loading && !user) {
+        console.warn('[AppLayout] ALARM: Loading finished but NO USER found on protected route.');
+     }
+  }, [loading, user, profile, authReady]);
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -43,6 +57,16 @@ export function AppLayout({ children }: AppLayoutProps) {
   const toggleMobileMenu = () => {
     setMobileMenuOpen((prev) => !prev);
   };
+
+  const router = useRouter();
+
+  // Enforce auth: If we are not loading and have no user, we shouldn't be here.
+  // This fixes the "zombie" state where middleware let us in but client has no session.
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
 
   return (
     <div className="flex h-screen overflow-hidden">

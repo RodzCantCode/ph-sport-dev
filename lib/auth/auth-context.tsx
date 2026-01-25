@@ -134,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Error loading auth:', error);
       } finally {
+        console.log(`[Auth] loadUser complete. User found? ${!!user}. Loading set to false.`);
         setLoading(false);
         initialLoadComplete = true;
       }
@@ -150,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event.persisted) {
         // La página fue restaurada desde BFCache
         // Las conexiones pueden estar stale, revalidar sesión
+        console.log('[Auth] Page restored from BFCache, revalidating...');
         loadUser('BFCache restore');
       }
     };
@@ -159,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Solo revalidar si la carga inicial ya completó
       // Esto evita race conditions durante el montaje inicial
       if (initialLoadComplete && document.visibilityState === 'visible') {
+        console.log('[Auth] Tab visible, revalidating session...');
         loadUser('Tab visible');
       }
     };
@@ -216,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, loggingOut, logout }}>
