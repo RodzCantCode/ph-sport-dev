@@ -67,6 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
+    
+    // Flag para evitar revalidaciones durante la carga inicial
+    let initialLoadComplete = false;
 
     // Función reutilizable para cargar perfil
     const fetchProfile = async (client: ReturnType<typeof createClient>, userId: string) => {
@@ -116,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error loading auth:', error);
       } finally {
         setLoading(false);
+        initialLoadComplete = true;
       }
     };
 
@@ -136,9 +140,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Handler para visibilidad: tab vuelve a primer plano
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // La tab volvió a estar visible, revalidar sesión
-        // Esto maneja casos de tabs inactivas por mucho tiempo
+      // Solo revalidar si la carga inicial ya completó
+      // Esto evita race conditions durante el montaje inicial
+      if (initialLoadComplete && document.visibilityState === 'visible') {
         loadUser('Tab visible');
       }
     };
@@ -163,19 +167,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Escuchar cambios de autenticación de Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Solo actuar en eventos estables para evitar race conditions
-      if (event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED' && event !== 'SIGNED_OUT') {
+      // Ignoramos INITIAL_SESSION porque ya hacemos una carga manual explícita con loadUser()
+      // Esto evita la doble llamada (race condition) al montar el componente.
+      if (event === 'INITIAL_SESSION') {
         return;
       }
-      
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(supabase, session.user.id);
-      } else {
-        setUser(null);
-        setProfile(null);
+
+      // Manejar eventos relevantes de cambio de sesión
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        if (session?.user) {
+          // Si es un refresco o login, actualizamos estado
+          setUser(session.user);
+          
+          // Optimización: Solo cargar perfil en SIGNED_IN o USER_UPDATED
+          // En TOKEN_REFRESHED solo actualizamos la sesión (token) pero el perfil no cambia
+          if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+             await fetchProfile(supabase, session.user.id);
+          }
+        } else {
+          // Logout o sesión inválida
+          setUser(null);
+          setProfile(null);
+        }
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     // Cleanup
