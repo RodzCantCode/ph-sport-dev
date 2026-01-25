@@ -71,27 +71,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Flag para evitar revalidaciones durante la carga inicial
     let initialLoadComplete = false;
 
-    // Función reutilizable para cargar perfil
-    const fetchProfile = async (client: ReturnType<typeof createClient>, userId: string) => {
-      const { data, error } = await client
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+    // Función reutilizable para cargar perfil con reintentos
+    const fetchProfile = async (client: ReturnType<typeof createClient>, userId: string, retries = 3) => {
+      try {
+        const { data, error } = await client
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (error) {
+          throw error;
+        }
         
-      if (error) {
-        console.error('Profile fetch error:', error);
-        return;
-      }
-      
-      if (data) {
-        setProfile(data as Profile);
-      } else {
-        // Usuario sin perfil: cerrar sesión y limpiar estado
-        console.warn('User without profile detected. Signing out.');
-        await client.auth.signOut();
-        setUser(null);
-        setProfile(null);
+        if (data) {
+          setProfile(data as Profile);
+        } else {
+          // Usuario existe en Auth pero no tiene perfil -> Error crítico de datos
+          throw new Error('User missing profile data');
+        }
+      } catch (err) {
+        console.warn(`[Auth] Profile fetch error (attempts left: ${retries}):`, err);
+        
+        if (retries > 0) {
+          // Esperar un poco antes de reintentar (backoff exponencial simple: 500ms, 1000ms, 1500ms...)
+          const delay = (4 - retries) * 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return fetchProfile(client, userId, retries - 1);
+        } else {
+          // Fallo definitivo tras reintentos
+          console.error('[Auth] Critical: Failed to load profile after retries. Enforcing cleanup.');
+          
+          // Limpiar todo y forzar logout para evitar estado zombie
+          await client.auth.signOut();
+          setUser(null);
+          setProfile(null);
+          // Opcional: Podríamos redirigir a login con error, pero el effect de ruta lo manejará
+        }
       }
     };
 
@@ -151,12 +167,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const safetyTimeout = setTimeout(() => {
       setLoading((current) => {
         if (current) {
-          console.warn('[Auth] Loading timed out after 5s');
+          console.warn('[Auth] Loading timed out after 8s');
           return false;
         }
         return current;
       });
-    }, 5000);
+    }, 8000);
 
     // Registrar event listeners
     window.addEventListener('pageshow', handlePageShow);
