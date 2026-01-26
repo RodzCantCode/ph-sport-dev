@@ -21,7 +21,6 @@ export function DesignerCard({ designer, onClick }: DesignerCardProps) {
   
   // Calcular métricas
   const total = designs.length;
-  const backlog = designs.filter(d => d.status === 'BACKLOG').length;
   const inProgress = designs.filter(d => d.status === 'IN_PROGRESS').length;
   const toReview = designs.filter(d => d.status === 'TO_REVIEW').length;
   const delivered = designs.filter(d => d.status === 'DELIVERED').length;

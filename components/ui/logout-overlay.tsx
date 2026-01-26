@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 
 interface LogoutOverlayProps {
@@ -11,9 +12,11 @@ export function LogoutOverlay({ isVisible }: LogoutOverlayProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm">
-      <img 
-        src="/images/favicon-v2.png" 
-        alt="PH Sport" 
+      <Image
+        src="/images/favicon-v2.png"
+        alt="PH Sport"
+        width={64}
+        height={64}
         className="h-16 w-16 mb-4 animate-pulse"
       />
       <div className="flex items-center gap-2 text-muted-foreground">

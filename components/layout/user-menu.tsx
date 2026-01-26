@@ -19,7 +19,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 
 export function UserMenu() {
   const router = useRouter();
-  const { user, profile, loading, logout } = useAuth();
+  const { user, profile, status, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
@@ -46,7 +46,9 @@ export function UserMenu() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  if (loading) {
+  const authLoading = status === 'INITIALIZING';
+
+  if (authLoading) {
     return (
       <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
     );

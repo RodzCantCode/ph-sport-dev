@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { AlertTriangle, Trash2, Info } from 'lucide-react';
 import {
   Dialog,
@@ -74,7 +75,13 @@ export function ConfirmDialog({
       <DialogContent className="max-w-md">
         <DialogHeader className="flex flex-col items-center text-center gap-4 pb-2">
           {customIcon ? (
-            <img src={customIcon} alt="" className="h-14 w-14 object-contain" />
+            <Image
+              src={customIcon}
+              alt=""
+              width={56}
+              height={56}
+              className="h-14 w-14 object-contain"
+            />
           ) : (
             <div
               className={cn(

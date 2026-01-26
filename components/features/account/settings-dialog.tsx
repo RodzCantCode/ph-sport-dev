@@ -37,6 +37,21 @@ interface NotificationPreferences {
   };
 }
 
+interface NotificationPreferencesDb {
+  email?: {
+    assignment?: boolean;
+    status_change?: boolean;
+    deadline?: boolean;
+    comment?: boolean;
+  };
+  in_app?: {
+    assignment?: boolean;
+    status_change?: boolean;
+    deadline?: boolean;
+    comment?: boolean;
+  };
+}
+
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -90,7 +105,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
         if (data?.notification_preferences) {
           // Merge with default to ensure all keys exist
-          const dbPrefs = data.notification_preferences as Record<string, any>;
+          const dbPrefs = data.notification_preferences as NotificationPreferencesDb;
           setPreferences({
             email: {
               assignment: dbPrefs.email?.assignment ?? true,

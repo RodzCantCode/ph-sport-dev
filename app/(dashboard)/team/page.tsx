@@ -25,7 +25,8 @@ interface DesignerWithDesigns {
 
 export default function TeamPage() {
   const router = useRouter();
-  const { profile, loading: authLoading } = useAuth();
+  const { profile, status } = useAuth();
+  const authLoading = status === 'INITIALIZING';
   const [designers, setDesigners] = useState<DesignerWithDesigns[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(new Date());

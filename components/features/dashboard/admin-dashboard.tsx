@@ -64,15 +64,16 @@ export function AdminDashboard({ items, onAssign, assigning }: AdminDashboardPro
 
   // Diseños críticos (< 24h)
   const criticalDesigns = useMemo(() => {
-    const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const currentTime = new Date();
+    const next24h = new Date(currentTime.getTime() + 24 * 60 * 60 * 1000);
     return items
       .filter(d => {
         const deadline = new Date(d.deadline_at);
-        return deadline < next24h && deadline > now && d.status !== 'DELIVERED';
+        return deadline < next24h && deadline > currentTime && d.status !== 'DELIVERED';
       })
       .sort((a, b) => new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime())
       .slice(0, 3);
-  }, [items, now]);
+  }, [items]);
 
   return (
     <div className="flex flex-col gap-6">
