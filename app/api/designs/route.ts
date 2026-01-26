@@ -23,11 +23,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
+  const weekStartDate = new Date(filters.weekStart);
+  weekStartDate.setHours(0, 0, 0, 0);
+  const weekEndDate = new Date(filters.weekEnd);
+  weekEndDate.setHours(23, 59, 59, 999);
+
   let query = supabase
     .from('designs')
     .select('*')
-    .gte('deadline_at', filters.weekStart)
-    .lte('deadline_at', filters.weekEnd);
+    .gte('deadline_at', weekStartDate.toISOString())
+    .lte('deadline_at', weekEndDate.toISOString());
   
   if (filters.status) {
     query = query.eq('status', filters.status);
