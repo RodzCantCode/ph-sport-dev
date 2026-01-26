@@ -32,6 +32,8 @@ interface KanbanBoardProps {
   designers?: { id: string; name: string }[];
   syncingDesignId?: string | null;
   onCardClick?: (designId: string) => void;
+  createDisabled?: boolean;
+  createDisabledReason?: string;
 }
 
 const COLUMNS: Array<{ status: DesignStatus; title: string }> = [
@@ -70,6 +72,8 @@ export function KanbanBoard({
   designers,
   syncingDesignId,
   onCardClick,
+  createDisabled = false,
+  createDisabledReason,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -159,6 +163,8 @@ export function KanbanBoard({
         description="Crea tu primer diseño para comenzar"
         actionLabel="Crear Diseño"
         onAction={onCreateDesign}
+        actionDisabled={createDisabled}
+        actionDisabledReason={createDisabledReason}
       />
     );
   }
@@ -200,4 +206,3 @@ export function KanbanBoard({
     </DndContext>
   );
 }
-

@@ -8,6 +8,8 @@ interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   actionHref?: string;
+  actionDisabled?: boolean;
+  actionDisabledReason?: string;
   className?: string;
 }
 
@@ -17,6 +19,8 @@ export function EmptyState({
   actionLabel,
   onAction,
   actionHref,
+  actionDisabled = false,
+  actionDisabledReason,
   className,
 }: EmptyStateProps) {
   return (
@@ -27,7 +31,13 @@ export function EmptyState({
           {(actionLabel && onAction) || actionHref ? (
             <div>
               {onAction ? (
-                <Button onClick={onAction}>{actionLabel}</Button>
+                <Button
+                  onClick={onAction}
+                  disabled={actionDisabled}
+                  title={actionDisabledReason}
+                >
+                  {actionLabel}
+                </Button>
               ) : actionHref ? (
                 <Button asChild>
                   <a href={actionHref}>{actionLabel}</a>
@@ -40,6 +50,5 @@ export function EmptyState({
     </Card>
   );
 }
-
 
 

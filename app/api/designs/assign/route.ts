@@ -9,6 +9,25 @@ import { logger } from '@/lib/utils/logger';
  */
 export async function POST(_request: Request) {
   const supabase = await createClient();
+  const { data, error: userError } = await supabase.auth.getUser();
+  if (userError || !data.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .single();
+
+  if (profileError) {
+    logger.error('[API Assign] Role check error:', profileError);
+    return NextResponse.json({ error: 'Failed to verify role' }, { status: 500 });
+  }
+
+  if (profile?.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   // Obtener todos los diseños sin asignar (BACKLOG y sin designer_id)
   const { data: unassigned, error } = await supabase
@@ -77,5 +96,3 @@ export async function POST(_request: Request) {
     assigned: assignedCount,
   });
 }
-
-

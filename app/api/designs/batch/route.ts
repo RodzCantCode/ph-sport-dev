@@ -74,9 +74,24 @@ export async function POST(request: Request) {
     const supabase = await createClient();
 
     // Obtener usuario actual
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data, error: userError } = await supabase.auth.getUser();
+    if (userError || !data.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError) {
+      logger.error('[API Batch] Role check error:', profileError);
+      return NextResponse.json({ error: 'Error al verificar permisos' }, { status: 500 });
+    }
+
+    if (profile?.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Prohibido' }, { status: 403 });
     }
 
     // Determinar diseñador (automático o manual)
@@ -95,7 +110,7 @@ export async function POST(request: Request) {
       deadline_at: shared.deadline_at,
       folder_url: shared.folder_url || null,
       designer_id: designerId || null,
-      created_by: user.id,
+      created_by: data.user.id,
       status: 'BACKLOG' as const,
     }));
 

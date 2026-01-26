@@ -43,6 +43,7 @@ import { PlayerStatusTag } from '@/components/features/designs/tags/player-statu
 import { DesignDetailSheet } from '@/components/features/designs/design-detail-sheet';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useAuth } from '@/lib/auth/auth-context';
 
 // Wrapper component para Suspense boundary requerido por useSearchParams
 export default function DesignsPage() {
@@ -54,6 +55,8 @@ export default function DesignsPage() {
 }
 
 function DesignsPageContent() {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'ADMIN';
   const [items, setItems] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +156,10 @@ function DesignsPageContent() {
   };
 
   const handleDelete = (design: Design) => {
+    if (!isAdmin) {
+      toast.error('Solo administradores pueden eliminar diseños');
+      return;
+    }
     setDesignToDelete(design);
     setDeleteConfirmOpen(true);
   };
@@ -317,7 +324,7 @@ function DesignsPageContent() {
           </h1>
           <p className="text-muted-foreground">Gestión de todas las piezas gráficas</p>
         </div>
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
           <div className="flex items-center rounded-lg border border-border bg-muted p-1">
             <Button
               type="button"
@@ -340,7 +347,11 @@ function DesignsPageContent() {
               Kanban
             </Button>
           </div>
-          <CreateDesignButton onDesignCreated={loadDesigns} />
+          <CreateDesignButton
+            onDesignCreated={loadDesigns}
+            disabled={!isAdmin}
+            disabledReason="Solo administradores pueden crear diseños"
+          />
         </div>
       </div>
 
@@ -441,10 +452,13 @@ function DesignsPageContent() {
             if (debouncedSearchQuery) {
               setSearchQuery('');
             } else {
-              setEditingDesign(null); 
+              if (!isAdmin) return;
+              setEditingDesign(null);
               setEditDialogOpen(true);
             }
           }}
+          actionDisabled={!isAdmin && !debouncedSearchQuery}
+          actionDisabledReason={!isAdmin && !debouncedSearchQuery ? 'Solo administradores pueden crear diseños' : undefined}
         />
       ) : viewMode === 'kanban' ? (
         <div className="w-full">
@@ -452,13 +466,19 @@ function DesignsPageContent() {
             designs={sortedItems}
             loading={false}
             onStatusChange={handleStatusChange}
-            onCreateDesign={() => { setEditingDesign(null); setEditDialogOpen(true); }}
+            onCreateDesign={() => {
+              if (!isAdmin) return;
+              setEditingDesign(null);
+              setEditDialogOpen(true);
+            }}
             designers={designers}
             syncingDesignId={syncingDesignId}
             onCardClick={(designId) => {
               setSelectedDesignId(designId);
               setDetailSheetOpen(true);
             }}
+            createDisabled={!isAdmin}
+            createDisabledReason="Solo administradores pueden crear diseños"
           />
         </div>
       ) : (
@@ -654,8 +674,12 @@ function DesignsPageContent() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(design)}
-                            disabled={deletingId === design.id}
-                            title="Eliminar diseño"
+                            disabled={!isAdmin || deletingId === design.id}
+                            title={
+                              isAdmin
+                                ? 'Eliminar diseño'
+                                : 'Solo administradores pueden eliminar diseños'
+                            }
                             aria-label="Eliminar diseño"
                             className="text-destructive hover:text-destructive/80"
                           >

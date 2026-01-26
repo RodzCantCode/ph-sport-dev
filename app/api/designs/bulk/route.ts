@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { assignDesignerAutomatically } from '@/lib/services/designs/assignment';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
 
@@ -67,36 +66,112 @@ export async function POST(request: Request) {
     const supabase = await createClient();
 
     // Obtener usuario actual
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data, error: userError } = await supabase.auth.getUser();
+    if (userError || !data.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Preparar inserts, asignando diseñador automáticamente si no se especifica
-    const designsToInsert = await Promise.all(
-      designs.map(async (d) => {
-        let designerId = d.designer_id;
-        if (!designerId || designerId === 'auto') {
-          designerId = await assignDesignerAutomatically();
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError) {
+      logger.error('[API Bulk] Role check error:', profileError);
+      return NextResponse.json({ error: 'Error al verificar permisos' }, { status: 500 });
+    }
+
+    if (profile?.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Prohibido' }, { status: 403 });
+    }
+
+    // Obtener diseñadores y carga actual para asignación equitativa en lote
+    const { data: designers, error: designersError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'DESIGNER');
+
+    if (designersError) {
+      logger.error('[API Bulk] Error fetching designers:', designersError);
+      return NextResponse.json({ error: 'Error al obtener diseñadores' }, { status: 500 });
+    }
+
+    const designerIds = (designers || []).map((d) => d.id);
+
+    const { data: activeDesigns, error: designsError } = await supabase
+      .from('designs')
+      .select('id, designer_id')
+      .neq('status', 'DELIVERED')
+      .not('designer_id', 'is', null);
+
+    if (designsError) {
+      logger.error('[API Bulk] Error fetching active designs:', designsError);
+      return NextResponse.json({ error: 'Error al obtener carga de diseñadores' }, { status: 500 });
+    }
+
+    const taskCounts = new Map<string, number>();
+    designerIds.forEach((id) => taskCounts.set(id, 0));
+
+    activeDesigns?.forEach((d) => {
+      if (d.designer_id && taskCounts.has(d.designer_id)) {
+        taskCounts.set(d.designer_id, (taskCounts.get(d.designer_id) || 0) + 1);
+      }
+    });
+
+    let nextIndex = 0;
+    const selectDesignerId = (): string | null => {
+      if (designerIds.length === 0) return null;
+
+      let minCount = Infinity;
+      for (const id of designerIds) {
+        const count = taskCounts.get(id) || 0;
+        if (count < minCount) minCount = count;
+      }
+
+      let selectedIndex = -1;
+      for (let i = 0; i < designerIds.length; i++) {
+        const idx = (nextIndex + i) % designerIds.length;
+        const id = designerIds[idx];
+        if ((taskCounts.get(id) || 0) === minCount) {
+          selectedIndex = idx;
+          break;
         }
+      }
 
-        // Si no hay título, usar el nombre del jugador
-        const title = d.title?.trim() || d.player;
+      if (selectedIndex === -1) selectedIndex = 0;
+      const selectedId = designerIds[selectedIndex];
+      nextIndex = (selectedIndex + 1) % designerIds.length;
+      return selectedId;
+    };
 
-        return {
-          title,
-          player: d.player,
-          player_status: d.player_status || null,
-          match_home: d.match_home,
-          match_away: d.match_away,
-          deadline_at: d.deadline_at,
-          folder_url: d.folder_url || null,
-          designer_id: designerId || null,
-          created_by: user.id,
-          status: 'BACKLOG' as const,
-        };
-      })
-    );
+    // Preparar inserts, asignando diseñador automáticamente si no se especifica
+    const designsToInsert = designs.map((d) => {
+      let designerId = d.designer_id;
+      if (!designerId || designerId === 'auto') {
+        designerId = selectDesignerId();
+      }
+
+      if (designerId && taskCounts.has(designerId)) {
+        taskCounts.set(designerId, (taskCounts.get(designerId) || 0) + 1);
+      }
+
+      // Si no hay título, usar el nombre del jugador
+      const title = d.title?.trim() || d.player;
+
+      return {
+        title,
+        player: d.player,
+        player_status: d.player_status || null,
+        match_home: d.match_home,
+        match_away: d.match_away,
+        deadline_at: d.deadline_at,
+        folder_url: d.folder_url || null,
+        designer_id: designerId || null,
+        created_by: data.user.id,
+        status: 'BACKLOG' as const,
+      };
+    });
 
     // Insert batch
     const { data: createdDesigns, error } = await supabase

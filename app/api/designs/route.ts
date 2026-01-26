@@ -18,6 +18,10 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
+  const { data, error: userError } = await supabase.auth.getUser();
+  if (userError || !data.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   
   let query = supabase
     .from('designs')
@@ -57,12 +61,27 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  
-  
+
+
   // Obtener usuario actual
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userData.user.id)
+    .single();
+
+  if (profileError) {
+    logger.error('[API] Role check error:', profileError);
+    return NextResponse.json({ error: 'Failed to verify role' }, { status: 500 });
+  }
+
+  if (profile?.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   
   // Si designer_id es null, undefined o 'auto', asignar automáticamente
@@ -82,7 +101,7 @@ export async function POST(request: Request) {
       folder_url: body.folder_url,
       deadline_at: body.deadline_at,
       designer_id: designerId || null,
-      created_by: user.id,
+      created_by: userData.user.id,
       status: 'BACKLOG',
       player_status: body.player_status || null,
     })
@@ -112,4 +131,3 @@ export async function POST(request: Request) {
   
   return NextResponse.json(newDesign, { status: 201 });
 }
-

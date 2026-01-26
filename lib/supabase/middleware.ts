@@ -34,7 +34,13 @@ export async function updateSession(request: NextRequest) {
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser()
+
+  if (userError) {
+    console.error('[Auth] getUser error in middleware:', userError)
+    return response
+  }
 
   const path = request.nextUrl.pathname
 

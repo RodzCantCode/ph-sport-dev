@@ -9,6 +9,10 @@ export async function GET(
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   
   const supabase = await createClient();
+  const { data, error: userError } = await supabase.auth.getUser();
+  if (userError || !data.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   
   const { data: design, error } = await supabase
     .from('designs')
@@ -33,8 +37,8 @@ export async function PUT(
   const supabase = await createClient();
   
   // Obtener usuario actual
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -101,9 +105,23 @@ export async function DELETE(
   const supabase = await createClient();
   
   // Verificar que hay usuario autenticado
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    return NextResponse.json({ error: 'Failed to verify role' }, { status: 500 });
+  }
+
+  if (profile?.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   
   const { error } = await supabase
@@ -116,4 +134,3 @@ export async function DELETE(
   }
   return NextResponse.json({ ok: true, message: 'Design deleted successfully' });
 }
-
