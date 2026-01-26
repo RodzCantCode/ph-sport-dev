@@ -45,22 +45,30 @@ export async function PUT(
   // Obtener el diseño actual ANTES de actualizarlo (para comparar designer_id)
   const { data: originalDesign } = await supabase
     .from('designs')
-    .select('designer_id, title')
+    .select('designer_id, title, status')
     .eq('id', id)
     .single();
   
-  // Procesar designer_id si es 'auto' o null
-  let designerId = body.designer_id;
-  if (designerId === 'auto' || designerId === null || designerId === undefined) {
-    const { assignDesignerAutomatically } = await import('@/lib/services/designs/assignment');
-    designerId = await assignDesignerAutomatically(id); // Excluir el diseño actual del conteo
+  const updateData = { ...body };
+
+  if (Object.prototype.hasOwnProperty.call(body, 'status')) {
+    if (body.status === 'DELIVERED') {
+      updateData.delivered_at = new Date().toISOString();
+    } else if (originalDesign?.status === 'DELIVERED') {
+      updateData.delivered_at = null;
+    }
   }
-  
-  // Actualizar con el designer_id procesado
-  const updateData = {
-    ...body,
-    designer_id: designerId,
-  };
+
+  // Solo procesar designer_id si viene explícitamente en la request
+  if (Object.prototype.hasOwnProperty.call(body, 'designer_id')) {
+    let designerId = body.designer_id;
+    if (designerId === 'auto' || designerId === null || designerId === undefined) {
+      const { assignDesignerAutomatically } = await import('@/lib/services/designs/assignment');
+      designerId = await assignDesignerAutomatically(id); // Excluir el diseño actual del conteo
+    }
+
+    updateData.designer_id = designerId;
+  }
   
   const { data: updated, error } = await supabase
     .from('designs')
@@ -71,25 +79,6 @@ export async function PUT(
   
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  // Fix #2: Notificar al NUEVO diseñador si hubo reasignación
-  const oldDesignerId = originalDesign?.designer_id;
-  const newDesignerId = updated.designer_id;
-  
-  if (newDesignerId && newDesignerId !== oldDesignerId) {
-    try {
-      await supabase.from('notifications').insert({
-        user_id: newDesignerId,
-        type: 'assignment',
-        title: 'Nueva asignación',
-        message: `Te han asignado el diseño "${updated.title || 'Sin título'}"`,
-        link: '/my-week',
-        read: false,
-      });
-    } catch (notifError) {
-      console.error('Error creating reassignment notification:', notifError);
-    }
   }
 
   return NextResponse.json(updated);

@@ -184,39 +184,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (!error && createdDesigns && createdDesigns.length > 0) {
-      // Agrupar diseños por diseñador para notificar en bloque
-      const designerMap = new Map<string, number>();
-
-      createdDesigns.forEach((d) => {
-        if (d.designer_id) {
-          const currentCount = designerMap.get(d.designer_id) || 0;
-          designerMap.set(d.designer_id, currentCount + 1);
-        }
-      });
-
-      // Enviar notificaciones agrupadas
-      const notifications = [];
-      for (const [designerId, count] of designerMap.entries()) {
-        notifications.push({
-          user_id: designerId,
-          type: 'assignment',
-          title: 'Nuevas asignaciones',
-          message: `Se te han asignado ${count} nuevos diseños`,
-          link: '/my-week',
-          read: false,
-        });
-      }
-
-      if (notifications.length > 0) {
-        try {
-          await supabase.from('notifications').insert(notifications);
-        } catch (notifError) {
-          logger.error('[API Bulk] Error sending notifications:', notifError);
-        }
-      }
-    }
-
     return NextResponse.json({
       created: createdDesigns?.length || 0,
       failed: designs.length - (createdDesigns?.length || 0),
