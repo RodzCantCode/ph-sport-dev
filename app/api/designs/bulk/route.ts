@@ -145,6 +145,9 @@ export async function POST(request: Request) {
       return selectedId;
     };
 
+    // Si hay más de 1 diseño, suprimimos notificaciones individuales y creamos una agregada
+    const shouldAggregate = designs.length > 1;
+
     // Preparar inserts, asignando diseñador automáticamente si no se especifica
     const designsToInsert = designs.map((d) => {
       let designerId = d.designer_id;
@@ -170,6 +173,8 @@ export async function POST(request: Request) {
         designer_id: designerId || null,
         created_by: data.user.id,
         status: 'BACKLOG' as const,
+        // Solo suprimir notificación individual si vamos a agregar
+        suppress_assignment_notification: shouldAggregate,
       };
     });
 
@@ -182,6 +187,38 @@ export async function POST(request: Request) {
     if (error) {
       logger.error('[API Bulk] Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Si hay múltiples diseños, crear notificación agregada por diseñador
+    if (shouldAggregate && createdDesigns && createdDesigns.length > 0) {
+      const designerMap = new Map<string, number>();
+
+      createdDesigns.forEach((d) => {
+        if (d.designer_id) {
+          const currentCount = designerMap.get(d.designer_id) || 0;
+          designerMap.set(d.designer_id, currentCount + 1);
+        }
+      });
+
+      const notifications = [];
+      for (const [designerId, count] of designerMap.entries()) {
+        notifications.push({
+          user_id: designerId,
+          type: 'assignment',
+          title: 'Nuevas asignaciones',
+          message: `Se te han asignado ${count} nuevos diseños`,
+          link: '/my-week',
+          read: false,
+        });
+      }
+
+      if (notifications.length > 0) {
+        try {
+          await supabase.from('notifications').insert(notifications);
+        } catch (notifError) {
+          logger.error('[API Bulk] Error sending notifications:', notifError);
+        }
+      }
     }
 
     return NextResponse.json({

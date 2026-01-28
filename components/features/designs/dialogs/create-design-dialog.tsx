@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { Plus, Edit, Save, FileText, Layers, Trash2, Loader2, AlertCircle, ChevronDown, ChevronUp, Link } from 'lucide-react';
+import { Plus, Edit, Save, Layers, Trash2, Loader2, AlertCircle, ChevronDown, ChevronUp, Link } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDesigners } from '@/lib/hooks/use-designers';
 import { PLAYER_STATUS_CONFIG } from '@/components/features/designs/tags/player-status-tag';
@@ -30,8 +30,6 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { TRANSITIONS, animations } from '@/components/ui/animations';
 
 import type { Design } from '@/lib/types/design';
-
-type CreationMode = 'individual' | 'batch';
 
 // Fila para el modo lote (cada fila es un diseño completo)
 interface BulkDesignRow {
@@ -102,9 +100,6 @@ export function CreateDesignDialog({
   const { designers, loading: loadingDesigners } = useDesigners();
   const isEditMode = !!design;
 
-  // Modo de creación (solo en modo nuevo)
-  const [creationMode, setCreationMode] = useState<CreationMode>('individual');
-
   // Datos del formulario individual
   const [formData, setFormData] = useState({
     title: '',
@@ -135,7 +130,6 @@ export function CreateDesignDialog({
         designer_id: design.designer_id || null,
         player_status: design.player_status || null,
       });
-      setCreationMode('individual');
     } else {
       setFormData({
         title: '',
@@ -148,7 +142,6 @@ export function CreateDesignDialog({
         player_status: null,
       });
       setBulkRows([createEmptyRow()]);
-      setCreationMode('individual');
     }
   }, [design, open]);
 
@@ -180,8 +173,8 @@ export function CreateDesignDialog({
     setLoading(true);
 
     try {
-      if (isEditMode || creationMode === 'individual') {
-        // Modo individual/edición
+      if (isEditMode) {
+        // Edición
         if (!formData.deadline_at) {
           toast.error('Selecciona una fecha de entrega');
           setLoading(false);
@@ -196,41 +189,22 @@ export function CreateDesignDialog({
           return;
         }
 
-        if (isEditMode) {
-          const response = await fetch(`/api/designs/${design.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...formData,
-              deadline_at: deadline.toISOString(),
-              designer_id: formData.designer_id || null,
-            }),
-          });
+        const response = await fetch(`/api/designs/${design.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            deadline_at: deadline.toISOString(),
+            designer_id: formData.designer_id || null,
+          }),
+        });
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Error al actualizar diseño');
-          }
-
-          toast.success('Diseño actualizado exitosamente');
-        } else {
-          const response = await fetch('/api/designs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...formData,
-              deadline_at: deadline.toISOString(),
-              designer_id: formData.designer_id || null,
-            }),
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Error al crear diseño');
-          }
-
-          toast.success('Diseño creado exitosamente');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Error al actualizar diseño');
         }
+
+        toast.success('Diseño actualizado exitosamente');
       } else {
         // Modo lote: usar el nuevo endpoint /api/designs/bulk
         const validRows = bulkRows.filter(isRowValid);
@@ -304,72 +278,42 @@ export function CreateDesignDialog({
   const hasIncompleteRows = bulkRows.some((r) => !isRowValid(r) && !isRowEmpty(r));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(
-        "max-h-[90vh] overflow-y-auto",
-        creationMode === 'batch' && !isEditMode ? "max-w-[95vw]" : "max-w-2xl"
-      )}>
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-3">
-            {isEditMode ? (
-              <>
-                <Edit className="h-6 w-6 text-primary" />
-                Editar Diseño
-              </>
-            ) : (
-              <>
-                <Plus className="h-6 w-6 text-primary" />
-                Crear Diseño
-              </>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditMode ? 'Modifica los datos del diseño.' : 'Añade uno o varios diseños al equipo.'}
-          </DialogDescription>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className={cn(
+          "max-h-[90vh] overflow-y-auto",
+          !isEditMode ? "max-w-[95vw]" : "max-w-2xl"
+        )}>
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-3">
+              {isEditMode ? (
+                <>
+                  <Edit className="h-6 w-6 text-primary" />
+                  Editar Diseño
+                </>
+              ) : (
+                <>
+                  <Plus className="h-6 w-6 text-primary" />
+                  Crear Diseños
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {isEditMode ? 'Modifica los datos del diseño.' : 'Añade uno o varios diseños al equipo.'}
+            </DialogDescription>
+          </DialogHeader>
 
-        <LayoutGroup>
-          <form onSubmit={handleSubmit}>
-            <motion.div 
-              layout
-              transition={TRANSITIONS.layout}
-              className="space-y-6 mt-4"
-            >
-              {/* Mode selector - solo en modo creación */}
-            {!isEditMode && (
-              <div className="flex items-center justify-center p-1 rounded-lg bg-muted border border-border">
-                <button
-                  type="button"
-                  onClick={() => setCreationMode('individual')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    creationMode === 'individual'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <FileText className="h-4 w-4" />
-                  Individual
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCreationMode('batch')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    creationMode === 'batch'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Layers className="h-4 w-4" />
-                  En Lote
-                </button>
-              </div>
-            )}
-
+          <LayoutGroup>
+            <form onSubmit={handleSubmit}>
+              <motion.div 
+                layout
+                transition={TRANSITIONS.layout}
+                className="space-y-6 mt-4"
+              >
             {/* Contenido según el modo - con animación suave de Framer Motion */}
             {/* mode="popLayout" permite que layout animations funcionen con AnimatePresence */}
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div 
-                key={creationMode}
+                key={isEditMode ? 'edit' : 'batch'}
                 layout
                 initial={animations.slideHorizontal.initial}
                 animate={animations.slideHorizontal.animate}
@@ -380,7 +324,7 @@ export function CreateDesignDialog({
                 }}
                 className="space-y-6"
               >
-              {(creationMode === 'individual' || isEditMode) ? (
+              {isEditMode ? (
                 /* ========== MODO INDIVIDUAL ========== */
                 <>
                   <Card>
@@ -778,7 +722,7 @@ export function CreateDesignDialog({
             </Button>
             <Button
               type="submit"
-              disabled={loading || (creationMode === 'batch' && !isEditMode && validBulkCount === 0)}
+              disabled={loading || (!isEditMode && validBulkCount === 0)}
             >
               {loading ? (
                 <>
@@ -789,11 +733,6 @@ export function CreateDesignDialog({
                 <>
                   <Save className="mr-2 h-4 w-4" />
                   Guardar Cambios
-                </>
-              ) : creationMode === 'individual' ? (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Crear Diseño
                 </>
               ) : (
                 <>
