@@ -14,6 +14,7 @@ import {
   Hr,
   Img,
   Link,
+  Font,
   Tailwind,
 } from "@react-email/components";
 import { render } from "@react-email/render";
@@ -49,45 +50,62 @@ const EmailLayout = ({
   children: React.ReactNode;
 }) => (
   <Html>
-    <Head />
+    <Head>
+      <Font
+        fontFamily="Outfit"
+        fallbackFontFamily="Arial"
+        webFont={{
+          url: "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap",
+          format: "woff2",
+        }}
+        fontWeight={400}
+        fontStyle="normal"
+      />
+    </Head>
     <Preview>{preview}</Preview>
     <Tailwind
       config={{
         theme: {
           extend: {
             colors: {
-              primary: "#f97316", // PH Sport Orange
+              primary: "#FC4F00", // PH Sport Orange
               gray: {
-                50: "#f9fafb",
-                100: "#f3f4f6",
-                200: "#e5e7eb",
-                500: "#6b7280",
-                800: "#1f2937",
-                900: "#111827",
+                50: "#FAFAFA",
+                100: "#F5F5F5",
+                200: "#E5E5E5",
+                500: "#737373",
+                800: "#171717",
+                900: "#0A0A0A",
               },
             },
           },
         },
       }}
     >
-      <Body className="bg-gray-100 my-auto mx-auto font-sans">
-        <Container className="border border-solid border-gray-200 rounded my-[40px] mx-auto p-[20px] max-w-[465px] bg-white text-gray-900 shadow-sm">
-          {/* Header Loop */}
-          <Section className="mt-[20px]">
-            <Heading className="text-primary text-center text-2xl font-bold m-0 p-0">
-              PH Sport
-            </Heading>
+      <Body className="bg-gray-50 my-auto mx-auto font-sans">
+        <Container className="border border-solid border-gray-200 rounded-[12px] my-[40px] mx-auto p-[28px] max-w-[520px] bg-white text-gray-800 shadow-sm">
+          <Section className="mb-[20px]">
+            <div className="h-[4px] w-full rounded-full bg-primary" />
+          </Section>
+          <Section className="mt-[4px] mb-[18px] text-center">
+            <Img
+              src="https://phsport.app/images/logo-full-orange.png"
+              width="200"
+              alt="PH Sport"
+              className="mx-auto"
+              style={{ height: "auto" }}
+            />
           </Section>
           
           {children}
 
           <Hr className="border border-solid border-gray-200 my-[26px] mx-0 w-full" />
           
-          <Text className="text-gray-500 text-[12px] leading-[24px] text-center">
-            Estás recibiendo este correo porque tienes notificaciones activas en tu cuenta de PH Sport Dashboard.
+          <Text className="text-gray-500 text-[12px] leading-[20px] text-center">
+            Estas recibiendo este correo porque tienes notificaciones activas en tu cuenta de PH Sport.
           </Text>
-          <Text className="text-gray-500 text-[12px] leading-[24px] text-center">
-             PH Sport, Todos los derechos reservados.
+          <Text className="text-gray-500 text-[12px] leading-[20px] text-center">
+            PH Sport, todos los derechos reservados.
           </Text>
         </Container>
       </Body>
@@ -96,26 +114,25 @@ const EmailLayout = ({
 );
 
 const AssignmentTemplate = ({ notification }: { notification: NotificationPayload }) => (
-  <EmailLayout preview={`Nueva asignación: ${notification.title}`}>
+  <EmailLayout preview={`Nueva asignacion: ${notification.title}`}>
     <Section className="mt-[32px] text-center">
-      <Heading className="text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-        Nueva <strong>Asignación</strong>
+      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0">
+        Nueva <strong>Asignacion</strong>
       </Heading>
-      <Text className="text-[14px] leading-[24px] text-gray-800">
-        Hola, tienes una nueva tarea o diseño asignado:
-      </Text>
-      <Text className="text-[18px] font-medium leading-[28px] text-gray-900 mt-2 mb-6">
+      <Text className="text-[18px] font-semibold leading-[28px] text-gray-900 mt-2 mb-6">
         {notification.title}
       </Text>
-      <Text className="text-[14px] leading-[24px] text-gray-500 mb-8">
-        {notification.message}
-      </Text>
+      {notification.message && (
+        <Text className="text-[14px] leading-[24px] text-gray-500 mb-8">
+          {notification.message}
+        </Text>
+      )}
       <Section className="text-center mt-[32px] mb-[32px]">
         <Button
-          className="bg-primary rounded text-white text-[12px] font-semibold no-underline text-center px-5 py-3"
+          className="bg-primary rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
           href={`https://phsport.app${notification.link || '/dashboard'}`}
         >
-          Ver Asignación
+          Ver Asignacion
         </Button>
       </Section>
     </Section>
@@ -125,23 +142,25 @@ const AssignmentTemplate = ({ notification }: { notification: NotificationPayloa
 const CommentTemplate = ({ notification }: { notification: NotificationPayload }) => (
   <EmailLayout preview={`Nuevo comentario en: ${notification.title}`}>
     <Section className="mt-[32px]">
-      <Heading className="text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0">
         Nuevo <strong>Comentario</strong>
       </Heading>
-      <Text className="text-[14px] leading-[24px] text-gray-800 text-center">
-        Han comentado en <strong>{notification.title}</strong>
+      <Text className="text-[18px] font-semibold leading-[28px] text-gray-900 mt-2 mb-4 text-center">
+        {notification.title}
       </Text>
       
       {/* Quote Component for Comment */}
-      <Section className="bg-gray-50 p-4 rounded-md border-l-4 border-primary my-6">
-        <Text className="text-gray-500 text-[14px] italic m-0">
-          "{notification.message}"
-        </Text>
-      </Section>
+      {notification.message && (
+        <Section className="bg-gray-50 p-4 rounded-md border-l-4 border-primary my-6">
+          <Text className="text-gray-500 text-[14px] italic m-0">
+            "{notification.message}"
+          </Text>
+        </Section>
+      )}
 
       <Section className="text-center mt-[32px] mb-[32px]">
         <Button
-          className="bg-primary rounded text-white text-[12px] font-semibold no-underline text-center px-5 py-3"
+          className="bg-primary rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
           href={`https://phsport.app${notification.link || '/dashboard'}`}
         >
           Responder
@@ -152,27 +171,26 @@ const CommentTemplate = ({ notification }: { notification: NotificationPayload }
 );
 
 const DeadlineTemplate = ({ notification }: { notification: NotificationPayload }) => (
-  <EmailLayout preview={`⚠️ Vence pronto: ${notification.title}`}>
+  <EmailLayout preview={`Vence pronto: ${notification.title}`}>
     <Section className="mt-[32px] text-center">
-      <Heading className="text-[24px] font-normal text-center p-0 my-[30px] mx-0 text-[#b45309]">
-        ⚠️ <strong>Fecha Límite Próxima</strong>
+      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0 text-[#b45309]">
+        <strong>Fecha Limite Proxima</strong>
       </Heading>
-      <Text className="text-[14px] leading-[24px] text-gray-800">
-        Atención, la fecha de entrega para este diseño está muy cerca:
-      </Text>
       
       <Section className="bg-yellow-50 border border-yellow-200 rounded p-4 my-6">
         <Text className="text-[18px] font-bold text-gray-900 m-0">
           {notification.title}
         </Text>
-        <Text className="text-gray-600 text-[14px] mt-2 mb-0">
-          {notification.message}
-        </Text>
+        {notification.message && (
+          <Text className="text-gray-600 text-[14px] mt-2 mb-0">
+            {notification.message}
+          </Text>
+        )}
       </Section>
 
       <Section className="text-center mt-[32px] mb-[32px]">
         <Button
-          className="bg-[#b45309] rounded text-white text-[12px] font-semibold no-underline text-center px-5 py-3"
+          className="bg-[#b45309] rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
           href={`https://phsport.app${notification.link || '/dashboard'}`}
         >
           Ver Detalles
@@ -183,20 +201,22 @@ const DeadlineTemplate = ({ notification }: { notification: NotificationPayload 
 );
 
 const DefaultTemplate = ({ notification }: { notification: NotificationPayload }) => (
-  <EmailLayout preview={`Notificación: ${notification.title}`}>
+  <EmailLayout preview={`Notificacion: ${notification.title}`}>
     <Section className="mt-[32px] text-center">
-      <Heading className="text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-        Nueva <strong>Notificación</strong>
+      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0">
+        Nueva <strong>Notificacion</strong>
       </Heading>
       <Text className="text-[14px] leading-[24px] text-gray-800">
         {notification.title}
       </Text>
-      <Text className="text-gray-500 text-[14px]">
-        {notification.message}
-      </Text>
+      {notification.message && (
+        <Text className="text-gray-500 text-[14px]">
+          {notification.message}
+        </Text>
+      )}
       <Section className="text-center mt-[32px] mb-[32px]">
       <Button
-          className="bg-primary rounded text-white text-[12px] font-semibold no-underline text-center px-5 py-3"
+          className="bg-primary rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
           href={`https://phsport.app${notification.link || '/dashboard'}`}
         >
           Ir al Dashboard
@@ -242,15 +262,28 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "Profile/Preferences not found" }), { status: 404 });
     }
 
+    // Defaults for notification preferences
+    const defaultEmailPrefs: Record<string, boolean> = {
+      assignment: true,
+      comment: true,
+      deadline: true,
+      status_change: true,
+    };
+
     const preferences: NotificationPreferences = profile.notification_preferences || {
-      // Defaults if null
-      email: { assignment: true, comment: true, deadline: true, status_change: true },
+      email: { ...defaultEmailPrefs },
       in_app: { assignment: true, comment: true, deadline: true, status_change: true },
     };
 
+    // Ensure email preferences object exists and merge with defaults
+    if (!preferences.email) {
+      preferences.email = { ...defaultEmailPrefs };
+    }
+
     // 3. Check Logic: Is email enabled for this type?
     const type = notification.type;
-    const isEnabled = preferences.email && preferences.email[type] !== false;
+    // Fallback to true if key doesn't exist (backwards compatible)
+    const isEnabled = preferences.email[type] ?? defaultEmailPrefs[type] ?? true;
 
     if (!isEnabled) {
       console.log(`Email skipped: User disabled emails for type '${type}'`);
@@ -263,21 +296,22 @@ Deno.serve(async (req: Request) => {
 
     switch (type) {
       case "assignment":
-        subject = `🎨 Nueva Asignación: ${notification.title}`;
+        subject = `Nueva asignacion: ${notification.title}`;
         emailHtml = await render(<AssignmentTemplate notification={notification} />);
         break;
       case "comment":
-        subject = `💬 Nuevo Comentario en: ${notification.title}`;
+        subject = `Nuevo comentario en: ${notification.title}`;
         emailHtml = await render(<CommentTemplate notification={notification} />);
         break;
       case "deadline":
-        subject = `⚠️ Vence Pronto: ${notification.title}`;
+        subject = `Vence pronto: ${notification.title}`;
         emailHtml = await render(<DeadlineTemplate notification={notification} />);
         break;
       default:
-        subject = `Notificación: ${notification.title}`;
+        subject = `Notificacion: ${notification.title}`;
         emailHtml = await render(<DefaultTemplate notification={notification} />);
     }
+    subject = subject.replace(/[\r\n]+/g, " ").trim();
 
     // 5. Send via Resend
     const resendResponse = await fetch("https://api.resend.com/emails", {
