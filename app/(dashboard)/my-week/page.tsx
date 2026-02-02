@@ -22,13 +22,12 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth/auth-context';
 import type { DesignStatus } from '@/lib/types/filters';
 import { STATUS_LABELS } from '@/lib/types/design';
-import { getDefaultWeekRange } from '@/lib/utils';
-import { logger } from '@/lib/utils/logger';
 import type { Design } from '@/lib/types/design';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 import { useConfirm } from '@/lib/hooks/use-confirm';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DesignDetailSheet } from '@/components/features/designs/design-detail-sheet';
+import { useMyWeek } from '@/lib/hooks/use-my-week';
 
 const STATUS_ORDER: Record<DesignStatus, number> = {
   BACKLOG: 0,
@@ -39,10 +38,9 @@ const STATUS_ORDER: Record<DesignStatus, number> = {
 
 export default function MyWeekPage() {
   const router = useRouter();
-  const { user, profile, status } = useAuth();
+  const { profile, status } = useAuth();
+  const { items, isLoading, mutate } = useMyWeek();
   const [updating, setUpdating] = useState<string | null>(null);
-  const [items, setItems] = useState<Design[]>([]);
-  const [loading, setLoading] = useState(true);
   const { confirm, isOpen, options, handleConfirm, handleCancel } = useConfirm();
   
   // Estado para panel de detalles
@@ -55,40 +53,6 @@ export default function MyWeekPage() {
       router.replace('/team');
     }
   }, [status, profile, router]);
-
-  useEffect(() => {
-    const loadTasks = async () => {
-      if (status === 'INITIALIZING') return;
-      if (!user || !profile) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      const { weekStart, weekEnd } = getDefaultWeekRange();
-
-      const qs = new URLSearchParams({
-        weekStart: format(weekStart, 'yyyy-MM-dd'),
-        weekEnd: format(weekEnd, 'yyyy-MM-dd'),
-        designerId: user.id,
-      });
-      
-      try {
-        const r = await fetch(`/api/designs?${qs.toString()}`);
-        if (!r.ok) throw new Error('Error al cargar las tareas');
-        const data = await r.json();
-        setItems(data.items || []);
-      } catch (err) {
-        logger.error('My week fetch error:', err);
-        toast.error('Error al cargar las tareas. Por favor, intenta de nuevo.');
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTasks();
-  }, [user, profile, status]);
 
   const handleStatusChange = async (design: Design, newStatus: DesignStatus) => {
     // Confirmar si es un cambio regresivo
@@ -118,9 +82,8 @@ export default function MyWeekPage() {
       }
 
       toast.success('Estado actualizado');
-      setItems(prev => prev.map(item => 
-        item.id === design.id ? { ...item, status: newStatus } : item
-      ));
+      // Revalidate SWR cache
+      mutate();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Error al actualizar estado');
     } finally {
@@ -166,8 +129,11 @@ export default function MyWeekPage() {
     return null;
   };
 
+  // Only show skeleton on initial load (no cached data yet)
+  const showSkeleton = isLoading && items.length === 0;
+
   return (
-    <PageTransition loading={loading || status === 'INITIALIZING'} skeleton={<MyWeekSkeleton />}>
+    <PageTransition loading={showSkeleton || status === 'INITIALIZING'} skeleton={<MyWeekSkeleton />}>
       <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -288,20 +254,7 @@ export default function MyWeekPage() {
         designId={selectedDesignId}
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
-        onDesignUpdated={() => {
-          if (!user) return;
-          const { weekStart, weekEnd } = getDefaultWeekRange();
-          const qs = new URLSearchParams({
-            weekStart: format(weekStart, 'yyyy-MM-dd'),
-            weekEnd: format(weekEnd, 'yyyy-MM-dd'),
-            designerId: user.id,
-          });
-          
-          fetch(`/api/designs?${qs.toString()}`)
-            .then(r => r.json())
-            .then(data => setItems(data.items || []))
-            .catch(err => logger.error('Reload error:', err));
-        }}
+        onDesignUpdated={() => mutate()}
       />
     </PageTransition>
   );

@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
+import useSWR from 'swr';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/auth-context';
 
@@ -16,124 +17,125 @@ export interface DesignConversation {
   totalComments: number;
 }
 
-export function useAllComments() {
-  const { user } = useAuth();
-  const [conversations, setConversations] = useState<DesignConversation[]>([]);
-  const [loading, setLoading] = useState(true);
+const fetchConversations = async ([, userId]: [string, string]): Promise<DesignConversation[]> => {
   const supabase = createClient();
 
-  const fetchConversations = useCallback(async () => {
-    if (!user) return;
+  // 1. Get all designs - "mini Slack" approach where everyone sees all team activity
+  const { data: designs, error: designsError } = await supabase
+    .from('designs')
+    .select('id, title, player, match_home, match_away');
 
-    try {
-      setLoading(true);
+  if (designsError) throw designsError;
+  if (!designs || designs.length === 0) {
+    return [];
+  }
 
-      // 1. Get all designs - "mini Slack" approach where everyone sees all team activity
-      const { data: designs, error: designsError } = await supabase
-        .from('designs')
-        .select('id, title, player, match_home, match_away');
+  const designIds = designs.map(d => d.id);
 
-      if (designsError) throw designsError;
-      if (!designs || designs.length === 0) {
-        setConversations([]);
-        return;
-      }
+  // 2. Get all comments for these designs
+  const { data: comments, error: commentsError } = await supabase
+    .from('comments')
+    .select(`
+      id,
+      content,
+      created_at,
+      design_id,
+      user_id,
+      profiles:user_id (full_name)
+    `)
+    .in('design_id', designIds)
+    .order('created_at', { ascending: false });
 
-      const designIds = designs.map(d => d.id);
+  if (commentsError) throw commentsError;
 
-      // 2. Get all comments for these designs
-      const { data: comments, error: commentsError } = await supabase
-        .from('comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          design_id,
-          user_id,
-          profiles:user_id (full_name)
-        `)
-        .in('design_id', designIds)
-        .order('created_at', { ascending: false });
+  // 3. Get read status for these comments by this user
+  const { data: readStatus, error: readError } = await supabase
+    .from('message_read_status')
+    .select('comment_id')
+    .eq('user_id', userId)
+    .in('comment_id', comments?.map(c => c.id) || []);
 
-      if (commentsError) throw commentsError;
+  if (readError) throw readError;
 
-      // 3. Get read status for these comments by this user
-      const { data: readStatus, error: readError } = await supabase
-        .from('message_read_status')
-        .select('comment_id')
-        .eq('user_id', user.id)
-        .in('comment_id', comments?.map(c => c.id) || []);
+  const readCommentIds = new Set(readStatus?.map(r => r.comment_id));
 
-      if (readError) throw readError;
+  // 4. Group and process
+  const grouped = designs.map(design => {
+    const designComments = comments?.filter(c => c.design_id === design.id) || [];
+    const lastComment = designComments[0];
 
-      const readCommentIds = new Set(readStatus?.map(r => r.comment_id));
+    // Count unread: comments NOT by me AND NOT in readStatus
+    const unreadCount = designComments.filter(c =>
+      c.user_id !== userId && !readCommentIds.has(c.id)
+    ).length;
 
-      // 4. Group and process
-      const grouped = designs.map(design => {
-        const designComments = comments?.filter(c => c.design_id === design.id) || [];
-        const lastComment = designComments[0];
+    return {
+      designId: design.id,
+      designTitle: design.title,
+      player: design.player,
+      match: `${design.match_home} vs ${design.match_away}`,
+      lastMessage: lastComment ? {
+        content: lastComment.content,
+        author: (lastComment.profiles as { full_name: string } | null)?.full_name || 'Desconocido',
+        createdAt: lastComment.created_at
+      } : null,
+      unreadCount,
+      totalComments: designComments.length
+    };
+  });
 
-        // Count unread: comments NOT by me AND NOT in readStatus
-        const unreadCount = designComments.filter(c =>
-          c.user_id !== user.id && !readCommentIds.has(c.id)
-        ).length;
+  // Filter to only active conversations and sort by last message date
+  const activeConversations = grouped
+    .filter(g => g.totalComments > 0)
+    .sort((a, b) => {
+      const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const dateB = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
 
-        return {
-          designId: design.id,
-          designTitle: design.title,
-          player: design.player,
-          match: `${design.match_home} vs ${design.match_away}`,
-          lastMessage: lastComment ? {
-            content: lastComment.content,
-            author: (lastComment.profiles as { full_name: string } | null)?.full_name || 'Desconocido',
-            createdAt: lastComment.created_at
-          } : null,
-          unreadCount,
-          totalComments: designComments.length
-        };
-      });
+  return activeConversations;
+};
 
-      // Filter out designs with no comments? Or keep them?
-      // "Comunicaciones" usually implies existing conversations. 
-      // Let's keep only those with comments for now, or all?
-      // User requested "visualizar el trabajo semanal... junto a metricas".
-      // But for "Comunicaciones", probably only active threads.
-      // Let's sort by last message date.
+export function useAllComments() {
+  const { user, status } = useAuth();
+  const supabase = useMemo(() => createClient(), []);
 
-      const activeConversations = grouped
-        .filter(g => g.totalComments > 0)
-        .sort((a, b) => {
-          const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
-          const dateB = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
-          return dateB - dateA;
-        });
-
-      setConversations(activeConversations);
-
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-    } finally {
-      setLoading(false);
+  const { data, error, isLoading, mutate } = useSWR<DesignConversation[]>(
+    // Only fetch when authenticated
+    status === 'AUTHENTICATED' && user?.id ? ['all-comments', user.id] : null,
+    fetchConversations,
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000,
     }
-  }, [user, supabase]);
+  );
 
+  // Subscribe to new comments for realtime updates
   useEffect(() => {
-    fetchConversations();
+    if (!user?.id) return;
 
-    // Subscribe to new comments
     const channel = supabase
       .channel('all-comments-changes')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'comments' },
-        () => fetchConversations()
+        () => {
+          // Revalidate SWR cache when a new comment arrives
+          mutate();
+        }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchConversations, supabase]);
+  }, [user?.id, supabase, mutate]);
 
-  return { conversations, loading, refresh: fetchConversations };
+  return {
+    conversations: data ?? [],
+    loading: isLoading,
+    error: error ?? null,
+    refresh: mutate,
+  };
 }

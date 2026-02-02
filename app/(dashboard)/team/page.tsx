@@ -9,26 +9,15 @@ import { Button } from '@/components/ui/button';
 import { PageTransition } from '@/components/ui/page-transition';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { createClient } from '@/lib/supabase/client';
-import { toast } from 'sonner';
-import { logger } from '@/lib/utils/logger';
 import { DesignerCard } from '@/components/features/team/designer-card';
 import { DesignerDetailSheet } from '@/components/features/team/designer-detail-sheet';
 import { TeamSkeleton } from '@/components/skeletons/team-skeleton';
-import type { Design } from '@/lib/types/design';
-
-interface DesignerWithDesigns {
-  id: string;
-  full_name: string;
-  designs: Design[];
-}
+import { useTeamData, type DesignerWithDesigns } from '@/lib/hooks/use-team-data';
 
 export default function TeamPage() {
   const router = useRouter();
   const { profile, status } = useAuth();
   const authLoading = status === 'INITIALIZING';
-  const [designers, setDesigners] = useState<DesignerWithDesigns[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(new Date());
   const [selectedDesigner, setSelectedDesigner] = useState<DesignerWithDesigns | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -37,67 +26,15 @@ export default function TeamPage() {
   const weekStart = useMemo(() => startOfWeek(selectedWeek, { weekStartsOn: 1 }), [selectedWeek]);
   const weekEnd = useMemo(() => endOfWeek(selectedWeek, { weekStartsOn: 1 }), [selectedWeek]);
 
+  // Use SWR hook for team data
+  const { designers, isLoading } = useTeamData(weekStart, weekEnd);
+
   // Redireccionar si no es admin
   useEffect(() => {
     if (!authLoading && profile && profile.role !== 'ADMIN') {
       router.replace('/my-week');
     }
   }, [authLoading, profile, router]);
-
-  // Cargar datos del equipo
-  useEffect(() => {
-    const loadTeamData = async () => {
-      if (authLoading || !profile || profile.role !== 'ADMIN') return;
-
-      setLoading(true);
-      try {
-        const supabase = createClient();
-
-        // 1. Obtener todos los diseñadores
-        const { data: designersData, error: designersError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .eq('role', 'DESIGNER');
-
-        if (designersError) throw designersError;
-
-        // 2. Obtener diseños de la semana
-        const { data: designsData, error: designsError } = await supabase
-          .from('designs')
-          .select('*')
-          .gte('deadline_at', format(weekStart, 'yyyy-MM-dd'))
-          .lte('deadline_at', format(weekEnd, 'yyyy-MM-dd\'T\'23:59:59'));
-
-        if (designsError) throw designsError;
-
-        // 3. Agrupar diseños por diseñador
-        const designerMap = new Map<string, DesignerWithDesigns>();
-        
-        (designersData || []).forEach(d => {
-          designerMap.set(d.id, {
-            id: d.id,
-            full_name: d.full_name || 'Sin nombre',
-            designs: [],
-          });
-        });
-
-        (designsData || []).forEach(design => {
-          if (design.designer_id && designerMap.has(design.designer_id)) {
-            designerMap.get(design.designer_id)!.designs.push(design);
-          }
-        });
-
-        setDesigners(Array.from(designerMap.values()));
-      } catch (err) {
-        logger.error('Error loading team data:', err);
-        toast.error('Error al cargar datos del equipo');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTeamData();
-  }, [authLoading, profile, weekStart, weekEnd]);
 
   const handleDesignerClick = (designer: DesignerWithDesigns) => {
     setSelectedDesigner(designer);
@@ -116,8 +53,11 @@ export default function TeamPage() {
   const weekLabel = `${format(weekStart, "d 'de' MMM", { locale: es })} - ${format(weekEnd, "d 'de' MMM", { locale: es })}`;
   const isCurrentWeek = format(weekStart, 'yyyy-MM-dd') === format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
 
+  // Only show skeleton on initial load (no cached data yet)
+  const showSkeleton = (isLoading && designers.length === 0) || authLoading;
+
   return (
-    <PageTransition loading={loading || authLoading} skeleton={<TeamSkeleton />}>
+    <PageTransition loading={showSkeleton} skeleton={<TeamSkeleton />}>
       <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

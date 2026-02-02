@@ -30,8 +30,11 @@ export default function CommunicationsPage() {
   // Contar no leídos totales
   const totalUnread = conversations.filter(c => c.unreadCount > 0).length;
 
+  // Only show skeleton on initial load (no cached data yet)
+  const showSkeleton = loading && conversations.length === 0;
+
   return (
-    <PageTransition loading={loading} skeleton={<CommunicationsSkeleton />}>
+    <PageTransition loading={showSkeleton} skeleton={<CommunicationsSkeleton />}>
       <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

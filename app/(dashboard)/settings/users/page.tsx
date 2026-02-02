@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,29 +24,7 @@ import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CreateInvitationDialog } from '@/components/invitations/create-invitation-dialog';
-
-interface Profile {
-  id: string;
-  full_name: string;
-  role: 'ADMIN' | 'DESIGNER';
-  created_at: string;
-}
-
-interface InvitationUse {
-  id: string;
-  email: string;
-  full_name: string;
-  used_at: string;
-}
-
-interface Invitation {
-  id: string;
-  token: string;
-  role: 'ADMIN' | 'DESIGNER';
-  max_uses: number;
-  expires_at: string | null;
-  invitation_uses: InvitationUse[];
-}
+import { useUsersData, type Invitation } from '@/lib/hooks/use-users-data';
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Admin',
@@ -61,52 +39,19 @@ const ROLE_COLORS: Record<string, string> = {
 export default function UsersPage() {
   const { profile: currentProfile, status } = useAuth();
   const router = useRouter();
-  const [users, setUsers] = useState<Profile[]>([]);
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { users, invitations, isLoading, mutate } = useUsersData();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showInvitations, setShowInvitations] = useState(true);
 
-  const loadData = useCallback(async () => {
-    const supabase = createClient();
-    
-    // Load users
-    const { data: usersData } = await supabase
-      .from('profiles')
-      .select('id, full_name, role, created_at')
-      .order('created_at', { ascending: true });
-
-    setUsers(usersData || []);
-
-    // Load all invitations with usage history
-    const { data: invData } = await supabase
-      .from('invitations')
-      .select(`
-        id, token, role, max_uses, expires_at,
-        invitation_uses (id, email, full_name, used_at)
-      `)
-      .order('created_at', { ascending: false });
-
-    setInvitations(invData || []);
-  }, []);
-
+  // Redirect non-admins
   useEffect(() => {
     if (status === 'INITIALIZING') return;
     
     if (!currentProfile || currentProfile.role !== 'ADMIN') {
       router.push('/dashboard');
-      return;
     }
-
-    const load = async () => {
-      setLoading(true);
-      await loadData();
-      setLoading(false);
-    };
-
-    load();
-  }, [status, currentProfile, router, loadData]);
+  }, [status, currentProfile, router]);
 
   const getInitials = (name: string) => {
     return name
@@ -143,7 +88,8 @@ export default function UsersPage() {
     }
     
     toast.success('Invitación eliminada');
-    setInvitations(prev => prev.filter(inv => inv.id !== id));
+    // Revalidate SWR cache
+    mutate();
   };
 
   const getTimeRemaining = (expiresAt: string | null) => {
@@ -164,8 +110,11 @@ export default function UsersPage() {
     return { label: 'Activa', color: 'bg-primary/20 text-primary border-primary/30' };
   };
 
+  // Only show skeleton on initial load (no cached data yet)
+  const showSkeleton = (isLoading && users.length === 0) || status === 'INITIALIZING';
+
   return (
-    <PageTransition loading={loading || status === 'INITIALIZING'} skeleton={<UsersSkeleton />}>
+    <PageTransition loading={showSkeleton} skeleton={<UsersSkeleton />}>
       {(!currentProfile || currentProfile.role !== 'ADMIN') ? null : (
         <div className="flex flex-col gap-6 p-6 md:p-8 max-w-4xl mx-auto">
       {/* Header */}
@@ -246,8 +195,8 @@ export default function UsersPage() {
             ) : (
               <div className="divide-y divide-border">
                 {invitations.map((invitation) => {
-                  const status = getInvitationStatus(invitation);
-                  const isActive = status.label === 'Activa';
+                  const invStatus = getInvitationStatus(invitation);
+                  const isActive = invStatus.label === 'Activa';
                   return (
                     <div
                       key={invitation.id}
@@ -257,8 +206,8 @@ export default function UsersPage() {
                         <Badge className={ROLE_COLORS[invitation.role]}>
                           {ROLE_LABELS[invitation.role]}
                         </Badge>
-                        <Badge className={status.color}>
-                          {status.label}
+                        <Badge className={invStatus.color}>
+                          {invStatus.label}
                         </Badge>
                         {isActive && (
                           <span className="text-sm text-muted-foreground">
@@ -307,7 +256,7 @@ export default function UsersPage() {
       <CreateInvitationDialog 
         open={dialogOpen} 
         onOpenChange={setDialogOpen}
-        onCreated={loadData}
+        onCreated={() => mutate()}
       />
         </div>
       )}
