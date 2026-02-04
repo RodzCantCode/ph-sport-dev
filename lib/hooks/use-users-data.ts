@@ -73,12 +73,7 @@ export function useUsersData(): UseUsersDataReturn {
   const { data, error, isLoading, mutate } = useSWR<UsersData>(
     // Only fetch when authenticated as admin
     isAdmin ? 'users-data' : null,
-    fetchUsersData,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 5000,
-    }
+    fetchUsersData
   );
 
   return {

@@ -64,12 +64,7 @@ export function useTeamData(weekStart: Date, weekEnd: Date): UseTeamDataReturn {
   const { data, error, isLoading, mutate } = useSWR<DesignerWithDesigns[]>(
     // Only fetch when authenticated as admin
     isAdmin ? ['team-data', weekStart, weekEnd] : null,
-    fetchTeamData,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 5000,
-    }
+    fetchTeamData
   );
 
   return {

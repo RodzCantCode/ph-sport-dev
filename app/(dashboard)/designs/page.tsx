@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -36,14 +36,13 @@ import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
 import type { DesignStatus } from '@/lib/types/filters';
 import { toast } from 'sonner';
-import { getDefaultWeekRange } from '@/lib/utils';
-import { logger } from '@/lib/utils/logger';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { PlayerStatusTag } from '@/components/features/designs/tags/player-status-tag';
 import { DesignDetailSheet } from '@/components/features/designs/design-detail-sheet';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useDesigns } from '@/lib/hooks/use-designs';
 
 // Wrapper component para Suspense boundary requerido por useSearchParams
 export default function DesignsPage() {
@@ -57,9 +56,6 @@ export default function DesignsPage() {
 function DesignsPageContent() {
   const { profile } = useAuth();
   const isAdmin = profile?.role === 'ADMIN';
-  const [items, setItems] = useState<Design[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -92,8 +88,12 @@ function DesignsPageContent() {
   // Filtros
   const [statusFilter, setStatusFilter] = useState<DesignStatus | 'all'>('all');
   const [designerFilter, setDesignerFilter] = useState<string | 'all'>('all');
-  const [weekStartFilter, setWeekStartFilter] = useState<Date | undefined>(undefined);
-  const [weekEndFilter, setWeekEndFilter] = useState<Date | undefined>(undefined);
+  const [weekStartFilter, setWeekStartFilter] = useState<Date | undefined>(() => 
+    startOfWeek(new Date(), { weekStartsOn: 1 })
+  );
+  const [weekEndFilter, setWeekEndFilter] = useState<Date | undefined>(() => 
+    endOfWeek(new Date(), { weekStartsOn: 1 })
+  );
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Debounce para searchQuery (solo afecta filtrado local, no fetch)
@@ -105,50 +105,33 @@ function DesignsPageContent() {
   const [sortColumn, setSortColumn] = useState<'title' | 'player' | 'deadline' | 'status' | null>('deadline');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const loadDesigns = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    const { weekStart: defaultStart, weekEnd: defaultEnd } = getDefaultWeekRange();
-    const weekStart = weekStartFilter ? format(weekStartFilter, 'yyyy-MM-dd') : format(defaultStart, 'yyyy-MM-dd');
-    const weekEnd = weekEndFilter ? format(weekEndFilter, 'yyyy-MM-dd') : format(defaultEnd, 'yyyy-MM-dd');
+  // SWR Hook for fetching designs
+  const { items, isLoading, error, mutate } = useDesigns({
+    weekStart: weekStartFilter,
+    weekEnd: weekEndFilter,
+    statusFilter,
+    designerFilter,
+  });
 
-    const qs = new URLSearchParams({
-      weekStart,
-      weekEnd,
-      ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
-      ...(designerFilter !== 'all' ? { designerId: designerFilter } : {}),
-    });
-    fetch(`/api/designs?${qs.toString()}`)
-      .then((r) => {
-        if (!r.ok) throw new Error('Error al cargar diseños');
-        return r.json();
-      })
-      .then((data) => setItems(data.items || []))
-      .catch((err) => {
-        logger.error('Designs fetch error:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-        setError(errorMessage);
-        toast.error(`Error al cargar los diseños: ${errorMessage}`);
-      })
-      .finally(() => setLoading(false));
+  // Local state for optimistic updates
+  const [localItems, setLocalItems] = useState<Design[]>([]);
+
+  // Sync SWR data with local state
+  useEffect(() => {
+    setLocalItems(items);
+  }, [items]);
+
+  // Clear localItems when filters change to show skeleton until new data arrives
+  useEffect(() => {
+    setLocalItems([]);
   }, [weekStartFilter, weekEndFilter, statusFilter, designerFilter]);
 
+  // Show toast when revalidation fails (even if we have cached data)
   useEffect(() => {
-    // Inicializar filtros de semana
-    const now = new Date();
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
-    setWeekStartFilter(weekStart);
-    setWeekEndFilter(weekEnd);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    // Recargar cuando cambian los filtros
-    if (weekStartFilter && weekEndFilter) {
-      loadDesigns();
+    if (error) {
+      toast.error('No se pudieron actualizar los datos. Revisa la conexión e inténtalo de nuevo.');
     }
-  }, [loadDesigns, weekStartFilter, weekEndFilter]);
+  }, [error]);
 
   const handleEdit = (design: Design) => {
     setEditingDesign(design);
@@ -174,16 +157,16 @@ function DesignsPageContent() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Error al eliminar diseño');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al eliminar diseño');
       }
 
       toast.success('Diseño eliminado exitosamente');
       setDeleteConfirmOpen(false);
       setDesignToDelete(null);
-      loadDesigns();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Error al eliminar diseño');
+      mutate();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar diseño');
     } finally {
       setDeletingId(null);
     }
@@ -192,12 +175,6 @@ function DesignsPageContent() {
   const handleEditDialogClose = () => {
     setEditDialogOpen(false);
     setEditingDesign(null);
-  };
-
-  const handleWeekFilterApply = () => {
-    if (weekStartFilter && weekEndFilter) {
-      loadDesigns();
-    }
   };
 
   const handleSort = (column: typeof sortColumn) => {
@@ -214,13 +191,13 @@ function DesignsPageContent() {
 
   const handleStatusChange = async (designId: string, newStatus: DesignStatus) => {
     // 1. Guardar estado anterior para poder revertir si falla
-    const previousItems = [...items];
+    const previousItems = [...localItems];
     
     // 2. Marcar como sincronizando (para feedback visual)
     setSyncingDesignId(designId);
     
     // 3. ACTUALIZACIÓN OPTIMISTA: Actualizar UI inmediatamente
-    setItems((prevItems) =>
+    setLocalItems((prevItems) =>
       prevItems.map((item) =>
         item.id === designId ? { ...item, status: newStatus } : item
       )
@@ -235,16 +212,16 @@ function DesignsPageContent() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Error al actualizar estado');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar estado');
       }
       
       // Éxito: el estado local ya está actualizado
-    } catch (error: unknown) {
+    } catch (err: unknown) {
       // 5. Error: Revertir el cambio optimista
-      setItems(previousItems);
-      toast.error(error instanceof Error ? error.message : 'Error al actualizar estado');
-      throw error;
+      setLocalItems(previousItems);
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar estado');
+      throw err;
     } finally {
       // 6. Limpiar estado de sincronización
       setSyncingDesignId(null);
@@ -252,7 +229,7 @@ function DesignsPageContent() {
   };
 
   // Filtrar items localmente basado en searchQuery (usando debounced)
-  const filteredItems = items.filter((design) => {
+  const filteredItems = localItems.filter((design) => {
     // Aplicar búsqueda
     if (debouncedSearchQuery) {
       const query = debouncedSearchQuery.toLowerCase();
@@ -300,21 +277,24 @@ function DesignsPageContent() {
   const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
   // Error state se maneja dentro del PageTransition
-  if (error && items.length === 0) {
+  if (error && localItems.length === 0) {
     return (
       <div className="p-6">
         <EmptyState
           title="Error al cargar diseños"
-          description={error}
+          description={error.message}
           actionLabel="Reintentar"
-          onAction={loadDesigns}
+          onAction={() => mutate()}
         />
       </div>
     );
   }
 
+  // Only show skeleton on initial load (no cached data yet)
+  const showSkeleton = isLoading && localItems.length === 0;
+
   return (
-    <PageTransition loading={loading && items.length === 0} skeleton={<DesignsSkeleton />}>
+    <PageTransition loading={showSkeleton} skeleton={<DesignsSkeleton />}>
       <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -348,7 +328,7 @@ function DesignsPageContent() {
             </Button>
           </div>
           <CreateDesignButton
-            onDesignCreated={loadDesigns}
+            onDesignCreated={() => mutate()}
             disabled={!isAdmin}
             disabledReason="Solo administradores pueden crear diseños"
           />
@@ -424,19 +404,14 @@ function DesignsPageContent() {
             </div>
             <div className="grid gap-2">
               <Label>Semana fin</Label>
-              <div className="flex gap-2">
-                <DatePicker
-                  value={weekEndFilter}
-                  onChange={(date) => {
-                    setWeekEndFilter(date);
-                  }}
-                  placeholder="Fecha fin"
-                  minDate={weekStartFilter}
-                />
-                <Button onClick={handleWeekFilterApply} size="sm">
-                  Aplicar
-                </Button>
-              </div>
+              <DatePicker
+                value={weekEndFilter}
+                onChange={(date) => {
+                  setWeekEndFilter(date);
+                }}
+                placeholder="Fecha fin"
+                minDate={weekStartFilter}
+              />
             </div>
           </div>
         </CardContent>
@@ -489,7 +464,7 @@ function DesignsPageContent() {
                 <CardTitle>Lista de Diseños</CardTitle>
                 <CardDescription>
                   {totalItems} diseño{totalItems !== 1 ? 's' : ''} encontrado{totalItems !== 1 ? 's' : ''}
-                  {debouncedSearchQuery && ` (filtrado de ${items.length} total${items.length !== 1 ? 'es' : ''})`}
+                  {debouncedSearchQuery && ` (filtrado de ${localItems.length} total${localItems.length !== 1 ? 'es' : ''})`}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -731,7 +706,7 @@ function DesignsPageContent() {
       <CreateDesignDialog
         open={editDialogOpen}
         onOpenChange={handleEditDialogClose}
-        onDesignCreated={loadDesigns}
+        onDesignCreated={() => mutate()}
         design={editingDesign}
       />
 
@@ -739,7 +714,7 @@ function DesignsPageContent() {
         designId={selectedDesignId}
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
-        onDesignUpdated={loadDesigns}
+        onDesignUpdated={() => mutate()}
       />
 
       <ConfirmDialog

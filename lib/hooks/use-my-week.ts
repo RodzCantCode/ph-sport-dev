@@ -36,12 +36,7 @@ export function useMyWeek(): UseMyWeekReturn {
   const { data, error, isLoading, mutate } = useSWR<Design[]>(
     // Only fetch when authenticated and have user id
     status === 'AUTHENTICATED' && url ? url : null,
-    fetcher,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 5000,
-    }
+    fetcher
   );
 
   return {

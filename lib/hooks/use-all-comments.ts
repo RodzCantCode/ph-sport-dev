@@ -103,12 +103,7 @@ export function useAllComments() {
   const { data, error, isLoading, mutate } = useSWR<DesignConversation[]>(
     // Only fetch when authenticated
     status === 'AUTHENTICATED' && user?.id ? ['all-comments', user.id] : null,
-    fetchConversations,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 5000,
-    }
+    fetchConversations
   );
 
   // Subscribe to new comments for realtime updates

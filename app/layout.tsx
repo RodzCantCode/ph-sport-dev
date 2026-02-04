@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Outfit } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { SWRProvider } from '@/components/providers/swr-provider';
 import { AuthProvider } from '@/lib/auth/auth-context';
 
 const outfit = Outfit({ 
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body className={`${outfit.className} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
-            {children}
+            <SWRProvider>
+              {children}
+            </SWRProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
