@@ -107,18 +107,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Only update state if user/profile actually changed (prevents unnecessary re-renders)
       setState(prev => {
         const isSameUser = prev.user?.id === user.id;
-        const isSameProfile = 
+        const isSameProfile =
           prev.profile?.id === profile.id &&
           prev.profile?.full_name === profile.full_name &&
           prev.profile?.role === profile.role &&
           prev.profile?.avatar_url === profile.avatar_url;
-        
+
         // If nothing changed, return previous state to avoid re-render
         if (prev.status === 'AUTHENTICATED' && isSameUser && isSameProfile) {
           console.log('[Auth] Session verified, no changes detected.');
           return prev;
         }
-        
+
         console.log('[Auth] Session & Profile verified. Access granted.');
         return {
           ...prev,
