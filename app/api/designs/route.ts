@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   }
   
   const { data: items, error } = await query;
-  
+
   if (error) {
     logger.log('[API] Supabase error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

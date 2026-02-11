@@ -121,10 +121,8 @@ function DesignsPageContent() {
     setLocalItems(items);
   }, [items]);
 
-  // Clear localItems when filters change to show skeleton until new data arrives
-  useEffect(() => {
-    setLocalItems([]);
-  }, [weekStartFilter, weekEndFilter, statusFilter, designerFilter]);
+  // NOTE: We intentionally avoid clearing localItems on filter changes.
+  // Logs proved this could run after SWR sync and wipe valid data for the new range.
 
   // Show toast when revalidation fails (even if we have cached data)
   useEffect(() => {
