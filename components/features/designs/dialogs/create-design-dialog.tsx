@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,13 +21,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { Plus, Edit, Save, Layers, Trash2, Loader2, AlertCircle, ChevronDown, ChevronUp, Link } from 'lucide-react';
+import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Plus, Edit, Save, Layers, Trash2, Loader2, ChevronRight, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDesigners } from '@/lib/hooks/use-designers';
 import { PLAYER_STATUS_CONFIG } from '@/components/features/designs/tags/player-status-tag';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { TRANSITIONS, animations } from '@/components/ui/animations';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import type { Design } from '@/lib/types/design';
 
@@ -114,9 +120,20 @@ export function CreateDesignDialog({
 
   // Datos para modo lote (filas completas)
   const [bulkRows, setBulkRows] = useState<BulkDesignRow[]>([createEmptyRow()]);
-  
-  // Toggle para mostrar columnas opcionales (Drive, Estado)
-  const [showOptionalColumns, setShowOptionalColumns] = useState(false);
+  // Filas expandidas (mostrar campos opcionales)
+  const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
+
+  const toggleRowExpanded = (id: string) => {
+    setExpandedRowIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const expandAllRows = () => setExpandedRowIds(new Set(bulkRows.map((r) => r.id)));
+  const collapseAllRows = () => setExpandedRowIds(new Set());
+  const allExpanded = bulkRows.length > 0 && expandedRowIds.size === bulkRows.length;
 
   useEffect(() => {
     if (design) {
@@ -142,6 +159,7 @@ export function CreateDesignDialog({
         player_status: null,
       });
       setBulkRows([createEmptyRow()]);
+      setExpandedRowIds(new Set());
     }
   }, [design, open]);
 
@@ -280,8 +298,10 @@ export function CreateDesignDialog({
   return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className={cn(
-          "max-h-[90vh] overflow-y-auto",
-          !isEditMode ? "max-w-[95vw]" : "max-w-2xl"
+          "max-h-[90vh]",
+          isEditMode
+            ? "max-w-2xl overflow-y-auto"
+            : "w-[90vw] max-w-[1100px] h-[78vh] max-h-[760px] overflow-hidden flex flex-col"
         )}>
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3">
@@ -302,27 +322,19 @@ export function CreateDesignDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <LayoutGroup>
-            <form onSubmit={handleSubmit}>
-              <motion.div 
-                layout
-                transition={TRANSITIONS.layout}
-                className="space-y-6 mt-4"
-              >
-            {/* Contenido según el modo - con animación suave de Framer Motion */}
-            {/* mode="popLayout" permite que layout animations funcionen con AnimatePresence */}
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.div 
+          <form
+            onSubmit={handleSubmit}
+            className={cn(!isEditMode && "mt-4 flex flex-1 min-h-0 flex-col")}
+          >
+            <div className={cn("space-y-6 mt-4", !isEditMode && "mt-0 flex-1 min-h-0")}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
                 key={isEditMode ? 'edit' : 'batch'}
-                layout
-                initial={animations.slideHorizontal.initial}
-                animate={animations.slideHorizontal.animate}
-                exit={animations.slideHorizontal.exit}
-                transition={{ 
-                  opacity: TRANSITIONS.fade,
-                  layout: TRANSITIONS.layout
-                }}
-                className="space-y-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className={cn("space-y-6", !isEditMode && "h-full")}
               >
               {isEditMode ? (
                 /* ========== MODO INDIVIDUAL ========== */
@@ -467,241 +479,243 @@ export function CreateDesignDialog({
             ) : (
               /* ========== MODO EN LOTE (nuevo sistema con tabla) ========== */
               <>
-                <Card>
-                  <CardHeader className="flex flex-row items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">Diseños a Crear</CardTitle>
-                      <CardDescription>
-                        Campos obligatorios: Jugador, Equipos, Deadline. El título se genera automáticamente si no se rellena.
-                      </CardDescription>
+                <Card className="h-full flex flex-col">
+                  <CardHeader>
+                    <div className="flex flex-row items-start justify-between gap-4">
+                      <div>
+                        <CardTitle>Diseños a Crear</CardTitle>
+                        <CardDescription>
+                          Campos obligatorios: Jugador, Local, Visitante, Deadline. Expande una fila para Título, Drive y Estado jugador.
+                        </CardDescription>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={allExpanded ? collapseAllRows : expandAllRows}
+                      >
+                        {allExpanded ? 'Colapsar todas' : 'Expandir todas'}
+                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowOptionalColumns(!showOptionalColumns)}
-                      className="shrink-0"
-                    >
-                      {showOptionalColumns ? (
-                        <>
-                          <ChevronUp className="mr-1 h-4 w-4" />
-                          Ocultar campos
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="mr-1 h-4 w-4" />
-                          Más campos
-                        </>
-                      )}
-                    </Button>
                   </CardHeader>
-                  <CardContent>
-                    {/* Tabla con scroll */}
-                    <div className="overflow-auto border rounded-lg max-h-[400px]">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/50 sticky top-0 z-10">
-                          <tr className="border-b">
-                            <th className="px-2 py-3 text-left font-medium w-8">#</th>
-                            <th className="px-2 py-3 text-left font-medium min-w-[140px]">Título</th>
-                            <th className="px-2 py-3 text-left font-medium min-w-[120px]">Jugador *</th>
-                            <th className="px-2 py-3 text-left font-medium min-w-[100px]">Local *</th>
-                            <th className="px-2 py-3 text-left font-medium min-w-[100px]">Visitante *</th>
-                            <th className="px-2 py-3 text-left font-medium min-w-[120px]">Diseñador</th>
-                            <th className="px-2 py-3 text-left font-medium min-w-[160px]">Deadline *</th>
-                            {showOptionalColumns && (
-                              <>
-                                <th className="px-2 py-3 text-left font-medium min-w-[200px]">
-                                  <div className="flex items-center gap-1">
-                                    <Link className="h-3 w-3" />
-                                    Drive URL
-                                  </div>
-                                </th>
-                                <th className="px-2 py-3 text-left font-medium min-w-[120px]">Estado</th>
-                              </>
-                            )}
-                            <th className="px-2 py-3 w-10"></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {bulkRows.map((row, index) => {
-                            const valid = isRowValid(row);
-                            const empty = isRowEmpty(row);
-                            const incomplete = !valid && !empty;
+                  <CardContent className="flex-1 min-h-0 flex flex-col">
+                    <div className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable_both-edges]">
+                      <table className="w-full caption-bottom text-sm">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-10" aria-label="Expandir" />
+                            <TableHead className="w-10">#</TableHead>
+                            <TableHead className="min-w-[100px]">Jugador</TableHead>
+                            <TableHead className="min-w-[90px]">Local</TableHead>
+                            <TableHead className="min-w-[90px]">Visitante</TableHead>
+                            <TableHead className="min-w-[120px]">Diseñador</TableHead>
+                            <TableHead className="min-w-[140px]">Deadline</TableHead>
+                            <TableHead className="w-10 text-right" aria-label="Quitar fila" />
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <AnimatePresence initial={false}>
+                            {bulkRows.flatMap((row, index) => {
+                              const valid = isRowValid(row);
+                              const empty = isRowEmpty(row);
+                              const incomplete = !valid && !empty;
+                              const isExpanded = expandedRowIds.has(row.id);
 
-                            return (
-                              <tr
-                                key={row.id}
-                                className={cn(
-                                  'border-b transition-colors',
-                                  incomplete && 'bg-yellow-500/5',
-                                  valid && 'bg-green-500/5'
-                                )}
-                              >
-                                <td className="px-2 py-2">
-                                  <span className={cn(
-                                    'text-sm font-medium',
-                                    incomplete && 'text-yellow-500',
-                                    valid && 'text-green-500',
-                                    empty && 'text-muted-foreground'
-                                  )}>
-                                    {index + 1}
-                                  </span>
-                                </td>
-                                <td className="px-1 py-1">
-                                  <Input
-                                    placeholder="Auto: Jugador"
-                                    value={row.title}
-                                    onChange={(e) => updateBulkRow(row.id, 'title', e.target.value)}
-                                    className="h-8 text-sm"
-                                  />
-                                </td>
-                                <td className="px-1 py-1">
-                                  <Input
-                                    placeholder="Jugador *"
-                                    value={row.player}
-                                    onChange={(e) => updateBulkRow(row.id, 'player', e.target.value)}
-                                    className="h-8 text-sm"
-                                  />
-                                </td>
-                                <td className="px-1 py-1">
-                                  <Input
-                                    placeholder="Local *"
-                                    value={row.match_home}
-                                    onChange={(e) => updateBulkRow(row.id, 'match_home', e.target.value)}
-                                    className="h-8 text-sm"
-                                  />
-                                </td>
-                                <td className="px-1 py-1">
-                                  <Input
-                                    placeholder="Visitante *"
-                                    value={row.match_away}
-                                    onChange={(e) => updateBulkRow(row.id, 'match_away', e.target.value)}
-                                    className="h-8 text-sm"
-                                  />
-                                </td>
-                                <td className="px-1 py-1">
-                                  <Select
-                                    value={row.designer_id || 'auto'}
-                                    onValueChange={(value) =>
-                                      updateBulkRow(row.id, 'designer_id', value === 'auto' ? null : value)
-                                    }
-                                  >
-                                    <SelectTrigger className="h-8 text-sm">
-                                      <SelectValue placeholder="Auto" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="auto">Automático</SelectItem>
-                                      {loadingDesigners ? (
-                                        <SelectItem value="loading" disabled>
-                                          Cargando...
-                                        </SelectItem>
+                              const rowClass = cn(
+                                'border-b border-gray-300/50 dark:border-gray-700/50 transition-colors hover:bg-gray-100/50 dark:hover:bg-gray-800/30',
+                                incomplete && 'bg-amber-500/5'
+                              );
+
+                              const mainRow = (
+                                <motion.tr
+                                  key={row.id}
+                                  initial={{ opacity: 0, y: -6 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                                  className={rowClass}
+                                >
+                                  <TableCell className="w-10">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => toggleRowExpanded(row.id)}
+                                      aria-expanded={isExpanded}
+                                      aria-label={isExpanded ? 'Ocultar detalles' : 'Ver opcionales'}
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronDown className="h-4 w-4" />
                                       ) : (
-                                        designers.map((user) => (
-                                          <SelectItem key={user.id} value={user.id}>
-                                            {user.name}
-                                          </SelectItem>
-                                        ))
+                                        <ChevronRight className="h-4 w-4" />
                                       )}
-                                    </SelectContent>
-                                  </Select>
-                                </td>
-                                <td className="px-1 py-1">
-                                  <DateTimePicker
-                                    value={row.deadline_at}
-                                    onChange={(date) => updateBulkRow(row.id, 'deadline_at', date)}
-                                    placeholder="Fecha *"
-                                    className="h-8 text-sm"
-                                  />
-                                </td>
-                                {showOptionalColumns && (
-                                  <>
-                                    <td className="px-1 py-1">
-                                      <Input
-                                        placeholder="https://drive.google.com/..."
-                                        value={row.folder_url}
-                                        onChange={(e) => updateBulkRow(row.id, 'folder_url', e.target.value)}
-                                        className="h-8 text-sm"
-                                      />
-                                    </td>
-                                    <td className="px-1 py-1">
-                                      <Select
-                                        value={row.player_status || 'none'}
-                                        onValueChange={(value) =>
-                                          updateBulkRow(row.id, 'player_status', value === 'none' ? null : value)
-                                        }
-                                      >
-                                        <SelectTrigger className="h-8 text-sm">
-                                          <SelectValue placeholder="—" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="none">Sin estado</SelectItem>
-                                          {Object.entries(PLAYER_STATUS_CONFIG).map(([key, config]) => (
-                                            <SelectItem key={key} value={key}>
-                                              <div className="flex items-center gap-2">
-                                                <config.icon className="h-3 w-3" />
-                                                <span>{config.label}</span>
-                                              </div>
+                                    </Button>
+                                  </TableCell>
+                                  <TableCell className="tabular-nums text-muted-foreground">
+                                    {index + 1}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      placeholder="Jugador"
+                                      value={row.player}
+                                      onChange={(e) => updateBulkRow(row.id, 'player', e.target.value)}
+                                      className="h-9"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      placeholder="Local"
+                                      value={row.match_home}
+                                      onChange={(e) => updateBulkRow(row.id, 'match_home', e.target.value)}
+                                      className="h-9"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      placeholder="Visitante"
+                                      value={row.match_away}
+                                      onChange={(e) => updateBulkRow(row.id, 'match_away', e.target.value)}
+                                      className="h-9"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Select
+                                      value={row.designer_id || 'auto'}
+                                      onValueChange={(value) =>
+                                        updateBulkRow(row.id, 'designer_id', value === 'auto' ? null : value)
+                                      }
+                                    >
+                                      <SelectTrigger className="h-9">
+                                        <SelectValue placeholder="Automático" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="auto">Automático</SelectItem>
+                                        {loadingDesigners ? (
+                                          <SelectItem value="loading" disabled>
+                                            Cargando...
+                                          </SelectItem>
+                                        ) : (
+                                          designers.map((user) => (
+                                            <SelectItem key={user.id} value={user.id}>
+                                              {user.name}
                                             </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </td>
-                                  </>
-                                )}
-                                <td className="px-1 py-1">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeBulkRow(row.id)}
-                                    disabled={bulkRows.length === 1}
-                                    className="h-8 w-8 text-destructive hover:text-destructive/80"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
+                                          ))
+                                        )}
+                                      </SelectContent>
+                                    </Select>
+                                  </TableCell>
+                                  <TableCell>
+                                    <DateTimePicker
+                                      value={row.deadline_at}
+                                      onChange={(date) => updateBulkRow(row.id, 'deadline_at', date)}
+                                      placeholder="Fecha"
+                                      className="h-9"
+                                    />
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive"
+                                      onClick={() => removeBulkRow(row.id)}
+                                      disabled={bulkRows.length === 1}
+                                      aria-label="Quitar fila"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </motion.tr>
+                              );
+
+                              const detailRow = isExpanded ? (
+                                <motion.tr
+                                  key={`${row.id}-detail`}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="border-b border-gray-300/50 bg-muted/30 dark:border-gray-700/50"
+                                >
+                                      <td colSpan={8} className="p-0 align-top">
+                                        <motion.div
+                                          initial={{ height: 0, opacity: 0 }}
+                                          animate={{ height: 'auto', opacity: 1 }}
+                                          exit={{ height: 0, opacity: 0 }}
+                                          transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                          style={{ overflow: 'hidden' }}
+                                        >
+                                          <div className="p-4">
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                                              <div className="space-y-2">
+                                                <Label>Título (opcional)</Label>
+                                                <Input
+                                                  placeholder="Auto: jugador"
+                                                  value={row.title}
+                                                  onChange={(e) => updateBulkRow(row.id, 'title', e.target.value)}
+                                                />
+                                              </div>
+                                              <div className="space-y-2">
+                                                <Label>URL Drive (opcional)</Label>
+                                                <Input
+                                                  type="url"
+                                                  placeholder="https://drive.google.com/..."
+                                                  value={row.folder_url}
+                                                  onChange={(e) => updateBulkRow(row.id, 'folder_url', e.target.value)}
+                                                />
+                                              </div>
+                                              <div className="space-y-2">
+                                                <Label>Estado jugador</Label>
+                                                <Select
+                                                  value={row.player_status || 'none'}
+                                                  onValueChange={(value) =>
+                                                    updateBulkRow(row.id, 'player_status', value === 'none' ? null : value)
+                                                  }
+                                                >
+                                                  <SelectTrigger>
+                                                    <SelectValue placeholder="Sin estado" />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    <SelectItem value="none">Sin estado</SelectItem>
+                                                    {Object.entries(PLAYER_STATUS_CONFIG).map(([key, config]) => (
+                                                      <SelectItem key={key} value={key}>
+                                                        <div className="flex items-center gap-2">
+                                                          <config.icon className="h-3 w-3" />
+                                                          <span>{config.label}</span>
+                                                        </div>
+                                                      </SelectItem>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </motion.div>
+                                      </td>
+                                    </motion.tr>
+                              ) : null;
+
+                              return [mainRow, detailRow].filter(Boolean);
+                            })}
+                          </AnimatePresence>
+                        </TableBody>
                       </table>
                     </div>
 
-                    {/* Botones para añadir filas */}
-                    <div className="flex items-center gap-2 mt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addBulkRow}
-                      >
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={addBulkRow}>
                         <Plus className="mr-1 h-4 w-4" />
                         +1 Fila
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addMultipleBulkRows(5)}
-                      >
+                      <Button type="button" variant="outline" size="sm" onClick={() => addMultipleBulkRows(5)}>
                         +5 Filas
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addMultipleBulkRows(10)}
-                      >
+                      <Button type="button" variant="outline" size="sm" onClick={() => addMultipleBulkRows(10)}>
                         +10 Filas
                       </Button>
-                      
-                      <div className="flex-1" />
-                      
                       {hasIncompleteRows && (
-                        <div className="flex items-center gap-1 text-sm text-yellow-500">
-                          <AlertCircle className="h-4 w-4" />
-                          <span>Hay filas incompletas</span>
-                        </div>
+                        <span className="ml-2 text-sm text-amber-600">Hay filas incompletas</span>
                       )}
                     </div>
                   </CardContent>
@@ -710,9 +724,9 @@ export function CreateDesignDialog({
             )}
               </motion.div>
             </AnimatePresence>
-            </motion.div>
+            </div>
 
-          <DialogFooter className="mt-6">
+          <DialogFooter className={cn("mt-6 shrink-0", !isEditMode && "pt-4 border-t border-border bg-card")}>
             <Button
               type="button"
               variant="outline"
@@ -743,7 +757,6 @@ export function CreateDesignDialog({
             </Button>
           </DialogFooter>
         </form>
-        </LayoutGroup>
       </DialogContent>
     </Dialog>
   );
