@@ -208,6 +208,9 @@ export async function POST(request: Request) {
           title: 'Nuevas asignaciones',
           message: `Se te han asignado ${count} nuevos diseños`,
           link: '/my-week',
+          meta: {
+            assignment_count: count,
+          },
           read: false,
         });
       }

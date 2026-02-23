@@ -13,7 +13,6 @@ import {
   Button,
   Hr,
   Img,
-  Link,
   Font,
   Tailwind,
 } from "@react-email/components";
@@ -32,6 +31,10 @@ interface NotificationPayload {
   title: string;
   message: string | null;
   link: string | null;
+  meta?: {
+    assignment_count?: number;
+    design_title?: string;
+  } | null;
   created_at: string;
 }
 
@@ -39,6 +42,130 @@ interface NotificationPreferences {
   email: Record<string, boolean>;
   in_app: Record<string, boolean>;
 }
+
+interface UserProfile {
+  notification_preferences: NotificationPreferences | null;
+  full_name: string | null;
+}
+
+interface EmailCopy {
+  subject: string;
+  preview: string;
+  headline: string;
+  bodyMessage: string;
+  ctaText: string;
+  ctaUrl: string;
+}
+
+interface TemplateProps {
+  greetingName: string;
+  copy: EmailCopy;
+}
+
+// --- Helpers ---
+
+const getGreetingName = (fullName: string | null | undefined): string => {
+  const trimmed = (fullName || "").trim();
+  if (!trimmed) return "";
+  return trimmed.split(/\s+/)[0] || "";
+};
+
+const getAssignmentCount = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.floor(value);
+  }
+  return null;
+};
+
+const getDesignTitle = (notification: NotificationPayload): string | null => {
+  const fromMeta = notification.meta?.design_title;
+  if (typeof fromMeta === "string" && fromMeta.trim().length > 0) {
+    return fromMeta.trim();
+  }
+
+  const fromTitle = notification.title?.trim();
+  if (fromTitle && fromTitle.toLowerCase() !== "nueva asignación") {
+    return fromTitle;
+  }
+
+  const fromMessage = notification.message?.match(/"([^"]+)"/)?.[1];
+  return fromMessage?.trim() || null;
+};
+
+const normalizeLink = (link: string | null | undefined, fallback: string): string =>
+  `https://phsport.app${link || fallback}`;
+
+const buildEmailCopy = (notification: NotificationPayload): EmailCopy => {
+  switch (notification.type) {
+    case "assignment": {
+      const assignmentCount = getAssignmentCount(notification.meta?.assignment_count);
+      const designTitle = getDesignTitle(notification);
+
+      if (assignmentCount && assignmentCount > 1) {
+        return {
+          subject: `Tienes ${assignmentCount} nuevos diseños en PH Sport`,
+          preview: `Se te han asignado ${assignmentCount} diseños para esta semana`,
+          headline: `Tienes ${assignmentCount} nuevos diseños`,
+          bodyMessage:
+            notification.message || `Se te han asignado ${assignmentCount} nuevos diseños.`,
+          ctaText: "Ver mis asignaciones",
+          ctaUrl: normalizeLink(notification.link, "/my-week"),
+        };
+      }
+
+      if (designTitle) {
+        return {
+          subject: `Nuevo diseño asignado: ${designTitle}`,
+          preview: `Tienes un nuevo diseño pendiente en PH Sport`,
+          headline: "Te han asignado un nuevo diseño",
+          bodyMessage:
+            notification.message || `Ya tienes disponible el diseño "${designTitle}".`,
+          ctaText: "Ver diseño",
+          ctaUrl: normalizeLink(notification.link, "/my-week"),
+        };
+      }
+
+      return {
+        subject: "Nueva asignación en PH Sport",
+        preview: "Tienes nuevas tareas pendientes por revisar",
+        headline: "Tienes una nueva asignación",
+        bodyMessage: notification.message || "Revisa tu panel para ver los detalles.",
+        ctaText: "Ver asignación",
+        ctaUrl: normalizeLink(notification.link, "/my-week"),
+      };
+    }
+    case "comment":
+      return {
+        subject: `Nuevo comentario en ${notification.title}`,
+        preview: "Hay una actualización en una de tus comunicaciones",
+        headline: "Tienes un nuevo comentario",
+        bodyMessage:
+          notification.message || "Han respondido en una conversación de diseño.",
+        ctaText: "Responder",
+        ctaUrl: normalizeLink(notification.link, "/communications"),
+      };
+    case "deadline":
+      return {
+        subject: `Vence pronto: ${notification.title}`,
+        preview: "Revisa la fecha límite y prioriza esta tarea",
+        headline: "Fecha límite próxima",
+        bodyMessage:
+          notification.message ||
+          "Hay un diseño con deadline próximo que requiere tu atención.",
+        ctaText: "Ver detalles",
+        ctaUrl: normalizeLink(notification.link, "/my-week"),
+      };
+    default:
+      return {
+        subject: `Notificación: ${notification.title}`,
+        preview: "Tienes una nueva notificación en PH Sport",
+        headline: "Tienes una nueva notificación",
+        bodyMessage: notification.message || notification.title,
+        ctaText: "Ir al dashboard",
+        ctaUrl: normalizeLink(notification.link, "/dashboard"),
+      };
+  }
+};
 
 // --- Components ---
 
@@ -78,33 +205,36 @@ const EmailLayout = ({
                 900: "#0A0A0A",
               },
             },
+            fontFamily: {
+              sans: ["Outfit", "Arial", "sans-serif"],
+            },
           },
         },
       }}
     >
       <Body className="bg-gray-50 my-auto mx-auto font-sans">
-        <Container className="border border-solid border-gray-200 rounded-[12px] my-[40px] mx-auto p-[28px] max-w-[520px] bg-white text-gray-800 shadow-sm">
+        <Container className="border border-solid border-gray-200 rounded-[14px] my-[40px] mx-auto p-[32px] max-w-[560px] bg-white text-gray-800 shadow-sm">
           <Section className="mb-[20px]">
             <div className="h-[4px] w-full rounded-full bg-primary" />
           </Section>
-          <Section className="mt-[4px] mb-[18px] text-center">
+          <Section className="mt-[6px] mb-[20px] text-center">
             <Img
               src="https://phsport.app/images/logo-full-orange.png"
-              width="200"
+              width="204"
               alt="PH Sport"
               className="mx-auto"
               style={{ height: "auto" }}
             />
           </Section>
-          
+
           {children}
 
-          <Hr className="border border-solid border-gray-200 my-[26px] mx-0 w-full" />
-          
-          <Text className="text-gray-500 text-[12px] leading-[20px] text-center">
-            Estas recibiendo este correo porque tienes notificaciones activas en tu cuenta de PH Sport.
+          <Hr className="border border-solid border-gray-200 my-[28px] mx-0 w-full" />
+
+          <Text className="text-gray-500 text-[12px] leading-[20px] text-center m-0">
+            Recibes este correo porque tienes notificaciones activas en tu cuenta de PH Sport.
           </Text>
-          <Text className="text-gray-500 text-[12px] leading-[20px] text-center">
+          <Text className="text-gray-500 text-[12px] leading-[20px] text-center mt-[8px] mb-0">
             PH Sport, todos los derechos reservados.
           </Text>
         </Container>
@@ -113,113 +243,104 @@ const EmailLayout = ({
   </Html>
 );
 
-const AssignmentTemplate = ({ notification }: { notification: NotificationPayload }) => (
-  <EmailLayout preview={`Nueva asignacion: ${notification.title}`}>
-    <Section className="mt-[32px] text-center">
-      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0">
-        Nueva <strong>Asignacion</strong>
-      </Heading>
-      <Text className="text-[18px] font-semibold leading-[28px] text-gray-900 mt-2 mb-6">
-        {notification.title}
+const AssignmentTemplate = ({ greetingName, copy }: TemplateProps) => (
+  <EmailLayout preview={copy.preview}>
+    <Section className="mt-[16px] text-center">
+      <Text className="text-[14px] leading-[22px] text-gray-500 mt-0 mb-[10px]">
+        {greetingName ? `Hola, ${greetingName}` : "Hola"}
       </Text>
-      {notification.message && (
-        <Text className="text-[14px] leading-[24px] text-gray-500 mb-8">
-          {notification.message}
-        </Text>
-      )}
-      <Section className="text-center mt-[32px] mb-[32px]">
+      <Heading className="text-[28px] font-semibold text-gray-900 text-center p-0 my-0 mx-0">
+        {copy.headline}
+      </Heading>
+      <Text className="text-[15px] leading-[26px] text-gray-500 mt-[18px] mb-[24px]">
+        {copy.bodyMessage}
+      </Text>
+      <Section className="text-center mt-[24px] mb-[30px]">
         <Button
-          className="bg-primary rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
-          href={`https://phsport.app${notification.link || '/dashboard'}`}
+          className="bg-primary rounded-[8px] text-white text-[14px] font-semibold no-underline text-center px-7 py-3"
+          href={copy.ctaUrl}
         >
-          Ver Asignacion
+          {copy.ctaText}
         </Button>
       </Section>
     </Section>
   </EmailLayout>
 );
 
-const CommentTemplate = ({ notification }: { notification: NotificationPayload }) => (
-  <EmailLayout preview={`Nuevo comentario en: ${notification.title}`}>
-    <Section className="mt-[32px]">
-      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0">
-        Nuevo <strong>Comentario</strong>
-      </Heading>
-      <Text className="text-[18px] font-semibold leading-[28px] text-gray-900 mt-2 mb-4 text-center">
-        {notification.title}
+const CommentTemplate = ({ greetingName, copy }: TemplateProps) => (
+  <EmailLayout preview={copy.preview}>
+    <Section className="mt-[16px]">
+      <Text className="text-[14px] leading-[22px] text-gray-500 text-center mt-0 mb-[10px]">
+        {greetingName ? `Hola, ${greetingName}` : "Hola"}
       </Text>
-      
-      {/* Quote Component for Comment */}
-      {notification.message && (
-        <Section className="bg-gray-50 p-4 rounded-md border-l-4 border-primary my-6">
-          <Text className="text-gray-500 text-[14px] italic m-0">
-            "{notification.message}"
-          </Text>
-        </Section>
-      )}
+      <Heading className="text-[28px] font-semibold text-center text-gray-900 p-0 my-0 mx-0">
+        {copy.headline}
+      </Heading>
 
-      <Section className="text-center mt-[32px] mb-[32px]">
+      <Section className="bg-gray-50 p-4 rounded-[10px] border-l-4 border-primary my-6">
+        <Text className="text-gray-500 text-[14px] italic m-0">
+          "{copy.bodyMessage}"
+        </Text>
+      </Section>
+
+      <Section className="text-center mt-[24px] mb-[30px]">
         <Button
-          className="bg-primary rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
-          href={`https://phsport.app${notification.link || '/dashboard'}`}
+          className="bg-primary rounded-[8px] text-white text-[14px] font-semibold no-underline text-center px-7 py-3"
+          href={copy.ctaUrl}
         >
-          Responder
+          {copy.ctaText}
         </Button>
       </Section>
     </Section>
   </EmailLayout>
 );
 
-const DeadlineTemplate = ({ notification }: { notification: NotificationPayload }) => (
-  <EmailLayout preview={`Vence pronto: ${notification.title}`}>
-    <Section className="mt-[32px] text-center">
-      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0 text-[#b45309]">
-        <strong>Fecha Limite Proxima</strong>
+const DeadlineTemplate = ({ greetingName, copy }: TemplateProps) => (
+  <EmailLayout preview={copy.preview}>
+    <Section className="mt-[16px] text-center">
+      <Text className="text-[14px] leading-[22px] text-gray-500 mt-0 mb-[10px]">
+        {greetingName ? `Hola, ${greetingName}` : "Hola"}
+      </Text>
+      <Heading className="text-[28px] font-semibold text-center p-0 my-0 mx-0 text-[#b45309]">
+        {copy.headline}
       </Heading>
-      
-      <Section className="bg-yellow-50 border border-yellow-200 rounded p-4 my-6">
-        <Text className="text-[18px] font-bold text-gray-900 m-0">
-          {notification.title}
+
+      <Section className="bg-yellow-50 border border-yellow-200 rounded-[10px] p-4 my-6">
+        <Text className="text-[16px] leading-[26px] text-gray-700 m-0">
+          {copy.bodyMessage}
         </Text>
-        {notification.message && (
-          <Text className="text-gray-600 text-[14px] mt-2 mb-0">
-            {notification.message}
-          </Text>
-        )}
       </Section>
 
-      <Section className="text-center mt-[32px] mb-[32px]">
+      <Section className="text-center mt-[24px] mb-[30px]">
         <Button
-          className="bg-[#b45309] rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
-          href={`https://phsport.app${notification.link || '/dashboard'}`}
+          className="bg-[#b45309] rounded-[8px] text-white text-[14px] font-semibold no-underline text-center px-7 py-3"
+          href={copy.ctaUrl}
         >
-          Ver Detalles
+          {copy.ctaText}
         </Button>
       </Section>
     </Section>
   </EmailLayout>
 );
 
-const DefaultTemplate = ({ notification }: { notification: NotificationPayload }) => (
-  <EmailLayout preview={`Notificacion: ${notification.title}`}>
-    <Section className="mt-[32px] text-center">
-      <Heading className="text-[24px] font-semibold text-center p-0 my-[20px] mx-0">
-        Nueva <strong>Notificacion</strong>
-      </Heading>
-      <Text className="text-[14px] leading-[24px] text-gray-800">
-        {notification.title}
+const DefaultTemplate = ({ greetingName, copy }: TemplateProps) => (
+  <EmailLayout preview={copy.preview}>
+    <Section className="mt-[16px] text-center">
+      <Text className="text-[14px] leading-[22px] text-gray-500 mt-0 mb-[10px]">
+        {greetingName ? `Hola, ${greetingName}` : "Hola"}
       </Text>
-      {notification.message && (
-        <Text className="text-gray-500 text-[14px]">
-          {notification.message}
-        </Text>
-      )}
-      <Section className="text-center mt-[32px] mb-[32px]">
-      <Button
-          className="bg-primary rounded text-white text-[13px] font-semibold no-underline text-center px-6 py-3"
-          href={`https://phsport.app${notification.link || '/dashboard'}`}
+      <Heading className="text-[28px] font-semibold text-center p-0 my-0 mx-0 text-gray-900">
+        {copy.headline}
+      </Heading>
+      <Text className="text-[15px] leading-[26px] text-gray-500 mt-[18px] mb-[24px]">
+        {copy.bodyMessage}
+      </Text>
+      <Section className="text-center mt-[24px] mb-[30px]">
+        <Button
+          className="bg-primary rounded-[8px] text-white text-[14px] font-semibold no-underline text-center px-7 py-3"
+          href={copy.ctaUrl}
         >
-          Ir al Dashboard
+          {copy.ctaText}
         </Button>
       </Section>
     </Section>
@@ -250,9 +371,9 @@ Deno.serve(async (req: Request) => {
     const userEmail = userData.user.email;
 
     // 2. Get User Preferences
-    const { data: profile, error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .select("notification_preferences")
+      .select("notification_preferences, full_name")
       .eq("id", notification.user_id)
       .single();
 
@@ -261,6 +382,8 @@ Deno.serve(async (req: Request) => {
       // Fallback to sending if profile fetch fails? Better safe than noisy: abort.
       return new Response(JSON.stringify({ error: "Profile/Preferences not found" }), { status: 404 });
     }
+
+    const profile = profileData as UserProfile;
 
     // Defaults for notification preferences
     const defaultEmailPrefs: Record<string, boolean> = {
@@ -290,26 +413,25 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ skipped: true, reason: "User preference" }), { status: 200 });
     }
 
+    const greetingName = getGreetingName(profile.full_name);
+    const copy = buildEmailCopy(notification);
+
     // 4. Select Template & Render HTML
     let emailHtml = "";
-    let subject = "";
+    let subject = copy.subject;
 
     switch (type) {
       case "assignment":
-        subject = `Nueva asignacion: ${notification.title}`;
-        emailHtml = await render(<AssignmentTemplate notification={notification} />);
+        emailHtml = await render(<AssignmentTemplate greetingName={greetingName} copy={copy} />);
         break;
       case "comment":
-        subject = `Nuevo comentario en: ${notification.title}`;
-        emailHtml = await render(<CommentTemplate notification={notification} />);
+        emailHtml = await render(<CommentTemplate greetingName={greetingName} copy={copy} />);
         break;
       case "deadline":
-        subject = `Vence pronto: ${notification.title}`;
-        emailHtml = await render(<DeadlineTemplate notification={notification} />);
+        emailHtml = await render(<DeadlineTemplate greetingName={greetingName} copy={copy} />);
         break;
       default:
-        subject = `Notificacion: ${notification.title}`;
-        emailHtml = await render(<DefaultTemplate notification={notification} />);
+        emailHtml = await render(<DefaultTemplate greetingName={greetingName} copy={copy} />);
     }
     subject = subject.replace(/[\r\n]+/g, " ").trim();
 
