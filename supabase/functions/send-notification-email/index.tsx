@@ -35,6 +35,8 @@ interface NotificationPayload {
     assignment_count?: number;
     design_title?: string;
   } | null;
+  delivery_id?: string;
+  idempotency_key?: string;
   created_at: string;
 }
 
@@ -61,6 +63,20 @@ interface TemplateProps {
   greetingName: string;
   copy: EmailCopy;
 }
+
+interface DeliveryRecord {
+  id: string;
+  status: "queued" | "sending" | "sent" | "failed" | "timeout" | "skipped";
+  attempt_count: number;
+}
+
+const MAX_EMAIL_ATTEMPTS = 3;
+
+const nextRetryAtFromAttempt = (attemptCount: number): string | null => {
+  if (attemptCount >= MAX_EMAIL_ATTEMPTS) return null;
+  const minutes = attemptCount <= 1 ? 1 : attemptCount === 2 ? 5 : 15;
+  return new Date(Date.now() + minutes * 60_000).toISOString();
+};
 
 // --- Helpers ---
 
@@ -234,9 +250,6 @@ const EmailLayout = ({
           <Text className="text-gray-500 text-[12px] leading-[20px] text-center m-0">
             Recibes este correo porque tienes notificaciones activas en tu cuenta de PH Sport.
           </Text>
-          <Text className="text-gray-500 text-[12px] leading-[20px] text-center mt-[8px] mb-0">
-            PH Sport, todos los derechos reservados.
-          </Text>
         </Container>
       </Body>
     </Tailwind>
@@ -350,6 +363,10 @@ const DefaultTemplate = ({ greetingName, copy }: TemplateProps) => (
 // --- Main Handler ---
 
 Deno.serve(async (req: Request) => {
+  let supabase: ReturnType<typeof createClient> | null = null;
+  let deliveryId: string | null = null;
+  let deliveryAttemptCount = 0;
+
   try {
     const notification: NotificationPayload = await req.json();
     console.log("Received notification:", notification);
@@ -360,7 +377,38 @@ Deno.serve(async (req: Request) => {
     }
 
     // Initialize Supabase Client (Service Role for Admin Access)
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Optional outbox delivery tracking context
+    deliveryId = notification.delivery_id?.trim() || null;
+    if (deliveryId) {
+      const { data: deliveryData, error: deliveryError } = await supabase
+        .from("notification_email_deliveries")
+        .select("id, status, attempt_count")
+        .eq("id", deliveryId)
+        .single();
+
+      if (deliveryError || !deliveryData) {
+        console.error("Delivery record not found:", deliveryError);
+        return new Response(JSON.stringify({ error: "Delivery record not found" }), { status: 404 });
+      }
+
+      const delivery = deliveryData as DeliveryRecord;
+      deliveryAttemptCount = delivery.attempt_count;
+
+      if (delivery.status === "sent" || delivery.status === "skipped") {
+        return new Response(JSON.stringify({ success: true, duplicate: true }), { status: 200 });
+      }
+
+      await supabase
+        .from("notification_email_deliveries")
+        .update({
+          status: "sending",
+          last_error: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", deliveryId);
+    }
 
     // 1. Get User Email
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(notification.user_id);
@@ -410,6 +458,18 @@ Deno.serve(async (req: Request) => {
 
     if (!isEnabled) {
       console.log(`Email skipped: User disabled emails for type '${type}'`);
+      if (deliveryId) {
+        await supabase
+          .from("notification_email_deliveries")
+          .update({
+            status: "skipped",
+            sent_at: new Date().toISOString(),
+            next_retry_at: null,
+            last_error: "Skipped due to user notification preference",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", deliveryId);
+      }
       return new Response(JSON.stringify({ skipped: true, reason: "User preference" }), { status: 200 });
     }
 
@@ -443,7 +503,7 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: FROM_EMAIL,
+        from: `PH Sport <${FROM_EMAIL}>`,
         to: [userEmail],
         subject: subject,
         html: emailHtml,
@@ -454,14 +514,58 @@ Deno.serve(async (req: Request) => {
 
     if (!resendResponse.ok) {
       console.error("Resend API Error:", resendData);
+      if (deliveryId) {
+        const isTransient = resendResponse.status >= 500 || resendResponse.status === 429;
+        const nextRetryAt = isTransient
+          ? nextRetryAtFromAttempt(deliveryAttemptCount)
+          : null;
+
+        await supabase
+          .from("notification_email_deliveries")
+          .update({
+            status: "failed",
+            last_error: JSON.stringify(resendData).slice(0, 1000),
+            next_retry_at: nextRetryAt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", deliveryId);
+      }
       return new Response(JSON.stringify({ error: resendData }), { status: 400 });
     }
 
     console.log("Email sent successfully:", resendData);
+    if (deliveryId) {
+      await supabase
+        .from("notification_email_deliveries")
+        .update({
+          status: "sent",
+          provider_message_id: resendData.id ?? null,
+          sent_at: new Date().toISOString(),
+          next_retry_at: null,
+          last_error: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", deliveryId);
+    }
     return new Response(JSON.stringify({ success: true, id: resendData.id }), { status: 200 });
 
   } catch (error) {
     console.error("Edge Function Exception:", error);
+    if (supabase && deliveryId) {
+      const rawError = String(error);
+      const status = /timeout/i.test(rawError) ? "timeout" : "failed";
+      const nextRetryAt = nextRetryAtFromAttempt(deliveryAttemptCount);
+
+      await supabase
+        .from("notification_email_deliveries")
+        .update({
+          status,
+          last_error: rawError.slice(0, 1000),
+          next_retry_at: nextRetryAt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", deliveryId);
+    }
     return new Response(JSON.stringify({ error: String(error) }), { status: 500 });
   }
 });
