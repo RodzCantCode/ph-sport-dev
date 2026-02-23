@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, ExternalLink, AlertTriangle, Flame } from 'lucide-react';
+import { Calendar, ExternalLink, AlertTriangle, Flame, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth/auth-context';
 import type { DesignStatus } from '@/lib/types/filters';
@@ -36,6 +36,8 @@ const STATUS_ORDER: Record<DesignStatus, number> = {
   DELIVERED: 3,
 };
 
+const INITIAL_VISIBLE_DELIVERED_WEEKS = 2;
+
 export default function MyWeekPage() {
   const router = useRouter();
   const { profile, status } = useAuth();
@@ -46,6 +48,8 @@ export default function MyWeekPage() {
   // Estado para panel de detalles
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [deliveredOpen, setDeliveredOpen] = useState(false);
+  const [showAllDeliveredWeeks, setShowAllDeliveredWeeks] = useState(false);
 
   // Redireccionar admins a /team
   useEffect(() => {
@@ -91,15 +95,45 @@ export default function MyWeekPage() {
     }
   };
 
-  // Ordenar por deadline (próximo primero), completados al final
-  const sortedItems = [...items].sort((a, b) => {
-    // Completados al final
-    if (a.status === 'DELIVERED' && b.status !== 'DELIVERED') return 1;
-    if (b.status === 'DELIVERED' && a.status !== 'DELIVERED') return -1;
-    
-    // Por deadline
-    return new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime();
-  });
+  const { inProgress, deliveredGroups, deliveredCount } = useMemo(() => {
+    const inProgressItems = items
+      .filter((d) => d.status !== 'DELIVERED')
+      .sort((a, b) => new Date(a.deadline_at).getTime() - new Date(b.deadline_at).getTime());
+
+    const deliveredItems = items
+      .filter((d) => d.status === 'DELIVERED')
+      .sort((a, b) => new Date(b.deadline_at).getTime() - new Date(a.deadline_at).getTime());
+
+    const byWeek = deliveredItems.reduce<Map<number, Design[]>>((acc, design) => {
+      const weekStart = startOfWeek(new Date(design.deadline_at), { weekStartsOn: 1 });
+      const weekKey = weekStart.getTime();
+      if (!acc.has(weekKey)) acc.set(weekKey, []);
+      acc.get(weekKey)!.push(design);
+      return acc;
+    }, new Map());
+
+    const groups = Array.from(byWeek.entries())
+      .sort(([a], [b]) => b - a)
+      .map(([weekStartMs, weekItems]) => {
+        const weekStart = new Date(weekStartMs);
+        const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+        return {
+          key: String(weekStartMs),
+          label: `${format(weekStart, "d 'de' MMM", { locale: es })} - ${format(weekEnd, "d 'de' MMM", { locale: es })}`,
+          items: [...weekItems].sort(
+            (a, b) => new Date(b.deadline_at).getTime() - new Date(a.deadline_at).getTime()
+          ),
+        };
+      });
+
+    return {
+      inProgress: inProgressItems,
+      deliveredGroups: groups,
+      deliveredCount: deliveredItems.length,
+    };
+  }, [items]);
+
+  const hasAnyItems = inProgress.length > 0 || deliveredCount > 0;
 
   const getUrgencyBadge = (design: Design) => {
     if (design.status === 'DELIVERED') return null;
@@ -131,6 +165,70 @@ export default function MyWeekPage() {
 
   // Only show skeleton on initial load (no cached data yet)
   const showSkeleton = isLoading && items.length === 0;
+  const visibleDeliveredGroups = showAllDeliveredWeeks
+    ? deliveredGroups
+    : deliveredGroups.slice(0, INITIAL_VISIBLE_DELIVERED_WEEKS);
+  const hasHiddenDeliveredWeeks = deliveredGroups.length > INITIAL_VISIBLE_DELIVERED_WEEKS;
+
+  const renderDesignCard = (design: Design, options?: { muted?: boolean }) => {
+    const urgencyBadge = getUrgencyBadge(design);
+    const isMuted = options?.muted ?? false;
+
+    return (
+      <Card key={design.id} className={isMuted ? 'opacity-75' : ''}>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => {
+                    setSelectedDesignId(design.id);
+                    setDetailSheetOpen(true);
+                  }}
+                  className="font-medium hover:text-primary transition-colors text-left"
+                >
+                  {design.title}
+                </button>
+                {design.player_status && (
+                  <PlayerStatusTag status={design.player_status} />
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {design.player} · {design.match_home} vs {design.match_away}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+              <Calendar className="h-4 w-4" />
+              {format(new Date(design.deadline_at), 'dd MMM HH:mm', { locale: es })}
+            </div>
+            {urgencyBadge}
+            <Select
+              value={design.status}
+              onValueChange={(value) => handleStatusChange(design, value as DesignStatus)}
+              disabled={updating === design.id}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BACKLOG">{STATUS_LABELS.BACKLOG}</SelectItem>
+                <SelectItem value="IN_PROGRESS">{STATUS_LABELS.IN_PROGRESS}</SelectItem>
+                <SelectItem value="TO_REVIEW">{STATUS_LABELS.TO_REVIEW}</SelectItem>
+                <SelectItem value="DELIVERED">{STATUS_LABELS.DELIVERED}</SelectItem>
+              </SelectContent>
+            </Select>
+            {design.folder_url && (
+              <Button variant="ghost" size="icon" asChild className="shrink-0">
+                <a href={design.folder_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir carpeta Drive">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <PageTransition loading={showSkeleton || status === 'INITIALIZING'} skeleton={<MyWeekSkeleton />}>
@@ -145,7 +243,7 @@ export default function MyWeekPage() {
           </div>
         </div>
 
-        {sortedItems.length === 0 ? (
+        {!hasAnyItems ? (
           <Card>
             <CardContent className="flex h-64 items-center justify-center">
               <div className="text-center space-y-3">
@@ -159,78 +257,91 @@ export default function MyWeekPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2">
-            {sortedItems.map((design) => {
-              const urgencyBadge = getUrgencyBadge(design);
-              const isCompleted = design.status === 'DELIVERED';
-              
-              return (
-                <Card 
-                  key={design.id}
-                  className={isCompleted ? 'opacity-60' : ''}
+          <div className="space-y-8">
+            {/* Sección En curso */}
+            <section>
+              <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                En curso
+                <Badge variant="secondary" className="font-normal">
+                  {inProgress.length}
+                </Badge>
+              </h2>
+              {inProgress.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nada en curso</p>
+              ) : (
+                <div className="space-y-2">
+                  {inProgress.map((design) => renderDesignCard(design))}
+                </div>
+              )}
+            </section>
+
+            {/* Sección Entregados (agrupados por semana) */}
+            <section>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  Entregados
+                  <Badge variant="outline" className="font-normal">
+                    {deliveredCount}
+                  </Badge>
+                </h2>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setDeliveredOpen((prev) => {
+                      const next = !prev;
+                      if (!next) setShowAllDeliveredWeeks(false);
+                      return next;
+                    });
+                  }}
+                  className="gap-1"
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4 flex-wrap">
-                      {/* Título y contexto */}
-                      <div className="flex-1 min-w-[200px]">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => {
-                              setSelectedDesignId(design.id);
-                              setDetailSheetOpen(true);
-                            }}
-                            className="font-medium hover:text-primary transition-colors text-left"
-                          >
-                            {design.title}
-                          </button>
-                          {design.player_status && (
-                            <PlayerStatusTag status={design.player_status} />
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {design.player} · {design.match_home} vs {design.match_away}
-                        </p>
+                  {deliveredOpen ? (
+                    <>
+                      Ocultar
+                      <ChevronUp className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      Ver
+                      <ChevronDown className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {deliveredCount === 0 ? (
+                <p className="text-sm text-muted-foreground">Aún no hay entregas</p>
+              ) : !deliveredOpen ? (
+                <p className="text-sm text-muted-foreground">
+                  Sección colapsada para reducir ruido visual.
+                </p>
+              ) : (
+                <div className="space-y-6">
+                  {visibleDeliveredGroups.map((group) => (
+                    <div key={group.key} className="space-y-2">
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        Semana {group.label}
+                      </h3>
+                      <div className="space-y-2">
+                        {group.items.map((design) => renderDesignCard(design, { muted: true }))}
                       </div>
-
-                      {/* Fecha */}
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
-                        <Calendar className="h-4 w-4" />
-                        {format(new Date(design.deadline_at), "dd MMM HH:mm", { locale: es })}
-                      </div>
-
-                      {/* Urgencia */}
-                      {urgencyBadge}
-
-                      {/* Estado */}
-                      <Select
-                        value={design.status}
-                        onValueChange={(value) => handleStatusChange(design, value as DesignStatus)}
-                        disabled={updating === design.id}
-                      >
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="BACKLOG">{STATUS_LABELS.BACKLOG}</SelectItem>
-                          <SelectItem value="IN_PROGRESS">{STATUS_LABELS.IN_PROGRESS}</SelectItem>
-                          <SelectItem value="TO_REVIEW">{STATUS_LABELS.TO_REVIEW}</SelectItem>
-                          <SelectItem value="DELIVERED">{STATUS_LABELS.DELIVERED}</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      {/* Drive */}
-                      {design.folder_url && (
-                        <Button variant="ghost" size="icon" asChild className="shrink-0">
-                          <a href={design.folder_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir carpeta Drive">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  ))}
+
+                  {hasHiddenDeliveredWeeks && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAllDeliveredWeeks((prev) => !prev)}
+                    >
+                      {showAllDeliveredWeeks ? 'Ver menos semanas' : 'Ver mas semanas'}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </section>
           </div>
         )}
       </div>
