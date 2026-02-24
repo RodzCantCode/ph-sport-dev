@@ -480,14 +480,11 @@ export function CreateDesignDialog({
               /* ========== MODO EN LOTE (nuevo sistema con tabla) ========== */
               <>
                 <Card className="h-full flex flex-col">
-                  <CardHeader>
-                    <div className="flex flex-row items-start justify-between gap-4">
-                      <div>
-                        <CardTitle>Diseños a Crear</CardTitle>
-                        <CardDescription>
-                          Campos obligatorios: Jugador, Local, Visitante, Deadline. Expande una fila para Título, Drive y Estado jugador.
-                        </CardDescription>
-                      </div>
+                  <CardContent className="flex-1 min-h-0 flex flex-col pt-4">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        Campos obligatorios: Jugador, Local, Visitante y Deadline.
+                      </p>
                       <Button
                         type="button"
                         variant="ghost"
@@ -497,8 +494,6 @@ export function CreateDesignDialog({
                         {allExpanded ? 'Colapsar todas' : 'Expandir todas'}
                       </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent className="flex-1 min-h-0 flex flex-col">
                     <div className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable_both-edges]">
                       <table className="w-full caption-bottom text-sm">
                         <TableHeader>
@@ -702,22 +697,6 @@ export function CreateDesignDialog({
                         </TableBody>
                       </table>
                     </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={addBulkRow}>
-                        <Plus className="mr-1 h-4 w-4" />
-                        +1 Fila
-                      </Button>
-                      <Button type="button" variant="outline" size="sm" onClick={() => addMultipleBulkRows(5)}>
-                        +5 Filas
-                      </Button>
-                      <Button type="button" variant="outline" size="sm" onClick={() => addMultipleBulkRows(10)}>
-                        +10 Filas
-                      </Button>
-                      {hasIncompleteRows && (
-                        <span className="ml-2 text-sm text-amber-600">Hay filas incompletas</span>
-                      )}
-                    </div>
                   </CardContent>
                 </Card>
               </>
@@ -726,35 +705,82 @@ export function CreateDesignDialog({
             </AnimatePresence>
             </div>
 
-          <DialogFooter className={cn("mt-6 shrink-0", !isEditMode && "pt-4 border-t border-border bg-card")}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading || (!isEditMode && validBulkCount === 0)}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Guardando...
-                </>
-              ) : isEditMode ? (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Guardar Cambios
-                </>
-              ) : (
-                <>
-                  <Layers className="mr-2 h-4 w-4" />
-                  Crear {validBulkCount} Diseño{validBulkCount !== 1 ? 's' : ''}
-                </>
-              )}
-            </Button>
+          <DialogFooter
+            className={cn(
+              'mt-6 shrink-0',
+              !isEditMode && 'border-t border-border bg-card pt-4 sm:justify-between sm:space-x-0'
+            )}
+          >
+            {isEditMode ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading || (!isEditMode && validBulkCount === 0)}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Guardar Cambios
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={addBulkRow}>
+                    <Plus className="mr-1 h-4 w-4" />
+                    +1 Fila
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => addMultipleBulkRows(5)}>
+                    +5 Filas
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => addMultipleBulkRows(10)}>
+                    +10 Filas
+                  </Button>
+                  {hasIncompleteRows && (
+                    <span className="text-sm text-amber-600">Hay filas incompletas</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading || validBulkCount === 0}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <Layers className="mr-2 h-4 w-4" />
+                        Crear {validBulkCount} Diseño{validBulkCount !== 1 ? 's' : ''}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
