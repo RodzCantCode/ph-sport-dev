@@ -203,8 +203,8 @@ function DesignsPageContent() {
     
     // 4. Sincronizar con el servidor en segundo plano
     try {
-      const response = await fetch(`/api/designs/${designId}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/designs/${designId}/status`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });

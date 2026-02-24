@@ -75,8 +75,8 @@ export default function MyWeekPage() {
 
     setUpdating(design.id);
     try {
-      const response = await fetch(`/api/designs/${design.id}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/designs/${design.id}/status`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });

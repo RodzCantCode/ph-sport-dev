@@ -42,6 +42,31 @@ export async function PUT(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const hasStatusInBody = Object.prototype.hasOwnProperty.call(body, 'status');
+  const hasDesignerInBody = Object.prototype.hasOwnProperty.call(body, 'designer_id');
+
+  // Evita operaciones ambiguas que mezclen dos intenciones distintas.
+  if (hasStatusInBody && hasDesignerInBody) {
+    return NextResponse.json(
+      { error: 'Ambiguous payload: status and designer_id cannot be updated together' },
+      { status: 400 }
+    );
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    return NextResponse.json({ error: 'Failed to verify role' }, { status: 500 });
+  }
+
+  if (hasDesignerInBody && profile?.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   // Obtener el diseño actual ANTES de actualizarlo (para comparar designer_id)
   const { data: originalDesign } = await supabase
     .from('designs')
@@ -51,7 +76,9 @@ export async function PUT(
   
   const updateData = { ...body };
 
-  if (Object.prototype.hasOwnProperty.call(body, 'status')) {
+  if (hasStatusInBody) {
+    // Compatibilidad temporal: seguimos aceptando status por esta ruta.
+    console.warn('[DEPRECATED] PUT /api/designs/:id status update. Use /api/designs/:id/status');
     if (body.status === 'DELIVERED') {
       updateData.delivered_at = new Date().toISOString();
     } else if (originalDesign?.status === 'DELIVERED') {
@@ -60,7 +87,7 @@ export async function PUT(
   }
 
   // Solo procesar designer_id si viene explícitamente en la request
-  if (Object.prototype.hasOwnProperty.call(body, 'designer_id')) {
+  if (hasDesignerInBody) {
     let designerId = body.designer_id;
     if (designerId === 'auto' || designerId === null || designerId === undefined) {
       const { assignDesignerAutomatically } = await import('@/lib/services/designs/assignment');
