@@ -6,8 +6,8 @@ Dashboard para el equipo de diseño de PH Sport.
 
 ### Gestión de Diseños
 
-- **Vistas múltiples**: Kanban, lista y calendario
-- **Estados de flujo**: Pendiente → En Progreso → En Revisión → Aprobado
+- **Vista principal**: Tabla con filtros avanzados
+- **Estados de flujo**: Pendiente → Entregado
 - **Asignación inteligente**: Algoritmo de reparto basado en carga de trabajo
 
 ### Comunicaciones

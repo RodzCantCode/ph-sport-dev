@@ -21,12 +21,11 @@ export function DesignerCard({ designer, onClick }: DesignerCardProps) {
   
   // Calcular métricas
   const total = designs.length;
-  const inProgress = designs.filter(d => d.status === 'IN_PROGRESS').length;
-  const toReview = designs.filter(d => d.status === 'TO_REVIEW').length;
+  const pending = designs.filter(d => d.status === 'BACKLOG').length;
   const delivered = designs.filter(d => d.status === 'DELIVERED').length;
   
-  // Progreso = (entregados + en revisión) / total
-  const completionRate = total > 0 ? Math.round(((delivered + toReview) / total) * 100) : 0;
+  // Progreso = entregados / total
+  const completionRate = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
   return (
     <Card 
@@ -53,12 +52,8 @@ export function DesignerCard({ designer, onClick }: DesignerCardProps) {
                 <span className="font-medium">{total}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">En progreso:</span>
-                <span className="font-medium text-blue-600 dark:text-blue-400">{inProgress}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">En revisión:</span>
-                <span className="font-medium text-amber-600 dark:text-amber-400">{toReview}</span>
+                <span className="text-muted-foreground">Pendientes:</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">{pending}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Entregados:</span>

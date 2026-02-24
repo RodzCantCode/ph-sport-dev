@@ -21,7 +21,6 @@ interface DesignerLoad {
   id: string;
   name: string;
   active: number;
-  inProgress: number;
   delivered: number;
 }
 
@@ -53,7 +52,6 @@ export function AdminDashboard({ items, onAssign, assigning }: AdminDashboardPro
         id: designer.id,
         name: designer.name,
         active: designerDesigns.filter(d => d.status !== 'DELIVERED').length,
-        inProgress: designerDesigns.filter(d => d.status === 'IN_PROGRESS').length,
         delivered: designerDesigns.filter(d => d.status === 'DELIVERED').length,
       };
     }).sort((a, b) => b.active - a.active);

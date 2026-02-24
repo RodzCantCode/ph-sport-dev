@@ -21,7 +21,7 @@ export function DesignerDashboard({ items, userId }: DesignerDashboardProps) {
   const myDesigns = useMemo(() => items.filter(d => d.designer_id === userId), [items, userId]);
 
   // KPIs minimalistas
-  const activeDesigns = myDesigns.filter(d => d.status === 'IN_PROGRESS' || d.status === 'BACKLOG').length;
+  const activeDesigns = myDesigns.filter(d => d.status === 'BACKLOG').length;
   const completedThisWeek = myDesigns.filter(d => d.status === 'DELIVERED').length;
   
   // Próxima entrega
@@ -43,7 +43,7 @@ export function DesignerDashboard({ items, userId }: DesignerDashboardProps) {
         <KpiCard
           title="Mis tareas activas"
           value={activeDesigns}
-          description="En progreso + Pendientes"
+          description="Pendientes"
           variant="primary"
         />
         

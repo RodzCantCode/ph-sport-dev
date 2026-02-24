@@ -47,13 +47,11 @@ export function DesignerDetailSheet({
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
   // Agrupar por estado - Memoized para rendimiento
-  const { designs, backlog, inProgress, toReview, delivered } = useMemo(() => {
+  const { designs, backlog, delivered } = useMemo(() => {
     const list = designer?.designs || [];
     return {
       designs: list,
       backlog: list.filter(d => d.status === 'BACKLOG'),
-      inProgress: list.filter(d => d.status === 'IN_PROGRESS'),
-      toReview: list.filter(d => d.status === 'TO_REVIEW'),
       delivered: list.filter(d => d.status === 'DELIVERED')
     };
   }, [designer]);
@@ -176,8 +174,6 @@ export function DesignerDetailSheet({
             ) : (
               <>
                 {renderSection('Pendientes', backlog, 'text-gray-600 dark:text-gray-400')}
-                {renderSection('En Progreso', inProgress, 'text-blue-600 dark:text-blue-400')}
-                {renderSection('En Revisión', toReview, 'text-amber-600 dark:text-amber-400')}
                 {renderSection('Entregados', delivered, 'text-green-600 dark:text-green-400')}
               </>
             )}

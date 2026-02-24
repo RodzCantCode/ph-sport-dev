@@ -15,8 +15,6 @@ const badgeVariants = cva(
       },
       status: {
         BACKLOG: 'border-muted-foreground/30 bg-muted text-muted-foreground',
-        IN_PROGRESS: 'border-blue-500/30 bg-blue-500/15 text-blue-700 dark:text-blue-400',
-        TO_REVIEW: 'border-yellow-500/30 bg-yellow-500/15 text-yellow-700 dark:text-yellow-400',
         DELIVERED: 'border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400',
       },
     },

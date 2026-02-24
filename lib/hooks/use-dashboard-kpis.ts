@@ -26,10 +26,8 @@ export function useDashboardKPIs(items: Design[]): DashboardKPIs {
       return isWithinInterval(deadline, { start: weekStart, end: weekEnd });
     }).length;
 
-    // En curso (IN_PROGRESS + TO_REVIEW) vs Entregados
-    const inProgressCount = items.filter(
-      (it) => it.status === 'IN_PROGRESS' || it.status === 'TO_REVIEW'
-    ).length;
+    // Pendientes vs entregados
+    const inProgressCount = items.filter((it) => it.status === 'BACKLOG').length;
     const deliveredCount = items.filter((it) => it.status === 'DELIVERED').length;
     const totalWithProgress = inProgressCount + deliveredCount;
     const progressPercentage =

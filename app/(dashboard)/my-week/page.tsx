@@ -31,9 +31,7 @@ import { useMyWeek } from '@/lib/hooks/use-my-week';
 
 const STATUS_ORDER: Record<DesignStatus, number> = {
   BACKLOG: 0,
-  IN_PROGRESS: 1,
-  TO_REVIEW: 2,
-  DELIVERED: 3,
+  DELIVERED: 1,
 };
 
 const INITIAL_VISIBLE_DELIVERED_WEEKS = 2;
@@ -212,8 +210,6 @@ export default function MyWeekPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="BACKLOG">{STATUS_LABELS.BACKLOG}</SelectItem>
-                <SelectItem value="IN_PROGRESS">{STATUS_LABELS.IN_PROGRESS}</SelectItem>
-                <SelectItem value="TO_REVIEW">{STATUS_LABELS.TO_REVIEW}</SelectItem>
                 <SelectItem value="DELIVERED">{STATUS_LABELS.DELIVERED}</SelectItem>
               </SelectContent>
             </Select>
@@ -258,16 +254,16 @@ export default function MyWeekPage() {
           </Card>
         ) : (
           <div className="space-y-8">
-            {/* Sección En curso */}
+            {/* Sección Pendientes */}
             <section>
               <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                En curso
+                Pendientes
                 <Badge variant="secondary" className="font-normal">
                   {inProgress.length}
                 </Badge>
               </h2>
               {inProgress.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nada en curso</p>
+                <p className="text-sm text-muted-foreground">Nada pendiente</p>
               ) : (
                 <div className="space-y-2">
                   {inProgress.map((design) => renderDesignCard(design))}

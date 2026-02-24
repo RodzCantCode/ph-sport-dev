@@ -124,7 +124,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE design_status_enum AS ENUM ('BACKLOG','IN_PROGRESS','TO_REVIEW','DELIVERED');
+  CREATE TYPE design_status_enum AS ENUM ('BACKLOG','DELIVERED');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Profiles table (para el sistema de diseños)

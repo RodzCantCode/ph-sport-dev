@@ -24,13 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Edit2, Trash2, ExternalLink, Filter, LayoutGrid, Table2, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Flame, AlertTriangle, Palette } from 'lucide-react';
+import { Edit2, Trash2, ExternalLink, Filter, Search, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Flame, AlertTriangle, Palette } from 'lucide-react';
 import { CreateDesignDialog } from '@/components/features/designs/dialogs/create-design-dialog';
 import { CreateDesignButton } from '@/components/features/designs/dialogs/create-design-button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageTransition } from '@/components/ui/page-transition';
 import { DesignsSkeleton } from '@/components/skeletons/designs-skeleton';
-import { KanbanBoard } from '@/components/features/designs/kanban/kanban-board';
 import { useDesigners } from '@/lib/hooks/use-designers';
 import type { Design } from '@/lib/types/design';
 import { STATUS_LABELS } from '@/lib/types/design';
@@ -59,14 +58,10 @@ function DesignsPageContent() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDesign, setEditingDesign] = useState<Design | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   
   // Estado para el panel de detalles
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
-  
-  // Estado para indicar qué diseño está sincronizando (optimistic UI)
-  const [syncingDesignId, setSyncingDesignId] = useState<string | null>(null);
   
   // Estado para el diálogo de confirmación de eliminación
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -187,45 +182,6 @@ function DesignsPageContent() {
     setCurrentPage(1); // Reset a página 1 al ordenar
   };
 
-  const handleStatusChange = async (designId: string, newStatus: DesignStatus) => {
-    // 1. Guardar estado anterior para poder revertir si falla
-    const previousItems = [...localItems];
-    
-    // 2. Marcar como sincronizando (para feedback visual)
-    setSyncingDesignId(designId);
-    
-    // 3. ACTUALIZACIÓN OPTIMISTA: Actualizar UI inmediatamente
-    setLocalItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === designId ? { ...item, status: newStatus } : item
-      )
-    );
-    
-    // 4. Sincronizar con el servidor en segundo plano
-    try {
-      const response = await fetch(`/api/designs/${designId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar estado');
-      }
-      
-      // Éxito: el estado local ya está actualizado
-    } catch (err: unknown) {
-      // 5. Error: Revertir el cambio optimista
-      setLocalItems(previousItems);
-      toast.error(err instanceof Error ? err.message : 'Error al actualizar estado');
-      throw err;
-    } finally {
-      // 6. Limpiar estado de sincronización
-      setSyncingDesignId(null);
-    }
-  };
-
   // Filtrar items localmente basado en searchQuery (usando debounced)
   const filteredItems = localItems.filter((design) => {
     // Aplicar búsqueda
@@ -303,28 +259,6 @@ function DesignsPageContent() {
           <p className="text-muted-foreground">Gestión de todas las piezas gráficas</p>
         </div>
           <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-lg border border-border bg-muted p-1">
-            <Button
-              type="button"
-              variant={viewMode === 'table' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              className="min-w-[90px]"
-            >
-              <Table2 className="h-4 w-4 mr-2" />
-              Tabla
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('kanban')}
-              className="min-w-[90px]"
-            >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Kanban
-            </Button>
-          </div>
           <CreateDesignButton
             onDesignCreated={() => mutate()}
             disabled={!isAdmin}
@@ -368,8 +302,6 @@ function DesignsPageContent() {
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="BACKLOG">Pendiente</SelectItem>
-                  <SelectItem value="IN_PROGRESS">En Progreso</SelectItem>
-                  <SelectItem value="TO_REVIEW">En Revisión</SelectItem>
                   <SelectItem value="DELIVERED">Entregado</SelectItem>
                 </SelectContent>
               </Select>
@@ -415,7 +347,7 @@ function DesignsPageContent() {
         </CardContent>
       </Card>
 
-      {/* Vista Tabla o Kanban */}
+      {/* Vista tabla */}
       {filteredItems.length === 0 ? (
         <EmptyState
           title={debouncedSearchQuery ? "No se encontraron resultados" : "No hay diseños programados"}
@@ -433,27 +365,6 @@ function DesignsPageContent() {
           actionDisabled={!isAdmin && !debouncedSearchQuery}
           actionDisabledReason={!isAdmin && !debouncedSearchQuery ? 'Solo administradores pueden crear diseños' : undefined}
         />
-      ) : viewMode === 'kanban' ? (
-        <div className="w-full">
-          <KanbanBoard
-            designs={sortedItems}
-            loading={false}
-            onStatusChange={handleStatusChange}
-            onCreateDesign={() => {
-              if (!isAdmin) return;
-              setEditingDesign(null);
-              setEditDialogOpen(true);
-            }}
-            designers={designers}
-            syncingDesignId={syncingDesignId}
-            onCardClick={(designId) => {
-              setSelectedDesignId(designId);
-              setDetailSheetOpen(true);
-            }}
-            createDisabled={!isAdmin}
-            createDisabledReason="Solo administradores pueden crear diseños"
-          />
-        </div>
       ) : (
         <Card>
           <CardHeader>

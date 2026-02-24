@@ -30,16 +30,6 @@ function DesignCalendar({ items, onEventClick }: DesignCalendarProps) {
       border: 'rgba(107, 114, 128, 0.6)', // gray-500
       text: '#374151', // gray-700
     },
-    IN_PROGRESS: {
-      background: 'rgba(249, 115, 22, 0.2)', // orange-500/20
-      border: 'rgba(249, 115, 22, 0.8)', // orange-500
-      text: '#ea580c', // orange-600
-    },
-    TO_REVIEW: {
-      background: 'rgba(234, 179, 8, 0.25)', // yellow-500/25
-      border: 'rgba(234, 179, 8, 0.8)', // yellow-500
-      text: '#ca8a04', // yellow-600
-    },
     DELIVERED: {
       background: 'rgba(34, 197, 94, 0.2)', // green-500/20
       border: 'rgba(34, 197, 94, 0.8)', // green-500

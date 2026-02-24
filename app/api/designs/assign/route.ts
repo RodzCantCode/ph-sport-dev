@@ -29,12 +29,12 @@ export async function POST(_request: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // Obtener todos los diseños sin asignar (BACKLOG y sin designer_id)
+  // Obtener todos los diseños pendientes sin asignar
   const { data: unassigned, error } = await supabase
     .from('designs')
     .select('id')
     .is('designer_id', null)
-    .in('status', ['BACKLOG', 'IN_PROGRESS']);
+    .eq('status', 'BACKLOG');
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
